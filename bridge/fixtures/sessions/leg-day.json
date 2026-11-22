@@ -1,0 +1,82 @@
+{
+  "name": "leg-day",
+  "description": "Squat all sets at the top of the range with RIR 3 (progress, +5 kg). RDL dropped 8% at the same RIR with normal sleep (reduce).",
+  "expected": {
+    "Back squat": [
+      "progress"
+    ],
+    "Romanian deadlift": [
+      "reduce"
+    ]
+  },
+  "session": {
+    "date": "2026-11-20",
+    "session_name": "Legs A",
+    "exercises": [
+      {
+        "exercise": "Back squat",
+        "prescribed": {
+          "sets": 3,
+          "rep_min": 5,
+          "rep_max": 8,
+          "rir": 2,
+          "load_kg": 110
+        },
+        "performed": [
+          {
+            "load_kg": 110,
+            "reps": 8,
+            "rir": 3
+          },
+          {
+            "load_kg": 110,
+            "reps": 8,
+            "rir": 3
+          },
+          {
+            "load_kg": 110,
+            "reps": 8,
+            "rir": 2
+          }
+        ],
+        "e1rm_history": [
+          145.0,
+          147.0
+        ]
+      },
+      {
+        "exercise": "Romanian deadlift",
+        "prescribed": {
+          "sets": 3,
+          "rep_min": 8,
+          "rep_max": 10,
+          "rir": 2,
+          "load_kg": 100
+        },
+        "performed": [
+          {
+            "load_kg": 100,
+            "reps": 7,
+            "rir": 1
+          },
+          {
+            "load_kg": 100,
+            "reps": 6,
+            "rir": 1
+          },
+          {
+            "load_kg": 100,
+            "reps": 6,
+            "rir": 1
+          }
+        ],
+        "e1rm_history": [
+          133.3,
+          133.3
+        ]
+      }
+    ],
+    "sleep_last_night_h": 7.6,
+    "soreness_1_to_5": 2
+  }
+}

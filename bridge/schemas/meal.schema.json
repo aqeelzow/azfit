@@ -1,0 +1,89 @@
+{
+  "type": "object",
+  "properties": {
+    "meal_name": {
+      "type": "string",
+      "description": "Short name the user will recognise, e.g. 'Chicken shawarma plate'"
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "portion": {
+            "type": "string",
+            "description": "e.g. '1 cup', 'palm-sized fillet'"
+          },
+          "grams": {
+            "type": "number"
+          },
+          "kcal": {
+            "type": "number"
+          },
+          "protein_g": {
+            "type": "number"
+          },
+          "carbs_g": {
+            "type": "number"
+          },
+          "fat_g": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "name",
+          "portion",
+          "grams",
+          "kcal",
+          "protein_g",
+          "carbs_g",
+          "fat_g"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "kcal_low": {
+      "type": "number"
+    },
+    "kcal_high": {
+      "type": "number"
+    },
+    "confidence": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "matched_similar_meal": {
+      "type": "string",
+      "description": "Name of the similar meal reused, or empty string"
+    },
+    "assumptions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Hidden things you assumed, like cooking oil or sauce"
+    },
+    "follow_up_question": {
+      "type": "string",
+      "description": "One question that would most improve the estimate, or empty string"
+    }
+  },
+  "required": [
+    "meal_name",
+    "items",
+    "kcal_low",
+    "kcal_high",
+    "confidence",
+    "matched_similar_meal",
+    "assumptions",
+    "follow_up_question"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,46 @@
+{
+  "type": "object",
+  "properties": {
+    "note": {
+      "type": "string",
+      "description": "One sentence for the user about this session."
+    },
+    "next_time": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "exercise": {
+            "type": "string"
+          },
+          "call": {
+            "type": "string",
+            "enum": [
+              "progress",
+              "repeat",
+              "reduce"
+            ]
+          },
+          "next_load_kg": {
+            "type": "number"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "exercise",
+          "call",
+          "next_load_kg",
+          "reason"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "note",
+    "next_time"
+  ],
+  "additionalProperties": false
+}
