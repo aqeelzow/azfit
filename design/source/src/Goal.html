@@ -1,0 +1,72 @@
+<!--title: Goal-->
+<!--css-->
+.opt{display:flex;align-items:center;gap:14px;height:76px;border-radius:24px;background:var(--fill);padding:0 18px 0 14px;width:100%}
+.opt.on{background:var(--peach);box-shadow:inset 0 0 0 2px var(--o)}
+.opt .ic{width:46px;height:46px;border-radius:15px;background:var(--card);color:var(--ink);display:grid;place-items:center;flex-shrink:0}
+.opt.on .ic{color:var(--o)}
+.opt .rd{width:24px;height:24px;border-radius:8px;box-shadow:inset 0 0 0 2px var(--ghost);color:transparent;display:grid;place-items:center;flex-shrink:0}
+.opt.on .rd{background:var(--o);box-shadow:none;color:#FFFFFF}
+.opt .s{font-size:13.5px;color:var(--mut)}
+.opt.on .s{color:var(--pm)}
+.prog{height:6px;border-radius:3px;background:var(--track);overflow:hidden}
+.prog i{display:block;height:100%;border-radius:3px;background:var(--o)}
+<!--/css-->
+%SB%
+<div class="top">
+  %BACK:Welcome.dc.html%
+  <div class="prog" style="flex:1;margin:0 6px"><i style="width:33%"></i></div>
+  <a href="Days.dc.html" style="font-size:15px;font-weight:600;color:var(--mut);padding:0 4px">Skip</a>
+</div>
+
+<div class="abs col" style="left:24px;right:24px;top:128px;gap:8px">
+  <span style="font-size:14px;font-weight:600;color:var(--o)">Step 1 of 3</span>
+  <h1 class="h1">What's your<br>main goal?</h1>
+</div>
+
+<div class="abs col" style="left:20px;right:20px;top:254px;gap:10px">
+  <button type="button" class="{{c0}}" onClick="{{p0}}" aria-pressed="{{a0}}">
+    <span class="ic">%I:flame:22::2%</span>
+    <span class="col" style="flex:1;gap:1px"><span style="font-size:16.5px;font-weight:700">Lose fat</span><span class="s">About 0.4 kg a week, keep muscle</span></span>
+    <span class="rd">%I:check:14::3%</span>
+  </button>
+  <button type="button" class="{{c1}}" onClick="{{p1}}" aria-pressed="{{a1}}">
+    <span class="ic">%I:dumbbell:22::2%</span>
+    <span class="col" style="flex:1;gap:1px"><span style="font-size:16.5px;font-weight:700">Build muscle</span><span class="s">Lean gain with a small surplus</span></span>
+    <span class="rd">%I:check:14::3%</span>
+  </button>
+  <button type="button" class="{{c2}}" onClick="{{p2}}" aria-pressed="{{a2}}">
+    <span class="ic">%I:barbell:22::2%</span>
+    <span class="col" style="flex:1;gap:1px"><span style="font-size:16.5px;font-weight:700">Get stronger</span><span class="s">Bigger numbers on the main lifts</span></span>
+    <span class="rd">%I:check:14::3%</span>
+  </button>
+  <button type="button" class="{{c3}}" onClick="{{p3}}" aria-pressed="{{a3}}">
+    <span class="ic">%I:heart:22::2%</span>
+    <span class="col" style="flex:1;gap:1px"><span style="font-size:16.5px;font-weight:700">Feel healthier</span><span class="s">Move well, sleep well, eat well</span></span>
+    <span class="rd">%I:check:14::3%</span>
+  </button>
+</div>
+
+<div class="abs row" style="left:24px;right:24px;top:612px;gap:12px">
+  %DIV:36%
+  <span style="font-size:14.5px;color:var(--mut);line-height:1.35">I'll build your whole plan around this.<br>You can change it any time.</span>
+</div>
+
+<a class="abs btn" href="Days.dc.html" style="left:20px;right:20px;width:auto;bottom:34px">Continue %I:arrow:18%</a>
+%HB%
+<!--script-->
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { pick: 0 };
+  }
+  renderVals() {
+    const v = {};
+    [0, 1, 2, 3].forEach((i) => {
+      const on = i === this.state.pick;
+      v['c' + i] = 'opt' + (on ? ' on' : '');
+      v['a' + i] = on ? 'true' : 'false';
+      v['p' + i] = () => this.setState({ pick: i });
+    });
+    return v;
+  }
+}

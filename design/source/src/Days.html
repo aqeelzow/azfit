@@ -1,0 +1,63 @@
+<!--title: Training days-->
+<!--css-->
+.prog{height:6px;border-radius:3px;background:var(--track);overflow:hidden}
+.prog i{display:block;height:100%;border-radius:3px;background:var(--o)}
+.dn{flex:1;height:60px;border-radius:18px;background:var(--fill);font-size:20px;font-weight:800;display:grid;place-items:center;color:var(--ink)}
+.dn.on{background:var(--btn);color:var(--btnk)}
+.wd{flex:1;height:34px;border-radius:10px;background:var(--card);display:grid;place-items:center;font-size:12px;font-weight:700;color:var(--lt)}
+.wd.on{background:var(--o);color:#FFFFFF}
+<!--/css-->
+%SB%
+<div class="top">
+  %BACK:Goal.dc.html%
+  <div class="prog" style="flex:1;margin:0 6px"><i style="width:66%"></i></div>
+  <a href="Connect.dc.html" style="font-size:15px;font-weight:600;color:var(--mut);padding:0 4px">Skip</a>
+</div>
+
+<div class="abs col" style="left:24px;right:24px;top:128px;gap:8px">
+  <span style="font-size:14px;font-weight:600;color:var(--o)">Step 2 of 3</span>
+  <h1 class="h1">How often can<br>you train?</h1>
+</div>
+
+<div class="abs row n" style="left:0;right:0;top:262px;justify-content:center;align-items:baseline;font-weight:800;letter-spacing:-.06em;line-height:1">
+  <span style="font-size:150px">{{n}}</span>
+</div>
+<span class="abs mut" style="left:0;right:0;top:420px;text-align:center;font-size:15.5px;font-weight:600">days a week</span>
+
+<div class="abs row" style="left:20px;right:20px;top:466px;gap:8px">
+  <sc-for list="{{days}}" as="d" hint-placeholder-count="5">
+    <button type="button" class="{{d.cls}}" onClick="{{d.pick}}" aria-label="{{d.aria}}">{{d.n}}</button>
+  </sc-for>
+</div>
+
+<div class="abs col" style="left:20px;right:20px;top:552px;border-radius:24px;background:var(--peach);padding:14px 16px 16px 14px;gap:14px">
+  <div class="row" style="gap:12px;align-items:flex-start">
+    %DIV:36%
+    <span class="col" style="gap:2px;flex:1"><span style="font-size:15px;font-weight:700">{{split}}</span><span style="font-size:14px;line-height:19px;color:var(--pm)">About 50 min each. Miss a day and I'll move it for you.</span></span>
+  </div>
+  <div class="row" style="gap:6px">
+    <sc-for list="{{week}}" as="w" hint-placeholder-count="7"><span class="{{w.cls}}">{{w.d}}</span></sc-for>
+  </div>
+</div>
+
+<a class="abs btn" href="Connect.dc.html" style="left:20px;right:20px;width:auto;bottom:34px">Continue %I:arrow:18%</a>
+%HB%
+<!--script-->
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { n: 4 };
+  }
+  renderVals() {
+    const n = this.state.n;
+    const splits = { 2: 'Full body, twice a week', 3: 'Full body A, B and C', 4: 'Push, Pull, Legs, Upper', 5: 'Push, Pull, Legs, Upper, Lower', 6: 'Push, Pull, Legs, twice' };
+    const pattern = { 2: [0, 3], 3: [0, 2, 4], 4: [0, 1, 3, 5], 5: [0, 1, 2, 4, 5], 6: [0, 1, 2, 3, 4, 5] };
+    const names = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+    return {
+      n,
+      split: splits[n],
+      days: [2, 3, 4, 5, 6].map((d) => ({ n: d, cls: 'dn n' + (d === n ? ' on' : ''), aria: d + ' days a week', pick: () => this.setState({ n: d }) })),
+      week: names.map((d, i) => ({ d, cls: 'wd' + (pattern[n].indexOf(i) >= 0 ? ' on' : '') })),
+    };
+  }
+}

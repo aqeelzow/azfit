@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AZfit Eat (dark)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800;900&amp;display=swap">
+<style>
+body{margin:0;background:#FFFFFF}
+*{box-sizing:border-box}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none;padding:0;text-align:inherit}
+a{color:inherit;text-decoration:none}
+img{display:block}
+p,h1,h2{margin:0}
+.scr{--bg:#FFFFFF;--ink:#1D1B22;--mut:#7D7A86;--lt:#B3B0BB;--fill:#F5F4F7;--track:#EEECF2;--line:#ECEAF0;--card:#FFFFFF;--peach:#EFEAFF;--peach2:#F5F2FF;--pk:#5B3FE0;--pm:#615885;--o:#7C5CFF;--o2:#A68FFF;--sun:#FFFFFF;--btn:#1D1B22;--btnk:#FFFFFF;--nav:#FFFFFF;--navsh:rgba(40,20,90,.08);--rest:#1D1B22;--rest2:#37343F;--ghost:#C7C4CE;--sunf:#EFEAFF;--sk:#5B3FE0;--spark:#FFFFFF;--carb:#B7A4FF;--fatc:#FF8FB1;--f0:#E9E7EE;--f1:#E4DCFF;--f2:#C9B9FF;--f3:#A68FFF;--f4:#7C5CFF;--f5:#5432D9;--fa:#FF9F6B;--fn:#DAD7E0}
+.scr.dark{--bg:#111015;--ink:#F3F1F7;--mut:#9C98A6;--lt:#67636F;--fill:#1E1C23;--track:#2A2730;--line:#24222A;--card:#2C2934;--peach:#251E40;--peach2:#1F1935;--pk:#C3B4FF;--pm:#ADA3D6;--o:#8E72FF;--o2:#5A44C4;--sun:#3B3170;--btn:#F3F1F7;--btnk:#111015;--nav:#1A1820;--navsh:rgba(0,0,0,.5);--rest:#211F27;--rest2:#36333E;--ghost:#57535F;--sunf:#251E40;--sk:#C3B4FF;--spark:#352B5E;--carb:#6F5BD6;--fatc:#FF9CBB;--f0:#2C2933;--f1:#3A2F66;--f2:#4F3FA0;--f3:#6A54D6;--f4:#8E72FF;--f5:#B7A4FF;--fa:#FF9F6B;--fn:#36333E}
+.scr{width:390px;height:844px;position:relative;overflow:hidden;background:var(--bg);color:var(--ink);font-family:"Figtree",ui-sans-serif,system-ui,sans-serif;-webkit-font-smoothing:antialiased;font-size:16px;line-height:1.4}
+.n{font-variant-numeric:tabular-nums}
+.sb{position:absolute;top:0;left:0;right:0;height:50px;padding:4px 28px 0 34px;display:flex;align-items:center;justify-content:space-between;font-size:15.5px;font-weight:600;z-index:30;color:var(--ink)}
+.sb.w{color:#FFFFFF}
+.hb{position:absolute;bottom:8px;left:50%;width:134px;height:5px;margin-left:-67px;border-radius:3px;background:var(--ink);z-index:40}
+.hb.w{background:#FFFFFF}
+.ib{width:44px;height:44px;border-radius:14px;background:var(--fill);display:grid;place-items:center;flex-shrink:0;color:var(--ink)}
+.top{position:absolute;top:56px;left:24px;right:24px;display:flex;align-items:center;justify-content:space-between;gap:12px;z-index:20}
+.btn{height:56px;border-radius:28px;background:var(--btn);color:var(--btnk);display:flex;align-items:center;justify-content:center;gap:10px;font-size:16.5px;font-weight:700;width:100%}
+.btn.o{background:var(--o);color:#FFFFFF}
+.btn.soft{background:var(--fill);color:var(--ink)}
+.h1{font-size:34px;line-height:38px;font-weight:800;letter-spacing:-.025em}
+.h2{font-size:22px;line-height:28px;font-weight:800;letter-spacing:-.02em}
+.mut{color:var(--mut)}
+.lt{color:var(--lt)}
+.lab{font-size:14px;font-weight:600;color:var(--mut)}
+.abs{position:absolute}
+.row{display:flex;align-items:center}
+.col{display:flex;flex-direction:column}
+.cover{width:100%;height:100%;object-fit:cover}
+.hr{height:1px;background:var(--line)}
+.bar{height:8px;border-radius:4px;background:var(--track);overflow:hidden}
+.bar>i{display:block;height:100%;border-radius:4px;background:var(--o)}
+.am{display:inline-flex;vertical-align:-3px;margin-left:5px}
+.was{color:var(--lt);text-decoration:line-through;text-decoration-thickness:1.5px;font-weight:500}
+.chg{background:var(--peach);color:var(--pk);border-radius:8px;padding:1px 7px;font-weight:700}
+.an{background:var(--peach);border-radius:24px;padding:14px 16px 14px 14px;display:flex;gap:12px;align-items:flex-start}
+.an .bd{flex:1;display:flex;flex-direction:column;gap:3px;min-width:0}
+.an b{font-size:15px;font-weight:700;line-height:20px}
+.an p{font-size:14px;line-height:19px;color:var(--pm)}
+.an .acts{display:flex;gap:8px;margin-top:8px}
+.pb{height:34px;padding:0 14px;border-radius:17px;font-size:14px;font-weight:700;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;flex-shrink:0}
+.pb.k{background:var(--btn);color:var(--btnk)}
+.pb.w{background:var(--card);color:var(--ink)}
+.pb.f{background:var(--fill);color:var(--ink)}
+.pb.p{background:var(--o);color:#FFFFFF}
+.chip{height:36px;padding:0 14px;border-radius:18px;background:var(--fill);font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;flex-shrink:0}
+.chip.on{background:var(--btn);color:var(--btnk)}
+.seg{display:flex;height:44px;border-radius:22px;background:var(--fill);padding:4px}
+.seg span{flex:1;border-radius:18px;display:grid;place-items:center;font-size:14px;font-weight:600;color:var(--mut)}
+.seg span.on{background:var(--card);color:var(--ink);box-shadow:0 2px 8px rgba(30,20,60,.08)}
+.sec{display:flex;justify-content:space-between;align-items:baseline}
+.sec h3{margin:0;font-size:19px;font-weight:800;letter-spacing:-.015em}
+.sec a,.sec span{font-size:14px;font-weight:600;color:var(--mut)}
+.li{display:flex;align-items:center;gap:14px;min-height:64px}
+.li+.li{box-shadow:inset 0 1px 0 var(--line)}
+.ph{width:48px;height:48px;border-radius:14px;overflow:hidden;flex-shrink:0;background:var(--fill)}
+.ttl{font-size:17px;font-weight:800;text-align:center}
+.grab{position:absolute;top:8px;left:50%;width:40px;height:5px;margin-left:-20px;border-radius:3px;background:var(--track)}
+.nav{position:absolute;left:0;right:0;bottom:0;height:112px;z-index:25}
+.nav .bg{position:absolute;left:0;top:0;filter:drop-shadow(0 -4px 18px var(--navsh))}
+.nav .plus{position:absolute;left:165px;top:10px;width:60px;height:60px;border-radius:20px;background:var(--o);color:#FFFFFF;display:grid;place-items:center}
+.nav .t{position:absolute;top:36px;width:50px;height:50px;display:grid;place-items:center;color:var(--lt)}
+.nav .t.on{color:var(--ink)}
+.nav .t.on::after{content:"";position:absolute;bottom:-3px;left:17px;width:16px;height:4px;border-radius:2px;background:var(--o)}
+.mc{flex:1;display:flex;flex-direction:column;gap:5px}
+.mc .k{font-size:13px;font-weight:600;color:var(--pm)}body{background:#111015}</style>
+</helmet>
+<div class="scr dark">
+<div class="sb"><span>9:41</span><svg aria-hidden="true" width="68" height="12" viewBox="0 0 68 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y=".5" width="3" height="11.5" rx="1"/><path d="M29.6 3.6a9.2 9.2 0 0 1 12.3 0l-1.4 1.5a7.1 7.1 0 0 0-9.5 0zM32.2 6.4a5.4 5.4 0 0 1 7.1 0l-1.4 1.5a3.3 3.3 0 0 0-4.3 0zM35.75 11.2l-1.9-1.9a2.7 2.7 0 0 1 3.8 0z"/><rect x="45.5" y=".5" width="19" height="11" rx="3.6" fill="none" stroke="currentColor" opacity=".45"/><rect x="47.2" y="2.2" width="15.6" height="7.6" rx="2.2"/><rect x="65.6" y="4" width="1.6" height="4" rx=".8" opacity=".45"/></svg></div>
+<div class="abs row" style="left:24px;right:24px;top:62px;justify-content:space-between;align-items:flex-end">
+  <div class="col" style="gap:2px"><span class="lab">Saturday, Nov 21</span><h1 class="h1">Eat</h1></div>
+  <a class="ib" href="Calibrate.dc.html" aria-label="Calorie target"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg></a>
+</div>
+
+<div class="abs col" style="left:24px;right:24px;top:138px;height:234px;border-radius:32px;background:var(--peach);padding:22px 22px 20px">
+  <span class="n" style="font-size:52px;line-height:54px;font-weight:800;letter-spacing:-.04em">1,110</span>
+  <a href="Calibrate.dc.html" class="row" style="font-size:15px;color:var(--pm)">kcal left of <b style="color:var(--ink);margin-left:4px">2,350</b><span class="am" title="Changed by Div" aria-label="Changed by Div"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 100 100" style="display:block;flex-shrink:0"><defs><clipPath id="ar26"><rect width="100" height="100" rx="32"/></clipPath></defs><g clip-path="url(#ar26)"><rect width="100" height="100" style="fill:var(--o)"/><g><path d="M-4 112L0 58L-8 40L14 40L22 18L38 32L56 12L62 38L84 34L76 56L96 70L80 82L84 112Z" style="fill:#16141A;stroke:#16141A" stroke-width="12" stroke-linejoin="round"/><circle cx="40" cy="56" r="10" fill="#FFFFFF"/><circle cx="42.8" cy="53" r="5" fill="#16141A"/><circle cx="60" cy="52" r="10" fill="#FFFFFF"/><circle cx="62.8" cy="49" r="5" fill="#16141A"/></g></g></svg></span></a>
+  <span class="row" style="gap:3px;margin-top:16px;height:10px">
+    <i style="flex:53;height:10px;border-radius:5px;background:var(--o)"></i><i style="flex:47;height:10px;border-radius:5px;background:var(--card)"></i>
+  </span>
+  <div class="row" style="gap:18px;margin-top:auto">
+    <div class="mc"><span class="k">Protein</span><span class="n" style="font-weight:800">112<span style="font-weight:500;color:var(--pm)">/165g</span></span><span class="bar" style="height:5px;background:var(--card)"><i style="width:68%"></i></span></div>
+    <div class="mc"><span class="k">Carbs</span><span class="n" style="font-weight:800">128<span style="font-weight:500;color:var(--pm)">/250g</span></span><span class="bar" style="height:5px;background:var(--card)"><i style="width:51%;background:var(--carb)"></i></span></div>
+    <div class="mc"><span class="k">Fat</span><span class="n" style="font-weight:800">41<span style="font-weight:500;color:var(--pm)">/75g</span></span><span class="bar" style="height:5px;background:var(--card)"><i style="width:55%;background:var(--fatc)"></i></span></div>
+  </div>
+</div>
+
+<div class="abs an" style="left:24px;right:24px;top:388px;background:var(--fill)">
+  <svg aria-hidden="true" width="36" height="36" viewBox="0 0 100 100" style="display:block;flex-shrink:0"><defs><clipPath id="ar25"><rect width="100" height="100" rx="30"/></clipPath></defs><g clip-path="url(#ar25)"><rect width="100" height="100" style="fill:var(--o)"/><g transform="translate(-4 20) scale(.84)"><path d="M-4 112L0 58L-8 40L14 40L22 18L38 32L56 12L62 38L84 34L76 56L96 70L80 82L84 112Z" style="fill:#16141A;stroke:#16141A" stroke-width="12" stroke-linejoin="round"/><circle cx="40" cy="56" r="10" fill="#FFFFFF"/><circle cx="42.8" cy="53" r="5" fill="#16141A"/><circle cx="60" cy="52" r="10" fill="#FFFFFF"/><circle cx="62.8" cy="49" r="5" fill="#16141A"/></g></g></svg>
+  <div class="bd">
+    <b>Did Thursday's dinner slip through?</b>
+    <p style="color:var(--mut)">You logged 1,180 kcal, about half your usual, and your weight didn't move Friday.</p>
+    <div class="acts"><a class="pb k" href="Snap.dc.html">Add it</a><span class="pb w">No, that's right</span></div>
+  </div>
+</div>
+
+<div class="abs" style="left:24px;right:24px;top:540px">
+  <a class="li" href="Meal.dc.html"><span class="ph"><img class="cover" src="../img/yogurt.jpg" alt="Greek yogurt with berries"></span><span class="col" style="flex:1"><span style="font-weight:700">Greek yogurt</span><span class="mut" style="font-size:14px">Breakfast · 8:05</span></span><span class="n" style="font-weight:700">380</span></a>
+  <a class="li" href="Meal.dc.html"><span class="ph"><img class="cover" src="../img/salmon.jpg" alt="Salmon power bowl"></span><span class="col" style="flex:1"><span style="font-weight:700">Salmon power bowl</span><span class="mut" style="font-size:14px">Lunch · 1:12 · estimate ±18%</span></span><span class="n" style="font-weight:700">640</span></a>
+  <a class="li" href="Meal.dc.html"><span class="ph"><img class="cover" src="../img/fruit.jpg" alt="Fruit bowl"></span><span class="col" style="flex:1"><span style="font-weight:700">Fruit bowl</span><span class="mut" style="font-size:14px">Snack · 4:30</span></span><span class="n" style="font-weight:700">220</span></a>
+</div>
+<nav class="nav" aria-label="Main"><svg class="bg" aria-hidden="true" width="390" height="112" viewBox="0 0 390 112"><path d="M0 48C0 34.7 10.7 24 24 24H124C139 24 145 30 149 42C155 62 168 80 195 80C222 80 235 62 241 42C245 30 251 24 266 24H366C379.3 24 390 34.7 390 48V112H0Z" style="fill:var(--nav)"/></svg><a class="t" href="Home.dc.html" aria-label="Home" style="left:22px"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.4 12 4l8 6.4V19a2 2 0 0 1-2 2h-3.5v-5.5h-5V21H6a2 2 0 0 1-2-2z"/></svg></a><a class="t" href="Train.dc.html" aria-label="Train" style="left:92px"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/></svg></a><a class="t on" href="Eat.dc.html" aria-label="Eat" aria-current="page" style="left:248px"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M17 3c-2.5 2-2.5 7 0 9v9"/></svg></a><a class="t" href="Body.dc.html" aria-label="Body" style="left:318px"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7.5" r="3.5"/><path d="M5 20.5c0-3.9 3.1-6.5 7-6.5s7 2.6 7 6.5"/></svg></a><a class="plus" href="QuickAdd.dc.html" aria-label="Quick add"><svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></a><div class="hb"></div></nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

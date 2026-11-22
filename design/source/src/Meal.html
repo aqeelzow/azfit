@@ -1,0 +1,114 @@
+<!--title: Meal estimate-->
+<!--css-->
+.ib.d{background:rgba(17,16,21,.42);color:#FFFFFF}
+.lad{flex:1;display:flex;flex-direction:column;gap:7px}
+.lad i{display:block;height:6px;border-radius:3px;background:var(--track)}
+.lad.dn i{background:var(--o)}
+.lad span{font-size:13px;font-weight:600;color:var(--lt);display:flex;gap:5px;white-space:nowrap}
+.lad.dn span{color:var(--ink)}
+.lad span em{font-style:normal;color:var(--lt);font-weight:600}
+.it{display:flex;align-items:center;height:36px;font-size:15px}
+.it+.it{box-shadow:inset 0 1px 0 var(--line)}
+.it.new{color:var(--pk)}
+.opt{height:34px;padding:0 14px;border-radius:17px;background:var(--card);font-size:14px;font-weight:700;display:inline-flex;align-items:center}
+<!--/css-->
+<div class="abs" style="left:0;top:0;width:390px;height:196px;border-radius:0 0 32px 32px;overflow:hidden;background:var(--fill)">
+  <img class="cover" src="%IMG:salmon%" alt="Salmon power bowl" style="object-position:center 42%">
+  <span class="abs" style="left:0;right:0;top:0;height:120px;background:linear-gradient(rgba(14,13,18,.45),rgba(14,13,18,0))"></span>
+</div>
+%SBW%
+<div class="top">%BACKD:Eat.dc.html%<a class="ib d" href="Coach.dc.html" aria-label="Ask Div about this meal">%I:more:20%</a></div>
+
+<div class="abs col" style="left:24px;right:24px;top:214px;gap:1px">
+  <span style="font-size:22px;font-weight:800;letter-spacing:-.02em">Salmon power bowl</span>
+  <span class="mut" style="font-size:14px">Lunch · 1:12 PM</span>
+</div>
+
+<div class="abs" style="left:24px;right:24px;top:278px">
+  <div class="row" style="justify-content:space-between;align-items:flex-end">
+    <span class="n" style="font-size:48px;line-height:50px;font-weight:800;letter-spacing:-.04em">{{kcal}}<span class="mut" style="font-size:16px;font-weight:600;letter-spacing:0"> kcal</span></span>
+    <span class="n" style="height:30px;padding:0 12px;border-radius:15px;background:var(--peach);color:var(--pk);font-size:14px;font-weight:700;display:inline-flex;align-items:center;margin-bottom:6px">± {{pct}}</span>
+  </div>
+  <div style="position:relative;height:8px;border-radius:4px;background:var(--track);margin-top:14px">
+    <i style="position:absolute;top:0;height:8px;border-radius:4px;background:var(--o2);opacity:.55;left:{{barL}};width:{{barW}}"></i>
+    <i style="position:absolute;top:-4px;width:4px;height:16px;border-radius:2px;background:var(--o);left:{{mk}}"></i>
+  </div>
+  <div class="mut n" style="font-size:13px;font-weight:600;margin-top:7px">Likely {{lo}} to {{hi}} kcal</div>
+</div>
+
+<div class="abs row" style="left:24px;right:24px;top:392px;gap:8px">
+  <sc-for list="{{steps}}" as="st" hint-placeholder-count="3">
+    <span class="{{st.cls}}"><i></i><span>{{st.label}}<em>± {{st.pct}}</em></span></span>
+  </sc-for>
+</div>
+
+<sc-if value="{{asking}}" hint-placeholder-val="{{ true }}">
+<div class="abs an" style="left:24px;right:24px;top:444px">
+  %DIV:36%
+  <div class="bd">
+    <b>Was there dressing?</b>
+    <p>It looks glossy, and dressing is the biggest unknown in a bowl like this.</p>
+    <div class="acts">
+      <button type="button" class="opt" onClick="{{pickNone}}">None</button>
+      <button type="button" class="opt" onClick="{{pickLittle}}">A little</button>
+      <button type="button" class="opt" onClick="{{pickLots}}">A lot</button>
+    </div>
+  </div>
+</div>
+</sc-if>
+<sc-if value="{{answered}}" hint-placeholder-val="{{ false }}">
+<div class="abs an" style="left:24px;right:24px;top:444px">
+  %DIV:36:proud%
+  <div class="bd">
+    <b class="n">Updated to {{kcal}} <span class="was" style="margin-left:4px">640</span></b>
+    <p>{{why}}</p>
+    <div class="acts"><button type="button" class="pb w" onClick="{{undo}}">%I:undo:15% Undo</button><span class="pb w">%I:scale:15% Weigh it for ± 4%</span></div>
+  </div>
+</div>
+</sc-if>
+
+<div class="abs col" style="left:24px;right:24px;top:590px">
+  <sc-for list="{{items}}" as="it" hint-placeholder-count="4">
+    <div class="{{it.cls}}"><span style="flex:1;font-weight:600">{{it.name}}</span><span class="mut n" style="width:70px;text-align:right">{{it.g}}</span><span class="n" style="width:52px;text-align:right;font-weight:700">{{it.k}}</span></div>
+  </sc-for>
+</div>
+
+<a class="abs btn" href="Eat.dc.html" style="left:24px;right:24px;width:auto;bottom:34px">Log {{kcal}} kcal</a>
+%HB%
+<!--script-->
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { ans: null };
+  }
+  renderVals() {
+    const base = [['Seared salmon', '130 g', 270], ['Edamame, corn', '110 g', 150], ['Eggs, vegetables', '200 g', 120]];
+    const A = {
+      none: { k: 560, d: null, why: 'No dressing, so I took out the 80 kcal I had guessed for it.' },
+      little: { k: 625, d: ['Sesame dressing', '1 tbsp', 85], why: 'About a tablespoon of sesame dressing. It is in the breakdown now.' },
+      lots: { k: 735, d: ['Sesame dressing', '3 tbsp', 195], why: 'About 3 tablespoons of sesame dressing. It is in the breakdown now.' },
+    };
+    const a = this.state.ans ? A[this.state.ans] : null;
+    const k = a ? a.k : 640;
+    const p = a ? 9 : 18;
+    const lo = Math.round(k * (1 - p / 100) / 5) * 5;
+    const hi = Math.round(k * (1 + p / 100) / 5) * 5;
+    const sc = (v) => ((v - 400) / 500 * 100).toFixed(1) + '%';
+    let items = base.map((r) => ({ name: r[0], g: r[1], k: r[2], cls: 'it' }));
+    if (!a) items.push({ name: 'Dressing (guess)', g: '?', k: 100, cls: 'it' });
+    else if (a.d) items.push({ name: a.d[0], g: a.d[1], k: a.d[2], cls: 'it new' });
+    const names = [['Photo', 18], ['Your answer', 9], ['Weighed', 4]];
+    const done = a ? 2 : 1;
+    return {
+      kcal: k.toLocaleString('en-US'), pct: p + '%', lo, hi,
+      barL: sc(lo), barW: ((hi - lo) / 500 * 100).toFixed(1) + '%', mk: 'calc(' + sc(k) + ' - 2px)',
+      asking: !a, answered: !!a, why: a ? a.why : '',
+      items,
+      steps: names.map((n, i) => ({ label: n[0], pct: n[1] + '%', cls: 'lad' + (i < done ? ' dn' : '') })),
+      pickNone: () => this.setState({ ans: 'none' }),
+      pickLittle: () => this.setState({ ans: 'little' }),
+      pickLots: () => this.setState({ ans: 'lots' }),
+      undo: () => this.setState({ ans: null }),
+    };
+  }
+}

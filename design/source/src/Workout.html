@@ -1,0 +1,93 @@
+<!--title: Live session-->
+<!--css-->
+.g{display:grid;grid-template-columns:28px 1fr 1fr 60px 50px 36px;align-items:center;column-gap:8px;padding:0 10px}
+.th{height:28px;font-size:13px;font-weight:600;color:var(--lt)}
+.tr{height:52px;border-radius:16px;font-size:15.5px}
+.tr.on{background:var(--fill)}
+.tr .s{font-weight:700}
+.tr .p{color:var(--lt)}
+.tr .t{color:var(--mut)}
+.in{height:38px;border-radius:12px;background:var(--fill);display:grid;place-items:center;font-weight:700}
+.tr.on .in{background:var(--card)}
+.ck{width:34px;height:34px;border-radius:12px;background:var(--track);display:grid;place-items:center;color:transparent}
+.tr.dn .ck{background:var(--o);color:#FFFFFF}
+.tr.on .ck{background:var(--card);color:var(--ghost)}
+.tc{display:inline-flex;white-space:nowrap;align-items:center;height:28px;padding:0 7px;margin-left:-7px;border-radius:9px;background:var(--peach);color:var(--pk);font-weight:700}
+.miss{color:var(--o)}
+<!--/css-->
+%SB%
+<div class="top">
+  <a class="ib" href="Home.dc.html" aria-label="Minimize">%I:chevd:22::2.2%</a>
+  <div class="col" style="align-items:center"><span style="font-size:17px;font-weight:800">Push A</span><span class="mut n" style="font-size:14px">32:14</span></div>
+  <a href="Done.dc.html" class="pb p" style="height:44px;border-radius:22px;padding:0 18px;font-size:15px">Finish</a>
+</div>
+
+<div class="abs row" style="left:24px;right:24px;top:124px;gap:12px">
+  <span class="row" style="flex:1;gap:4px"><span class="bar" style="flex:1;height:6px"><i style="width:60%"></i></span><span class="bar" style="flex:1;height:6px"><i style="width:0"></i></span><span class="bar" style="flex:1;height:6px"><i style="width:0"></i></span><span class="bar" style="flex:1;height:6px"><i style="width:0"></i></span><span class="bar" style="flex:1;height:6px"><i style="width:0"></i></span><span class="bar" style="flex:1;height:6px"><i style="width:0"></i></span></span>
+  <span class="mut n" style="font-size:13.5px;font-weight:600">3 of 17 sets</span>
+</div>
+
+<div class="abs row" style="left:24px;right:24px;top:156px;justify-content:space-between;align-items:flex-start">
+  <div class="col" style="gap:2px"><span style="font-size:13px;font-weight:700;color:var(--o)">Exercise 1 of 6</span><h2 class="h2" style="font-size:28px;line-height:32px">Bench press</h2><span class="mut" style="font-size:14.5px">Chest, triceps · rest 2:30</span></div>
+  <a href="Library.dc.html" class="pb f" style="height:36px;margin-top:20px">%I:swap:16% Swap</a>
+</div>
+
+<div class="abs col" style="left:14px;right:14px;top:252px;gap:4px">
+  <div class="g th"><span>Set</span><span>Previous</span><span>Target</span><span style="text-align:center">kg</span><span style="text-align:center">Reps</span><span></span></div>
+  <div class="g tr dn n"><span class="s">1</span><span class="p">80 × 8</span><span class="t">82.5 × 8</span><span class="in">82.5</span><span class="in">8</span><span class="ck">%I:check:16::3%</span></div>
+  <div class="g tr dn n"><span class="s">2</span><span class="p">80 × 8</span><span class="t">82.5 × 8</span><span class="in">82.5</span><span class="in miss">6</span><span class="ck">%I:check:16::3%</span></div>
+  <div class="g tr on n"><span class="s">3</span><span class="p">80 × 8</span>
+    <sc-if value="{{changed}}" hint-placeholder-val="{{ true }}"><span><span class="tc">82.5 × 6</span></span></sc-if>
+    <sc-if value="{{kept}}" hint-placeholder-val="{{ false }}"><span class="t">82.5 × 8</span></sc-if>
+    <span class="in">82.5</span><span class="in" style="color:var(--ghost)">{{reps}}</span><span class="ck">%I:check:16::3%</span></div>
+</div>
+
+<sc-if value="{{changed}}" hint-placeholder-val="{{ true }}">
+<div class="abs an" style="left:24px;right:24px;top:462px">
+  %DIV:36%
+  <div class="bd">
+    <b>I lowered set 3 to 6 reps</b>
+    <p>You got 6 on set 2. Matching it keeps your form clean and still counts as a hard set.</p>
+    <div class="acts"><button type="button" class="pb w" onClick="{{undo}}">%I:undo:15% Keep 8 reps</button></div>
+  </div>
+</div>
+</sc-if>
+<sc-if value="{{kept}}" hint-placeholder-val="{{ false }}">
+<div class="abs an" style="left:24px;right:24px;top:462px;background:var(--fill);align-items:center">
+  %DIV:36:side%
+  <div class="bd"><b>Back to 8. Your call.</b><p style="color:var(--mut)">If set 3 stalls early, stop at 6.</p></div>
+  <button type="button" class="pb w" onClick="{{redo}}">Use 6</button>
+</div>
+</sc-if>
+
+<div class="abs" style="left:24px;right:24px;top:620px">
+  <span class="lab">Up next</span>
+  <a class="li" href="Exercise.dc.html" style="min-height:56px"><span class="col" style="flex:1"><span class="row" style="font-weight:700">Landmine press%DMARK:16%</span><span class="mut" style="font-size:14px">Swapped in for overhead press · 3 × 10</span></span><span class="lt">%I:chev:18%</span></a>
+</div>
+
+<div class="abs" style="left:16px;right:16px;bottom:30px;height:72px;border-radius:24px;background:var(--rest);color:#FFFFFF;overflow:hidden">
+  <i class="abs" style="left:0;top:0;height:4px;width:63%;background:#8E72FF"></i>
+  <div class="abs row" style="inset:0;padding:0 10px 0 22px;gap:12px">
+    <span class="col" style="flex:1"><span style="font-size:13px;color:#A39BB0">Rest</span><span class="n" style="font-size:24px;font-weight:800;line-height:26px">1:34</span></span>
+    <span class="pb" style="height:48px;border-radius:16px;padding:0 18px;background:var(--rest2)">+15s</span>
+    <span class="pb" style="height:48px;border-radius:16px;padding:0 20px;background:#FFFFFF;color:#1D1B22">Skip</span>
+  </div>
+</div>
+%HB%
+<!--script-->
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { kept: false };
+  }
+  renderVals() {
+    const kept = this.state.kept;
+    return {
+      changed: !kept,
+      kept,
+      reps: kept ? 8 : 6,
+      undo: () => this.setState({ kept: true }),
+      redo: () => this.setState({ kept: false }),
+    };
+  }
+}

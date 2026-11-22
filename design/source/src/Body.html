@@ -1,0 +1,44 @@
+<!--title: Muscle map-->
+<!--css-->
+.lg{display:flex;align-items:center;gap:3px}
+.lg i{width:14px;height:8px;border-radius:2px}
+.sr{display:grid;grid-template-columns:96px 1fr 44px;align-items:center;height:34px;column-gap:12px;font-size:15px}
+.sr .tk{position:relative;height:8px;border-radius:4px;background:var(--track)}
+.sr .tk b{position:absolute;left:0;top:0;height:8px;border-radius:4px;background:var(--o)}
+.sr .tk u{position:absolute;top:-4px;width:2px;height:16px;border-radius:1px;background:var(--ink);opacity:.35}
+.sr .v{text-align:right;font-weight:700}
+<!--/css-->
+%SB%
+<div class="abs row" style="left:24px;right:24px;top:62px;justify-content:space-between;align-items:flex-end">
+  <div class="col" style="gap:2px"><span class="lab">This week · Nov 16 to 21</span><h1 class="h1">Body</h1></div>
+  <div class="row" style="gap:10px"><a class="ib" href="Scan.dc.html" aria-label="Body scan">%I:scan:20%</a><a class="ib" href="Progress.dc.html" aria-label="Progress">%I:trend:20%</a></div>
+</div>
+
+<div class="abs" style="left:24px;right:24px;top:138px;height:270px;border-radius:32px;background:var(--fill)">
+  <div class="abs" style="left:40px;top:16px">%FIGF:bf:92:238:234211131:Front muscles by sets this week. Chest worked most%</div>
+  <div class="abs" style="right:40px;top:16px">%FIGB:bb:92:238:3a4312321:Back muscles by sets this week. Rear delts lagging%</div>
+  <div class="abs row" style="left:18px;right:18px;bottom:14px;justify-content:space-between;font-size:12.5px;font-weight:600;color:var(--mut)">
+    <span class="row" style="gap:7px">Fewer<span class="lg"><i style="background:var(--f1)"></i><i style="background:var(--f2)"></i><i style="background:var(--f3)"></i><i style="background:var(--f4)"></i><i style="background:var(--f5)"></i></span>More sets</span>
+    <span class="row" style="gap:6px"><span class="lg"><i style="background:var(--fa)"></i></span>Lagging</span>
+  </div>
+</div>
+
+<div class="abs an" style="left:24px;right:24px;top:422px">
+  %DIV:36%
+  <div class="bd">
+    <b>Rear delts only got 2 sets</b>
+    <p>All that pressing needs balance. I added 3 sets of face pulls to Pull B on Monday.</p>
+    <div class="acts"><span class="pb w">%I:undo:15% Undo</span><a class="pb w" href="Train.dc.html">See Pull B</a></div>
+  </div>
+</div>
+
+<div class="abs" style="left:24px;right:24px;top:566px">
+  <div class="sec"><h3>Sets this week</h3><span>Line is your target</span></div>
+  <div style="margin-top:8px">
+    <div class="sr n"><span>Chest</span><span class="tk"><b style="width:82%"></b><u style="left:70%"></u></span><span class="v">14</span></div>
+    <div class="sr n"><span>Back</span><span class="tk"><b style="width:76%"></b><u style="left:70%"></u></span><span class="v">13</span></div>
+    <div class="sr n"><span>Legs</span><span class="tk"><b style="width:64%"></b><u style="left:70%"></u></span><span class="v">11</span></div>
+    <div class="sr n"><span>Rear delts</span><span class="tk"><b style="width:12%;background:var(--fa)"></b><u style="left:47%"></u></span><span class="v">2</span></div>
+  </div>
+</div>
+%NAV:user%

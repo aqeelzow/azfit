@@ -1,0 +1,69 @@
+<!--title: What Div knows-->
+<!--css-->
+.mm{min-height:60px}
+.mm b{font-size:15.5px;font-weight:700;white-space:nowrap}
+.mm small{font-size:13.5px;color:var(--mut);white-space:nowrap}
+.sw{width:50px;height:30px;border-radius:10px;background:var(--track);padding:3px;flex-shrink:0;display:flex}
+.sw i{width:24px;height:24px;border-radius:7px;background:#FFFFFF;box-shadow:0 1px 3px rgba(20,10,40,.18);transition:transform .15s}
+.sw.on{background:var(--o)}
+.sw.on i{transform:translateX(20px)}
+.lk{width:50px;height:30px;border-radius:10px;background:var(--fill);color:var(--lt);display:grid;place-items:center;flex-shrink:0}
+<!--/css-->
+%SB%
+<div class="top">%BACK:Coach.dc.html%<span class="ttl">Div</span><a class="ib" href="Coach.dc.html" aria-label="Search memory">%I:search:20%</a></div>
+
+<div class="abs row" style="left:24px;right:24px;top:122px;gap:14px">
+  %DIV:56%
+  <span class="col" style="gap:2px"><span class="h2">What Div knows</span><span class="mut" style="font-size:14px">Opus on your MacBook · 214 memories</span></span>
+</div>
+
+<div class="abs" style="left:24px;right:24px;top:206px">
+  <span class="lab">Div can do without asking</span>
+  <div class="col" style="margin-top:2px">
+    <sc-for list="{{tiers}}" as="t" hint-placeholder-count="3">
+      <div class="li mm">
+        <span class="col" style="flex:1;min-width:0;gap:1px"><b>{{t.t}}</b><small>{{t.s}}</small></span>
+        <button type="button" class="{{t.cls}}" role="switch" aria-checked="{{t.on}}" aria-label="{{t.t}}" onClick="{{t.flip}}"><i></i></button>
+      </div>
+    </sc-for>
+    <div class="li mm">
+      <span class="col" style="flex:1;min-width:0;gap:1px"><b>Fill in food you didn't log</b><small>Never. Div asks you instead.</small></span>
+      <span class="lk" title="Always off">%I:lock:16%</span>
+    </div>
+  </div>
+</div>
+
+<div class="abs" style="left:24px;right:24px;top:494px">
+  <div class="sec"><span style="color:var(--mut)">Remembers</span><a href="Coach.dc.html">Add</a></div>
+  <div class="col" style="margin-top:2px">
+    <div class="li mm"><span class="col" style="flex:1;min-width:0;gap:1px"><b>Left shoulder tight overhead</b><small>From chat · Tue, Nov 17</small></span><span class="lt">%I:edit:18%</span></div>
+    <div class="li mm"><span class="col" style="flex:1;min-width:0;gap:1px"><b>Right knee: no deep lunges</b><small>From onboarding</small></span><span class="lt">%I:edit:18%</span></div>
+    <div class="li mm"><span class="col" style="flex:1;min-width:0;gap:1px"><b>Trains mornings, about 50 min</b><small>Learned from 6 weeks of sessions</small></span><span class="lt">%I:edit:18%</span></div>
+    <div class="li mm"><span class="col" style="flex:1;min-width:0;gap:1px"><b>Short answers, no pep talks</b><small>You said so · Oct 3</small></span><span class="lt">%I:edit:18%</span></div>
+  </div>
+</div>
+%HB%
+<!--script-->
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { on: [true, true, true] };
+  }
+  renderVals() {
+    const rows = [
+      ['Reps, weight and rest', 'During a workout, shown on the set'],
+      ['Swap exercises, move sessions', 'Logged, undo for 7 days'],
+      ['Calorie target, up to 200 kcal', 'Bigger changes ask you first'],
+    ];
+    const on = this.state.on;
+    return {
+      tiers: rows.map((r, i) => ({
+        t: r[0],
+        s: on[i] ? r[1] : 'Div suggests, you decide',
+        on: on[i] ? 'true' : 'false',
+        cls: 'sw' + (on[i] ? ' on' : ''),
+        flip: () => { const o = on.slice(); o[i] = !o[i]; this.setState({ on: o }); },
+      })),
+    };
+  }
+}
