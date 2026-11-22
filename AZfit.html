@@ -1,0 +1,589 @@
+<title>AZfit</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@300;400;500&display=swap">
+<style>
+/* Layout: a long single column of "objects" resting on a stone ground; data figures lead, prose follows. */
+:root{
+  --ground:#E8E6E2; --object:#F6F5F2; --object-2:#EFEDE9; --ink:#161514; --ink-2:#5E5A55; --ink-3:#8C8780;
+  --rule:#DCD9D3; --night:#161514; --night-2:#211F1D; --night-ink:#EEEBE6; --night-ink-2:#9A958E;
+  --ember:#E4561F; --ember-ink:#B8410F; --glacier:#5F9DB3;
+  --h0:#2B2927; --h1:#4A2F24; --h2:#7A3B22; --h3:#B54A1F; --h4:#E4561F; --h5:#FF8A55;
+  --sans:"Geist",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"Geist Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --r-obj:30px; --r-inner:18px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#0E0D0C; --object:#181715; --object-2:#201E1C; --ink:#EEEBE6; --ink-2:#A39E97; --ink-3:#77726B;
+  --rule:#2A2825; --night:#1E1C1A; --night-2:#272522; --ember-ink:#FF7A45; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --ground:#0E0D0C; --object:#181715; --object-2:#201E1C; --ink:#EEEBE6; --ink-2:#A39E97; --ink-3:#77726B;
+  --rule:#2A2825; --night:#1E1C1A; --night-2:#272522; --ember-ink:#FF7A45; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 96px;display:flex;flex-direction:column;gap:20px}
+h1,h2,h3{margin:0;font-weight:500;letter-spacing:-.03em;text-wrap:balance}
+p{margin:0}
+.label{font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:300;letter-spacing:-.04em}
+.obj{background:var(--object);border-radius:var(--r-obj);padding:clamp(22px,4vw,44px)}
+.night{background:var(--night);color:var(--night-ink)}
+.night .label{color:var(--night-ink-2)}
+.prose{max-width:62ch;color:var(--ink-2)}
+.prose strong{color:var(--ink);font-weight:600}
+.grid{display:grid;gap:20px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:820px){.g2,.g3{grid-template-columns:1fr}}
+
+/* top bar */
+.top{display:flex;justify-content:space-between;align-items:center;padding:4px 6px 8px}
+.mark{display:flex;align-items:center;gap:10px;font-weight:600;letter-spacing:-.02em;font-size:17px}
+.mark i{width:22px;height:22px;border-radius:7px;background:var(--ink);display:grid;place-items:center}
+.mark i::after{content:"";width:8px;height:8px;border-radius:50%;background:var(--ember)}
+
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:28px;align-items:center}
+@media (max-width:820px){.hero{grid-template-columns:1fr}}
+.hero h1{font-size:clamp(38px,6.2vw,68px);line-height:1.02;font-weight:500;letter-spacing:-.045em}
+.hero h1 em{font-style:normal;color:var(--ink-3)}
+.hero .lede{margin-top:22px;font-size:18px;color:var(--ink-2);max-width:48ch}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:26px}
+.chip{font-family:var(--mono);font-size:12px;padding:7px 12px;border-radius:999px;background:var(--object-2);color:var(--ink-2)}
+.figure{background:var(--night);border-radius:var(--r-obj);padding:22px 22px 18px;color:var(--night-ink)}
+.figure .bodies{display:flex;gap:6px;justify-content:center}
+.figure svg{width:46%;height:auto;max-width:100%}
+.figure .row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.scale{display:flex;align-items:center;gap:10px;margin-top:12px;font-family:var(--mono);font-size:11px;color:var(--night-ink-2)}
+.scale span.s{display:flex;gap:3px}
+.scale span.s b{width:18px;height:8px;border-radius:4px;display:block}
+
+/* elevator */
+.pitch{font-size:clamp(22px,3vw,30px);line-height:1.3;letter-spacing:-.025em;font-weight:400;max-width:34ch}
+.pitch span{color:var(--ink-3)}
+
+/* loop */
+.loop{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:28px}
+@media (max-width:820px){.loop{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.step{background:var(--object-2);border-radius:var(--r-inner);padding:18px;min-width:0}
+.step .label{display:flex;justify-content:space-between}
+.step h3{font-size:19px;margin-top:22px}
+.step p{font-size:14px;color:var(--ink-2);margin-top:6px}
+
+/* section heads */
+.shead{display:flex;flex-direction:column;gap:10px;margin-bottom:26px}
+.shead h2{font-size:clamp(28px,3.6vw,40px);line-height:1.08}
+
+/* feature cards */
+.feat h3{font-size:22px;margin-bottom:8px}
+.feat p{font-size:15px;color:var(--ink-2)}
+.feat .viz{margin-top:22px}
+.kv{display:flex;flex-direction:column;margin-top:18px}
+.kv div{display:flex;justify-content:space-between;gap:16px;padding:10px 0;border-top:1px solid var(--rule);font-size:14px}
+.kv div span:first-child{color:var(--ink-2)}
+.kv div span:last-child{font-family:var(--mono);font-size:13px;text-align:right}
+
+/* volume pills */
+.vol{display:flex;flex-direction:column;gap:9px}
+.vol .r{display:grid;grid-template-columns:86px 1fr 52px;align-items:center;gap:10px;font-size:13px}
+.vol .r span:last-child{font-family:var(--mono);font-size:12px;color:var(--ink-3);text-align:right}
+.pills{display:flex;gap:3px}
+.pills b{flex:1;height:12px;border-radius:6px;background:var(--object-2)}
+.pills b.on{background:var(--ink)}
+.pills b.hot{background:var(--ember)}
+.pills b.ghost{background:transparent;box-shadow:inset 0 0 0 1.2px var(--ink-3)}
+
+/* context ladder */
+.ladder{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media (max-width:820px){.ladder{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.rung{background:var(--object-2);border-radius:var(--r-inner);padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.rung h4{margin:0;font-size:15px;font-weight:600;letter-spacing:-.01em}
+.rung p{font-size:13px;color:var(--ink-2)}
+.band{height:34px;position:relative;border-radius:8px;background:var(--object)}
+.band i{position:absolute;top:8px;bottom:8px;border-radius:5px;background:color-mix(in srgb,var(--ember) 30%,transparent)}
+.band u{position:absolute;top:4px;bottom:4px;width:2px;background:var(--ember);left:50%;margin-left:-1px;text-decoration:none}
+.rung .num{font-size:22px}
+.rung .num small{font-size:12px;color:var(--ink-3);letter-spacing:0}
+
+/* calibration chart */
+.chart svg{width:100%;height:auto;display:block}
+.chart text{font-family:var(--mono);font-size:10px;fill:var(--ink-3)}
+.legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--ink-2)}
+.legend span{display:flex;align-items:center;gap:7px}
+.legend i{width:14px;height:3px;border-radius:2px;display:block}
+
+/* scan */
+.angles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.angle{aspect-ratio:3/4;max-width:100%;background:var(--night-2);border-radius:16px;display:grid;place-items:center;position:relative;overflow:hidden}
+.angle svg{width:60%;height:auto}
+.angle .label{position:absolute;left:10px;bottom:8px;font-size:10px}
+
+/* agent plan */
+.plan{background:var(--night-2);border-radius:var(--r-inner);padding:8px}
+.pi{display:grid;grid-template-columns:24px 1fr auto;gap:12px;align-items:start;padding:12px 10px;border-radius:12px}
+.pi + .pi{border-top:1px solid #2E2B28}
+.pi .ic{width:24px;height:24px;border-radius:8px;background:#34302C;display:grid;place-items:center;font-family:var(--mono);font-size:11px;color:var(--night-ink-2)}
+.pi h4{margin:0;font-size:14px;font-weight:500}
+.pi p{font-size:12.5px;color:var(--night-ink-2);margin-top:3px}
+.pi code{font-family:var(--mono);font-size:11px;background:#34302C;padding:2px 6px;border-radius:5px;color:var(--night-ink-2)}
+.st{font-family:var(--mono);font-size:10.5px;padding:4px 8px;border-radius:999px;white-space:nowrap}
+.st.auto{background:#2C3A3F;color:#A9D3E1}
+.st.ask{background:#47291C;color:#FFB38F}
+.plan .foot{display:flex;justify-content:space-between;align-items:center;padding:10px 10px 6px;font-size:12px;color:var(--night-ink-2)}
+.btn{font-family:var(--sans);font-size:13px;font-weight:500;border:0;border-radius:999px;padding:8px 14px;background:var(--night-ink);color:var(--night)}
+
+/* tools table */
+.tools{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:820px){.tools{grid-template-columns:1fr}}
+.tg{background:var(--object-2);border-radius:var(--r-inner);padding:16px;min-width:0}
+.tg ul{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
+.tg li{font-family:var(--mono);font-size:12.5px;color:var(--ink);overflow-wrap:anywhere}
+.tg li span{color:var(--ink-3)}
+
+/* architecture */
+.arch{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:10px;align-items:stretch}
+@media (max-width:820px){.arch{grid-template-columns:1fr}.arch .wire{transform:rotate(90deg);justify-self:center}}
+.node{background:var(--night-2);border-radius:var(--r-inner);padding:18px;min-width:0}
+.node h4{margin:10px 0 6px;font-size:17px;font-weight:500}
+.node p{font-size:13px;color:var(--night-ink-2)}
+.node ul{margin:10px 0 0;padding-left:16px;font-size:12.5px;color:var(--night-ink-2)}
+.wire{align-self:center;font-family:var(--mono);font-size:11px;color:var(--night-ink-2);text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px}
+.wire::before{content:"";width:34px;height:2px;background:var(--ember);border-radius:2px}
+
+/* walkthrough */
+.walk{display:flex;flex-direction:column}
+.wk{display:grid;grid-template-columns:110px minmax(0,1fr);gap:20px;padding:20px 0;border-top:1px solid var(--rule)}
+@media (max-width:600px){.wk{grid-template-columns:1fr;gap:6px}}
+.wk h3{font-size:18px;margin-bottom:6px}
+.wk p{font-size:15px;color:var(--ink-2);max-width:66ch}
+
+/* opinions */
+.ops{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 36px}
+@media (max-width:820px){.ops{grid-template-columns:1fr}}
+.op{padding:16px 0;border-top:1px solid var(--rule)}
+.op h4{margin:0 0 4px;font-size:15.5px;font-weight:600}
+.op p{font-size:14px;color:var(--ink-2)}
+/* device tiers */
+.tiers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:20px}
+@media (max-width:820px){.tiers{grid-template-columns:1fr}}
+.tier{background:var(--night-2);border-radius:var(--r-inner);padding:18px;min-width:0}
+.tier h4{margin:10px 0 10px;font-size:17px;font-weight:500}
+.tier ul{margin:0;padding-left:16px;font-size:13px;color:var(--night-ink-2);display:flex;flex-direction:column;gap:8px}
+.tier ul strong{color:var(--night-ink);font-weight:500}
+
+/* decision rules */
+.rules{display:flex;flex-direction:column;margin-top:18px}
+.rules div{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;padding:12px 0;border-top:1px solid var(--rule);font-size:14px;color:var(--ink-2)}
+.rules div b{font-family:var(--mono);font-weight:400;font-size:12px;color:var(--ink-3);padding-top:2px}
+.rules div strong{color:var(--ink);font-weight:600}
+.read{display:flex;flex-direction:column;margin-top:18px}
+.read div{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:14px;padding:11px 0;border-top:1px solid var(--rule);font-size:13.5px;color:var(--ink-2)}
+.read div span:first-child{font-family:var(--mono);font-size:12px;color:var(--ink)}
+.read div.hd span{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.note{margin-top:16px;padding:14px 16px;border-radius:var(--r-inner);background:var(--object-2);font-size:13.5px;color:var(--ink-2)}
+.note strong{color:var(--ink);font-weight:600}
+
+footer{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:10px 6px;color:var(--ink-3);font-size:13px}
+@media (prefers-reduced-motion:no-preference){.figure svg path{transition:fill .6s}}
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div class="mark"><i></i>AZfit</div>
+    <span class="label">Product brief · v0.2 · Nov 2026</span>
+  </div>
+
+  <!-- HERO -->
+  <section class="obj hero">
+    <div>
+      <span class="label">Training, food and body, run by your own Claude</span>
+      <h1 style="margin-top:18px">A coach that reads every set you log. <em>And it runs on your Mac.</em></h1>
+      <p class="lede">AZfit logs training, food and body measurements as structured data. A Claude agent running on your own machine reads all of it and can change your plan: sets, reps, exercises, calories.</p>
+      <div class="chips">
+        <span class="chip">bring your own Claude</span>
+        <span class="chip">per-muscle fatigue model</span>
+        <span class="chip">calories as a benchmark</span>
+        <span class="chip">body scan on any iPhone</span>
+        <span class="chip">Apple Health</span>
+      </div>
+    </div>
+    <div class="figure" aria-label="Muscle heat map, last 7 days">
+      <div class="row"><span class="label">Last 7 days · effective sets</span><span class="num" style="font-size:13px;color:var(--night-ink-2)">Push-heavy</span></div>
+      <div class="bodies" id="heroBodies"></div>
+      <div class="scale"><span>0</span><span class="s"><b style="background:var(--h0)"></b><b style="background:var(--h1)"></b><b style="background:var(--h2)"></b><b style="background:var(--h3)"></b><b style="background:var(--h4)"></b><b style="background:var(--h5)"></b></span><span>20+ sets</span></div>
+    </div>
+  </section>
+
+  <!-- ELEVATOR -->
+  <section class="obj">
+    <span class="label">The pitch</span>
+    <p class="pitch" style="margin-top:16px">Fitness apps record what you did. AZfit works out what you should do next. <span>Every set, meal and scan becomes data that an Opus-class agent can reason over, and it uses tools to adjust your training and diet the way a good coach would. It runs on the Claude subscription you already pay for, through a small free bridge on your Mac.</span></p>
+    <div class="loop">
+      <div class="step"><div class="label"><span>Log</span><span>01</span></div><h3>Capture fast</h3><p>Sets with reps in reserve, meals from a photo, a weigh-in, a 30-second scan.</p></div>
+      <div class="step"><div class="label"><span>Model</span><span>02</span></div><h3>Compute state</h3><p>Fatigue per muscle, e1RM trends, trend weight, and the calories it takes you to maintain, in your own logging units.</p></div>
+      <div class="step"><div class="label"><span>Reason</span><span>03</span></div><h3>Agent reviews</h3><p>After each session and every Sunday, Claude reads the state and drafts changes.</p></div>
+      <div class="step"><div class="label"><span>Adjust</span><span>04</span></div><h3>Plan updates</h3><p>Small changes apply on their own. Bigger ones wait for your tap. Then the loop repeats.</p></div>
+    </div>
+  </section>
+
+  <!-- TRAIN -->
+  <section class="obj">
+    <div class="shead">
+      <span class="label">Pillar 1 · Train</span>
+      <h2>Every exercise is tagged with the muscles it works and how much fatigue it costs.</h2>
+      <p class="prose">The exercise library ships complete, so you can build workouts by hand or ask the agent for them. Each exercise records its <strong>primary and secondary muscles with involvement weights</strong>, movement pattern, equipment, joint stress, and a fatigue cost. That tagging lets one logged set of RDLs update your hamstrings, glutes, lower back and grip at once.</p>
+    </div>
+    <div class="grid g2">
+      <div class="feat">
+        <h3>Logging that captures effort</h3>
+        <p>Weight, reps and <strong style="color:var(--ink)">reps in reserve</strong> on every set, with one-tap RPE if you prefer it. RIR is the most important input in the app: it is how the agent separates a strength drop from tiredness.</p>
+        <div class="kv">
+          <div><span>Estimated 1RM</span><span>w × (1 + (reps + RIR) / 30)</span></div>
+          <div><span>Effective set</span><span>RIR ≤ 4, weighted by involvement</span></div>
+          <div><span>Muscle fatigue</span><span>Σ sets × cost, decays per muscle</span></div>
+          <div><span>Skipped session</span><span>logged as a gap, never deleted</span></div>
+        </div>
+      </div>
+      <div class="feat">
+        <h3>Weekly volume against your landmarks</h3>
+        <p>Each muscle has a minimum effective volume and a maximum recoverable volume, which the agent learns from how you respond. The filled pills are this week's sets. Orange pills are sets past what you have been able to recover from.</p>
+        <div class="viz vol" id="vol"></div>
+        <div class="legend" style="margin-top:14px"><span><i style="background:var(--ink)"></i>done</span><span><i style="background:var(--ember)"></i>past recoverable</span><span><i style="background:transparent;box-shadow:inset 0 0 0 1.2px var(--ink-3)"></i>planned</span></div>
+      </div>
+    </div>
+    <div class="grid g3" style="margin-top:20px">
+      <div class="step" style="background:var(--object-2)"><span class="label">Recovery</span><h3 style="font-size:17px;margin-top:14px">Readiness per muscle</h3><p>Fatigue decays at a rate set for each muscle, then gets adjusted by sleep and soreness check-ins. Legs can be at 40% while arms are fresh.</p></div>
+      <div class="step"><span class="label">Detraining</span><h3 style="font-size:17px;margin-top:14px">Skips are modeled</h3><p>Missed days are logged as gaps. After about two weeks off, the next session starts lighter and builds back up over several sessions. Nobody gets lectured.</p></div>
+      <div class="step"><span class="label">Overreaching</span><h3 style="font-size:17px;margin-top:14px">Catches burnout early</h3><p>The warning sign is e1RM falling at the same RIR over two or more sessions, plus poor sleep and high soreness. The response is a deload or a volume cut.</p></div>
+    </div>
+  </section>
+
+  <!-- EAT -->
+  <section class="obj">
+    <div class="shead">
+      <span class="label">Pillar 2 · Eat</span>
+      <h2>Calories are a ruler. It only has to be the same ruler every day.</h2>
+      <p class="prose">Getting the absolute number right is close to impossible. Labels can be off by 20%, photos misjudge oil, and portions drift. That is fine. If you gain weight eating "2,000", the agent lowers your target to 1,700 and watches. <strong>Your logged number becomes accurate for you</strong> through the scale's feedback. Consistency matters more than accuracy, so AZfit puts its effort into logging the same meal the same way each time.</p>
+    </div>
+
+    <span class="label">The context ladder · more input, narrower range</span>
+    <div class="ladder" style="margin-top:14px" id="ladder"></div>
+
+    <div class="grid g2" style="margin-top:20px">
+      <div class="feat chart">
+        <h3>Calibration loop</h3>
+        <p>Trend weight is weight with day-to-day water noise smoothed out. When trend weight and logged intake disagree for two weeks, the target moves at the next Sunday review. This is an example of six weeks for someone losing fat.</p>
+        <div class="viz" id="calib"></div>
+        <div class="legend"><span><i style="background:var(--ink-3)"></i>daily weigh-in</span><span><i style="background:var(--ink)"></i>trend weight</span><span><i style="background:var(--ember)"></i>calorie target</span></div>
+      </div>
+      <div class="feat">
+        <h3>The agent notices gaps</h3>
+        <p>An Opus-class model can spot patterns a formula misses. It asks about them instead of accusing you.</p>
+        <div class="plan night" style="margin-top:18px">
+          <div class="pi"><span class="ic">?</span><div><h4>Weekend logging drops 41%</h4><p>Fri to Sun average 1,180 logged vs 1,990 on weekdays, and the scale isn't moving. Did some meals go unlogged?</p></div><span class="st ask">asks</span></div>
+          <div class="pi"><span class="ic">≈</span><div><h4>No breakfast logged for 9 days</h4><p>You logged breakfast every day before. Did you start skipping it, or stop logging it?</p></div><span class="st ask">asks</span></div>
+          <div class="pi"><span class="ic">↓</span><div><h4>Maintenance came out 240 low</h4><p>Trend weight is flat on 2,100 logged, below the 2,340 estimate. Recalibrated to your units.</p></div><span class="st auto">auto</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid g2" style="margin-top:20px">
+      <div class="feat">
+        <h3>Protein is the daily target</h3>
+        <p>Calories get tuned once a week. Protein is the number to hit every day, because it decides how much muscle you keep on a cut and build on a recomp. The target is set per kg of body weight. If body fat is high, it uses goal weight instead, so the number doesn't get inflated.</p>
+        <div class="kv">
+          <div><span>Cut</span><span>2.0 – 2.2 g/kg</span></div>
+          <div><span>Recomp</span><span>1.8 – 2.2 g/kg</span></div>
+          <div><span>Build</span><span>1.6 – 2.0 g/kg</span></div>
+          <div><span>Per meal</span><span>~0.4 g/kg · 3 to 5 meals</span></div>
+        </div>
+        <div class="note">When calories go down, protein stays and carbs and fat take the cut. If you miss protein three or more days a week, the agent suggests easy swaps from foods you already log instead of a bigger number. Onboarding asks about kidney disease. If you have it, your doctor sets the protein number and the agent won't change it.</div>
+      </div>
+      <div class="feat">
+        <h3>Only complete days count</h3>
+        <p>The calibration loop assumes your log is the whole day. A day with only lunch logged would make maintenance look hundreds of calories too low. So every day is marked <strong>complete</strong> or <strong>partial</strong>, and only complete days go into the maintenance math.</p>
+        <div class="kv">
+          <div><span>How it's marked</span><span>"Done for today" tap, or asked next morning</span></div>
+          <div><span>Suspected partial</span><span>under 60% of usual, or a regular meal missing</span></div>
+          <div><span>Partial days still count for</span><span>protein, history, favorites</span></div>
+          <div><span>Minimum for a review</span><span>10 complete days in the window</span></div>
+        </div>
+        <div class="note">The agent asks about a suspected partial day before it excludes it. It never assumes. With fewer than 10 complete days, the Sunday review holds calories and says why.</div>
+      </div>
+    </div>
+
+    <div class="shead" style="margin-top:44px;margin-bottom:6px">
+      <span class="label">When the target moves</span>
+      <h2 style="font-size:clamp(24px,3vw,32px)">Weigh in daily, decide weekly, and read the scale next to the tape and the bar.</h2>
+      <p class="prose">Daily weight swings 1 to 2 kg with water, salt, carbs and digestion, so a single weigh-in is mostly noise. A plain 7-day average is better, but one salty weekend still moves it and it lags by half a week. AZfit keeps a smoothed trend weight, where each new weigh-in counts for about 10%, and only looks at its <strong>slope over the last two to three weeks</strong>. The scale also can't tell fat from muscle or water, so before changing calories the agent checks it against your waist measurement and your strength.</p>
+    </div>
+    <div class="grid g2">
+      <div class="feat">
+        <h3>The decision rules</h3>
+        <div class="rules">
+          <div><b>1</b><span><strong>Weigh daily, decide weekly.</strong> The calorie target is only reviewed on Sunday, never because of one weigh-in.</span></div>
+          <div><b>2</b><span><strong>Read the slope.</strong> Implied maintenance = average intake on complete days − (trend change in kg × 7,700) ÷ days, over a 14 to 21 day window.</span></div>
+          <div><b>3</b><span><strong>Two weeks off target before moving.</strong> One off week is marked "watching". The exception is losing faster than 1% of body weight a week.</span></div>
+          <div><b>4</b><span><strong>Small steps.</strong> 100 to 200 per change, at most one change every two weeks, so the effect of each change can be seen.</span></div>
+          <div><b>5</b><span><strong>Flag known water events.</strong> Starting creatine, the first two weeks of a new program, travel, illness, or the menstrual cycle (compared phase to phase) extend the window instead of triggering a change.</span></div>
+        </div>
+      </div>
+      <div class="feat">
+        <h3>Reading the signals together</h3>
+        <p>Muscle grows at most around 0.25 to 1 kg a month, so a 1.5 kg jump in a week is water. Waist and e1RM settle what the scale can't.</p>
+        <div class="read">
+          <div class="hd"><span>Scale · waist · strength</span><span>Agent reads it as</span></div>
+          <div><span>flat · down · up</span><span>Recomposition. Hold calories.</span></div>
+          <div><span>up · up · flat</span><span>Surplus too big. Propose a cut.</span></div>
+          <div><span>up · flat · up</span><span>Lean gain, on target if building.</span></div>
+          <div><span>down fast · down · down</span><span>Deficit too steep. Propose more food.</span></div>
+          <div><span>up 1.5 kg in a week · flat · flat</span><span>Water. Wait a week.</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCAN -->
+  <section class="obj night">
+    <div class="shead">
+      <span class="label">Pillar 3 · Measure</span>
+      <h2>Prop the phone up, turn in place, and get a body scan.</h2>
+      <p class="prose" style="color:var(--night-ink-2)">Lean the phone against the bathroom wall and step back about two meters. Voice cues walk you through a slow turn. On Pro models the <strong style="color:var(--night-ink)">rear LiDAR</strong> captures depth from every angle, since the front TrueDepth camera can't reach that far. Other iPhones can't measure depth well enough for trustworthy numbers, so there the scan becomes a 3D progress model: you can turn it around, put two dates side by side, or slide between them to see how you've changed. Measurements and a body fat range come only from LiDAR. As with calories, the trend matters more than any single number, so it asks for the same spot, the same light, first thing in the morning.</p>
+    </div>
+    <div class="grid g2">
+      <div>
+        <div class="angles" id="angles"></div>
+        <p style="font-size:13px;color:var(--night-ink-2);margin-top:12px">It captures one continuous turn, then keeps four key frames (front, left, back, right). The full turn gives the mesh fit more data than four still photos would.</p>
+      </div>
+      <div class="kv" style="margin-top:0">
+        <div style="border-color:#2E2B28"><span style="color:var(--night-ink-2)">Waist</span><span>81.4 cm <span style="color:#A9D3E1">−1.2</span></span></div>
+        <div style="border-color:#2E2B28"><span style="color:var(--night-ink-2)">Chest</span><span>103.0 cm <span style="color:var(--night-ink-2)">+0.3</span></span></div>
+        <div style="border-color:#2E2B28"><span style="color:var(--night-ink-2)">Upper arm (L / R)</span><span>36.1 / 36.6 cm</span></div>
+        <div style="border-color:#2E2B28"><span style="color:var(--night-ink-2)">Thigh (L / R)</span><span>58.2 / 58.0 cm</span></div>
+        <div style="border-color:#2E2B28"><span style="color:var(--night-ink-2)">Body fat range (Pro only)</span><span>14 – 17 %</span></div>
+        <div style="border-color:#2E2B28"><span style="color:var(--night-ink-2)">Scan conditions</span><span>same spot · 07:12 · fasted</span></div>
+      </div>
+    </div>
+
+    <div class="shead" style="margin-top:44px;margin-bottom:0">
+      <span class="label">Every iPhone, not just Pro</span>
+      <h2 style="font-size:clamp(24px,3vw,32px)">LiDAR gives numbers. Every iPhone gives a progress model.</h2>
+      <p class="prose" style="color:var(--night-ink-2)">Only Pro and Pro Max iPhones have LiDAR. Photogrammetry works on the rest for food, because a plate holds still. It works poorly for a person turning in place, because the body shifts between frames, and a body fitted to silhouettes is too rough to report body fat or circumferences honestly. So base iPhones show change visually and leave the numbers to a tape measure, a 30-second waist check the agent asks for weekly. The same spot, light and time of day matter more than the device.</p>
+    </div>
+    <div class="tiers">
+      <div class="tier"><span class="label">Pro · Pro Max</span><h4>Measured depth</h4><ul>
+        <li><strong>Body:</strong> LiDAR depth at about 2 m from every angle of the turn, fused into one point cloud and fitted to a body model. Tightest circumference ranges.</li>
+        <li><strong>Food:</strong> one shot gives a real-scale depth map of the plate. Volume is the space between the food's surface and the table.</li>
+      </ul></div>
+      <div class="tier"><span class="label">Base iPhones</span><h4>Progress model</h4><ul>
+        <li><strong>Body:</strong> Apple's Vision framework finds your silhouette and pose in each frame of the turn, and a body model is fitted to them for scale and shape. You get a 3D progress model and four matched photos per date. No body fat number. Waist comes from the tape.</li>
+        <li><strong>Food:</strong> a 3-second sweep around the plate. ARKit tracks the camera at real-world scale using the motion sensors and finds the table, frames are triangulated into a height map above the table, and volume comes from that. A single photo falls back to your plate's diameter, measured once, as the ruler.</li>
+      </ul></div>
+    </div>
+    <p style="font-size:13px;color:var(--night-ink-2);margin-top:12px;max-width:72ch">Volume is not calories. Density, oil and hidden sauce still come from the description, so the kitchen scale stays the most accurate rung on the ladder on every phone. Scans and 3D models stay on your devices. The agent only ever sees the numbers, never the images.</p>
+  </section>
+
+  <!-- HEALTH -->
+  <section class="obj">
+    <div class="shead">
+      <span class="label">Pillar 4 · Apple Health</span>
+      <h2>Apple Health fills in the hours you aren't logging.</h2>
+      <p class="prose">Most of what decides your recovery and your maintenance calories happens outside the gym: steps, sleep, other sports. AZfit reads these from Apple Health with background delivery, so new samples arrive without opening the app, and syncs them to the bridge. The agent sees them as <strong>context for decisions</strong>, never as a second calorie budget.</p>
+    </div>
+    <div class="grid g2">
+      <div class="feat">
+        <h3>What it reads, and what it does with it</h3>
+        <div class="read">
+          <div class="hd"><span>From Health</span><span>Used for</span></div>
+          <div><span>Steps · active energy</span><span>Explains maintenance shifts. If steps drop 4,000 a day, the agent expects maintenance to fall before the scale shows it.</span></div>
+          <div><span>Sleep duration · stages</span><span>Readiness. Two short nights in a row lower the day's load or swap in a lighter session.</span></div>
+          <div><span>Resting HR · HRV</span><span>Compared with your own 30-day baseline. Lower HRV with higher resting HR flags fatigue or illness.</span></div>
+          <div><span>Workouts from Watch and other apps</span><span>A 10 km run or a football match counts as leg fatigue, so leg day plans around it.</span></div>
+          <div><span>Weight · body fat (smart scale)</span><span>Daily weigh-ins with no typing, straight into trend weight.</span></div>
+          <div><span>Cycle tracking</span><span>Weigh-ins are compared at the same phase, so cycle water doesn't trigger a calorie change.</span></div>
+        </div>
+      </div>
+      <div class="feat">
+        <h3>What it writes back</h3>
+        <div class="kv">
+          <div><span>Strength sessions</span><span>workouts with duration and energy</span></div>
+          <div><span>Food log</span><span>dietary energy, protein, carbs, fat</span></div>
+          <div><span>Weigh-ins</span><span>body mass</span></div>
+          <div><span>Scans and tape</span><span>waist circumference · body fat % (Pro scans)</span></div>
+        </div>
+        <div class="note"><strong>Exercise calories are never added back.</strong> Watch estimates for active energy are often far off, and the calibration loop already measures what you actually burn. Activity only explains why maintenance moved.</div>
+        <div class="note" style="margin-top:10px"><strong>Consent is separate.</strong> Each Health category can be switched on or off. Health data only reaches Claude when the agent asks for it through a tool, and only after you agree on its own screen, because Apple requires explicit consent before health data goes to any third party, your own Claude account included.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AGENT -->
+  <section class="obj">
+    <div class="shead">
+      <span class="label">The coach</span>
+      <h2>The agent has every tool a human coach would, with limits on what it changes alone.</h2>
+      <p class="prose">Claude reads your logs through structured tools and makes changes through other tools. Routine progression, like +2.5 kg after you hit the top of a rep range, applies automatically. Structural changes go to you as a plan to approve: swapping an exercise, adding volume to a muscle, changing calories by 150 or more, scheduling a deload. Every change records its reason, so you can always ask why.</p>
+    </div>
+    <div class="grid g2">
+      <div class="plan night">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 10px 6px"><span style="font-size:14px;font-weight:500">Sunday review · week 7</span><span class="label">4 changes</span></div>
+        <div class="pi"><span class="ic">↑</span><div><h4>Incline DB press 30 → 32.5 kg</h4><p>Hit 3×10 at RIR 2 two weeks running.</p></div><span class="st auto">applied</span></div>
+        <div class="pi"><span class="ic">⇄</span><div><h4>Swap barbell row for chest-supported row</h4><p>Lower back fatigue is high on deadlift days. Same lats, less spinal load. <code>swap_exercise</code></p></div><span class="st ask">approve</span></div>
+        <div class="pi"><span class="ic">+</span><div><h4>Rear delts +2 sets / week</h4><p>Volume is under your effective minimum and front-to-rear delt work is 3:1.</p></div><span class="st ask">approve</span></div>
+        <div class="pi"><span class="ic">−</span><div><h4>Calories 2,350 → 2,200</h4><p>Trend weight is +0.4 kg/wk against a +0.2 target.</p></div><span class="st ask">approve</span></div>
+        <div class="foot"><span>1 applied · 3 waiting</span><button class="btn" type="button">Review</button></div>
+      </div>
+      <div class="tools" style="grid-template-columns:1fr 1fr">
+        <div class="tg"><span class="label">Read</span><ul>
+          <li>get_training_log<span>(range)</span></li><li>get_muscle_state<span>()</span></li><li>get_e1rm_trend<span>(lift)</span></li>
+          <li>get_food_log<span>(range)</span></li><li>get_weight_trend<span>()</span></li><li>get_scans<span>(n)</span></li><li>get_activity<span>(range)</span></li><li>get_sleep<span>(range)</span></li><li>get_recovery_signals<span>()</span></li><li>search_exercises<span>(q)</span></li></ul></div>
+        <div class="tg"><span class="label">Write</span><ul>
+          <li>set_prescription<span>(sets, reps, RIR, load)</span></li><li>swap_exercise</li><li>build_workout</li><li>schedule_deload</li>
+          <li>set_calorie_target</li><li>set_protein_target</li><li>set_macros</li><li>mark_day<span>(complete)</span></li><li>estimate_meal<span>(photo, ctx)</span></li><li>ask_user<span>(question)</span></li></ul></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BYO -->
+  <section class="obj night">
+    <div class="shead">
+      <span class="label">Bring your own Claude</span>
+      <h2>A small free bridge on your Mac. No AI subscription markup.</h2>
+      <p class="prose" style="color:var(--night-ink-2)">Your phone talks to the AZfit Bridge, a menu bar app on your Mac. The bridge runs <strong style="color:var(--night-ink)">headless Claude Code (<code style="font-family:var(--mono);font-size:.9em">claude -p</code>)</strong> on your own subscription, with AZfit's tools exposed over MCP. Meal photos go in as image inputs, and every answer comes back as JSON against a schema, so the app never has to parse prose.</p>
+    </div>
+    <div class="arch">
+      <div class="node"><span class="label">iPhone</span><h4>AZfit app</h4><p>Holds the data on device. Works offline and queues agent requests until the bridge is reachable.</p><ul><li>SQLite + sync log</li><li>LiDAR scan capture</li><li>camera, HealthKit</li></ul></div>
+      <div class="wire">local network<br>or Tailscale</div>
+      <div class="node"><span class="label">Mac</span><h4>AZfit Bridge</h4><p>Keeps a copy of your data, runs the models, and queues agent jobs.</p><ul><li>MCP tool server</li><li>fatigue + trend models</li><li>scheduled reviews</li></ul></div>
+      <div class="wire">stdio · JSON<br>schema out</div>
+      <div class="node"><span class="label">Your account</span><h4>claude -p</h4><p>Opus for weekly reviews and investigations. A faster model for meal estimates.</p><ul><li>images as input</li><li>structured outputs</li><li>full tool use</li></ul></div>
+    </div>
+  </section>
+
+  <!-- WALKTHROUGH -->
+  <section class="obj">
+    <div class="shead">
+      <span class="label">Walkthrough · your first week</span>
+      <h2>From install to the first plan change.</h2>
+    </div>
+    <div class="walk">
+      <div class="wk"><span class="label">Day 0 · 5 min</span><div><h3>Pair the bridge</h3><p>Install the bridge on your Mac. It shows a QR code, you scan it with the phone, and that's the pairing done. The bridge checks that <code style="font-family:var(--mono)">claude</code> is signed in. Then you set a goal (lose fat, recomp, or build), your schedule, your equipment, and any injuries, and choose which Apple Health categories AZfit can read.</p></div></div>
+      <div class="wk"><span class="label">Day 0</span><div><h3>Baseline scan and weigh-in</h3><p>The first scan sets your starting measurements. The agent drafts a four-week block for your schedule and shows which muscles each day trains, so you can see the split before agreeing to it.</p></div></div>
+      <div class="wk"><span class="label">Day 1</span><div><h3>First workout</h3><p>Today's session opens with the warm-up sets already calculated. Log each set with weight, reps and RIR, and a rest timer starts. When you finish, the heat map updates and the agent gives a one-line note: "Bench felt easier than prescribed, next week's load goes up."</p></div></div>
+      <div class="wk"><span class="label">Day 1 to 7</span><div><h3>Log food at whatever detail you have time for</h3><p>Snap a photo and it's logged. Add a few words ("chicken shawarma plate, half the rice") or the plate weight when you can. Meals you eat often become one-tap favorites that log the same number every time, which is what the calibration loop needs. A protein ring fills through the day. At night, one tap marks the day complete.</p></div></div>
+      <div class="wk"><span class="label">Day 3</span><div><h3>Life happens</h3><p>You skip leg day. Nothing gets reset or rescheduled into a pile. The agent moves the essential lower-body work into Friday's session and drops the accessories.</p></div></div>
+      <div class="wk"><span class="label">Day 7</span><div><h3>Sunday review</h3><p>Claude reads the week: sessions done, effort per set, volume per muscle, weight trend against intake, sleep. You get a short summary and a list of proposed changes, with reasons, to approve or skip.</p></div></div>
+      <div class="wk"><span class="label">Week 3+</span><div><h3>Calibration</h3><p>Once there are about two weeks of weigh-ins and at least 10 complete days, AZfit replaces the formula's estimate with your measured maintenance calories, in your own logging units. From then on, diet changes come from your data instead of averages.</p></div></div>
+    </div>
+  </section>
+
+  <!-- OPINIONS -->
+  <section class="obj">
+    <div class="shead">
+      <span class="label">Product opinions</span>
+      <h2>What we chose, and what we left out.</h2>
+    </div>
+    <div class="ops">
+      <div class="op"><h4>RIR over RPE</h4><p>"2 reps left" is easier to judge than "RPE 8", and it feeds the e1RM math directly. RPE is still accepted and converted.</p></div>
+      <div class="op"><h4>Trends over snapshots</h4><p>Weight, scans and calories are always shown smoothed, with a range. Calorie targets move only at the weekly review. No single weigh-in should set the mood for your day.</p></div>
+      <div class="op"><h4>Proposals, not surprises</h4><p>The agent changes the plan through a visible diff. Only routine progression applies without asking.</p></div>
+      <div class="op"><h4>Your data stays local</h4><p>Your data lives on your phone and your Mac. There's no AZfit cloud, so there are no AZfit accounts to breach. The only data that leaves is what the agent reads through Claude on your own account.</p></div>
+      <div class="op"><h4>No streak shame</h4><p>No guilt notifications or broken-streak badges. A skipped workout is just data the agent plans around.</p></div>
+      <div class="op"><h4>No social feed</h4><p>AZfit is a coach, not a network. Shareable progress cards can come later.</p></div>
+    </div>
+  </section>
+
+  <section class="obj" style="background:var(--object-2)">
+    <span class="label">Next phase</span>
+    <p class="pitch" style="margin-top:14px;font-size:clamp(20px,2.6vw,26px)">Design the data model so the agent has full context: every exercise tag, set, meal estimate with its confidence, whether each day was complete, scan, and plan change with its reason. <span>The goal is that no recommendation depends on information the agent cannot see.</span></p>
+  </section>
+
+  <footer><span>AZfit · product brief</span><span>Figures shown are illustrative examples.</span></footer>
+</div>
+
+<script>
+/* ---------- body figure (shared drawing) ---------- */
+const FRONT = {
+  traps:  "M90 48 C85 54 77 57 67 60 C77 62 86 62 93 60 Z",
+  delts:  "M64 62 C53 63 45 72 45 86 C45 92 46 96 49 99 C53 88 59 80 68 74 C69 69 67 64 64 62 Z",
+  chest:  "M72 66 C84 63 94 63 98 66 L98 95 C90 100 79 99 71 94 C65 90 64 82 67 74 Z",
+  biceps: "M49 104 C53 100 58 100 60 106 C62 117 60 128 56 135 C52 137 48 136 46 132 C44 121 45 111 49 104 Z",
+  forearms:"M45 141 C49 139 54 139 56 143 C56 158 52 175 48 187 C45 189 42 188 41 185 C39 170 40 155 45 141 Z",
+  abs:    "M86 101 h10 a2 2 0 0 1 2 2 v12 h-12 a3 3 0 0 1 -3 -3 v-8 a3 3 0 0 1 3 -3 Z M86 119 h12 v14 h-12 a3 3 0 0 1 -3 -3 v-8 a3 3 0 0 1 3 -3 Z M86 137 h12 v14 h-12 a3 3 0 0 1 -3 -3 v-8 a3 3 0 0 1 3 -3 Z M87 155 h11 v18 c-5 0 -11 -3 -12 -8 v-7 a3 3 0 0 1 1 -3 Z",
+  obliques:"M70 101 C75 104 79 106 80 110 L80 160 C78 166 75 168 72 166 C67 150 66 121 70 101 Z",
+  quads:  "M71 181 C79 176 92 178 96 186 C98 211 94 240 88 258 C82 262 76 262 72 258 C64 236 63 205 71 181 Z",
+  calves: "M72 276 C78 272 86 274 88 280 C88 300 84 330 80 349 C77 351 74 351 72 347 C68 326 68 296 72 276 Z"
+};
+const BACK = {
+  traps:  "M100 45 C94 52 82 58 67 62 C80 66 92 76 100 102 Z",
+  delts:  FRONT.delts,
+  lats:   "M71 78 C80 84 91 97 98 106 L98 132 C92 140 84 146 78 148 C72 130 67 101 71 78 Z",
+  triceps:"M49 104 C53 100 58 100 61 106 C63 117 61 128 57 135 C53 137 48 136 46 132 C44 121 45 111 49 104 Z",
+  forearms:FRONT.forearms,
+  lowerback:"M85 138 C90 139 95 140 98 142 L98 166 C92 167 86 165 83 161 C83 152 83 145 85 138 Z",
+  glutes: "M72 170 C82 166 94 169 98 173 L98 205 C90 211 78 209 72 203 C68 193 68 180 72 170 Z",
+  hamstrings:"M72 213 C80 211 92 213 95 217 C96 237 92 254 86 262 C80 264 76 263 73 260 C67 244 67 227 72 213 Z",
+  calves: "M72 276 C80 270 88 274 90 282 C90 300 86 320 80 342 C76 344 73 343 72 340 C66 318 66 294 72 276 Z"
+};
+const NEUTRAL = "M100 11 a17 19 0 1 1 -0.01 0 Z M43 192 a6 9 0 1 0 0.01 0 Z M157 192 a6 9 0 1 0 0.01 0 Z M78 356 a8 6 0 1 0 0.01 0 Z M122 356 a8 6 0 1 0 0.01 0 Z";
+function heat(l){return `var(--h${Math.max(0,Math.min(5,l))})`}
+function body(view, lv, opts={}){
+  const map = view==="front"?FRONT:BACK;
+  let s = `<svg viewBox="30 4 140 362" role="img" aria-label="${view} muscle map"><path d="${NEUTRAL}" fill="${opts.neutral||'#2B2927'}"/>`;
+  for(const [k,d] of Object.entries(map)){
+    const f = opts.mono? opts.mono : heat(lv[k]??0);
+    s += `<g><path d="${d}" fill="${f}"/><path d="${d}" fill="${f}" transform="translate(200 0) scale(-1 1)"/></g>`;
+  }
+  return s+"</svg>";
+}
+const lv = {chest:5,delts:4,triceps:4,traps:2,biceps:1,forearms:1,abs:2,obliques:1,quads:3,calves:1,lats:2,lowerback:2,glutes:3,hamstrings:2};
+document.getElementById("heroBodies").innerHTML = body("front",lv)+body("back",lv);
+
+/* scan angles */
+document.getElementById("angles").innerHTML = ["front","left","back","right"].map((a,i)=>{
+  const v = (a==="back")?"back":"front";
+  const squeeze = (a==="left"||a==="right")?'style="transform:scaleX(.55)"':'';
+  return `<div class="angle"><div ${squeeze}>${body(v,{}, {mono:"#3A3633",neutral:"#3A3633"})}</div><span class="label">${a}</span></div>`;
+}).join("");
+
+/* volume pills */
+const vol=[["Chest",14,12,0],["Back",10,14,4],["Delts",9,16,3],["Quads",8,12,2],["Hamstrings",4,10,2],["Arms",12,14,0]];
+document.getElementById("vol").innerHTML = vol.map(([n,done,mrv,plan])=>{
+  let p="";for(let i=0;i<18;i++){p+= i<Math.min(done,mrv)?'<b class="on"></b>': i<done?'<b class="hot"></b>': i<done+plan?'<b class="ghost"></b>':'<b></b>'}
+  return `<div class="r"><span>${n}</span><span class="pills">${p}</span><span>${done}/${mrv}</span></div>`;
+}).join("");
+
+/* context ladder */
+const L=[["Photo","Model identifies foods and estimates portions from plate size.",640,330,"±32%"],
+         ["+ Description","\"Half the rice, extra garlic sauce.\" Fixes hidden fats and swaps.",610,190,"±18%"],
+         ["+ Ingredients","Recipe, brands, measured oil. Database lookups replace guesses.",585,90,"±9%"],
+         ["+ Plate weight","Kitchen scale, or a depth scan of the plate. Only density is left to estimate.",590,40,"±4%"]];
+document.getElementById("ladder").innerHTML = L.map(([t,d,k,w,pct],i)=>{
+  const half = w/2, left = 50 - half/8, width = w/8;
+  return `<div class="rung"><span class="label">Level ${i}</span><h4>${t}</h4><div class="num">${k}<small> kcal ${pct}</small></div><div class="band"><i style="left:${left}%;width:${width}%"></i><u></u></div><p>${d}</p></div>`;
+}).join("");
+
+/* calibration chart */
+(function(){
+  const W=520,H=230,pl=36,pr=40,pt=14,pb=26,days=42;
+  const x=d=>pl+(W-pl-pr)*d/(days-1);
+  const wMin=80.5,wMax=84.5, y=v=>pt+(H-pt-pb)*(1-(v-wMin)/(wMax-wMin));
+  const cMin=1800,cMax=2600, yc=c=>pt+(H-pt-pb)*(1-(c-cMin)/(cMax-cMin));
+  let seed=7; const rnd=()=>{seed=(seed*9301+49297)%233280;return seed/233280};
+  const trend=[],daily=[];
+  for(let d=0;d<days;d++){const t= d<14? 83.6-0.002*d : d<28? 83.57-0.04*(d-14): 83.0-0.06*(d-28); trend.push(t); daily.push(t+(rnd()-.5)*1.3)}
+  const target=d=> d<14?2400: d<28?2250:2150;
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Trend weight falls after calorie target is lowered twice">`;
+  [81,82,83,84].forEach(v=>{s+=`<line x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}" stroke="var(--rule)" stroke-width="1"/><text x="${pl-6}" y="${y(v)+3}" text-anchor="end">${v}</text>`});
+  [2000,2200,2400].forEach(c=>{s+=`<text x="${W-pr+6}" y="${yc(c)+3}" style="fill:var(--ember-ink)">${(c/1000).toFixed(1)}k</text>`});
+  [0,14,28,41].forEach(d=>{s+=`<text x="${x(d)}" y="${H-8}" text-anchor="middle">wk ${Math.round(d/7)+1}</text>`});
+  const tp = `M${x(0)} ${yc(2400)} H${x(14)} V${yc(2250)} H${x(28)} V${yc(2150)} H${x(41)}`;
+  s+=`<path d="${tp}" fill="none" stroke="var(--ember)" stroke-width="2"/>`;
+  daily.forEach((v,d)=>{s+=`<circle cx="${x(d)}" cy="${y(v)}" r="2.2" fill="var(--ink-3)" opacity=".7"/>`});
+  s+=`<path d="${trend.map((v,d)=>(d?'L':'M')+x(d)+' '+y(v)).join(' ')}" fill="none" stroke="var(--ink)" stroke-width="2.2" stroke-linecap="round"/>`;
+  s+=`<circle cx="${x(41)}" cy="${y(trend[41])}" r="4" fill="var(--ink)"/>`;
+  s+=`<text x="${x(14)+4}" y="${yc(2250)-6}" style="fill:var(--ember-ink)">flat → −150</text><text x="${x(28)+4}" y="${yc(2150)-6}" style="fill:var(--ember-ink)">−100</text>`;
+  document.getElementById("calib").innerHTML=s+"</svg>";
+})();
+</script>
+
