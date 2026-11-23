@@ -1,2 +1,29 @@
+# macOS
 .DS_Store
 node_modules/
+
+# SwiftPM
+.build/
+.swiftpm/
+Packages/
+
+# Xcode (the project is generated from project.yml; see docs/decisions.md D-004)
+*.xcodeproj
+*.xcworkspace
+xcuserdata/
+DerivedData/
+*.xcresult
+/App/Info.plist
+/App/AZfit.entitlements
+/Bridge/Info.plist
+
+# Design build output for the canvas artifact
+/design/.publish/
+
+# Local secrets and settings
+.env
+.env.*
+.claude/settings.local.json
+
+# Python
+__pycache__/

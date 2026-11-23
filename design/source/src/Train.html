@@ -1,0 +1,61 @@
+<!--title: Plan-->
+<!--css-->
+.wk{display:flex;justify-content:space-between}
+.wk a{display:flex;flex-direction:column;align-items:center;gap:6px;width:42px;position:relative}
+.wk b{font-size:12px;font-weight:600;color:var(--mut)}
+.wk i{width:42px;height:44px;border-radius:14px;display:grid;place-items:center;font-style:normal;font-size:14px;font-weight:700;background:var(--fill);color:var(--mut)}
+.wk .d i{background:var(--peach);color:var(--o)}
+.wk .m i{background:transparent;box-shadow:inset 0 0 0 1.5px var(--line);color:var(--lt);text-decoration:line-through}
+.wk .t i{background:var(--btn);color:var(--btnk)}
+.wk .t b{color:var(--ink)}
+.wk .am{position:absolute;right:-5px;bottom:-5px;margin:0}
+.hx{display:flex;align-items:center;justify-content:space-between;font-size:14.5px;height:26px}
+.hx>span:last-child{color:var(--pm)}
+.dt{width:48px;height:48px;border-radius:14px;background:var(--fill);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;line-height:1.1}
+.dt small{font-size:11px;font-weight:700;color:var(--mut)}
+.dt span{font-size:16px;font-weight:800}
+<!--/css-->
+%SB%
+<div class="abs row" style="left:24px;right:24px;top:62px;justify-content:space-between">
+  <div class="col" style="gap:2px"><span class="lab">Week 7 of 12 · 3 of 5 done</span><h1 class="h1">This week</h1></div>
+  <a class="ib" href="Library.dc.html" aria-label="Exercise library">%I:search:20::2.2%</a>
+</div>
+
+<div class="abs wk n" style="left:24px;right:24px;top:138px">
+  <a class="d" href="#"><b>M</b><i>%I:check:16::3%</i></a>
+  <a class="d" href="#"><b>T</b><i>%I:check:16::3%</i></a>
+  <a href="#"><b>W</b><i>18</i></a>
+  <a class="d" href="#"><b>T</b><i>%I:check:16::3%</i></a>
+  <a class="m" href="#" aria-label="Friday, missed"><b>F</b><i>20</i></a>
+  <a class="t" href="#" aria-current="date"><b>S</b><i>21</i></a>
+  <a href="#" aria-label="Sunday, Upper A moved here by Div"><b>S</b><i>22</i>%DMARK:16%</a>
+</div>
+
+<a href="Workout.dc.html" class="abs col" style="left:24px;right:24px;top:222px;border-radius:28px;background:var(--peach);padding:20px 22px 20px">
+  <div class="row" style="justify-content:space-between"><span style="font-size:14px;font-weight:600;color:var(--pk)">Today · 52 min</span><span class="pb k" style="height:36px;border-radius:18px">%I:play:13% Start</span></div>
+  <span style="font-size:30px;line-height:34px;font-weight:800;letter-spacing:-.03em;margin-top:2px">Push A</span>
+  <div class="col" style="margin-top:10px">
+    <div class="hx"><span>Bench press</span><span class="n">4 × 8</span></div>
+    <div class="hx"><span>Incline dumbbell press</span><span class="n">3 × 10</span></div>
+    <div class="hx"><span class="row">Landmine press%DMARK:16%<span class="was" style="margin-left:8px;font-size:13.5px">Overhead press</span></span><span class="n">3 × 10</span></div>
+    <div class="hx"><span style="color:var(--pm)">Cable fly, lateral raise, pushdown</span><span class="n">3 × 12</span></div>
+  </div>
+</a>
+
+<div class="abs" style="left:24px;right:24px;top:470px">
+  <div class="sec"><h3>Coming up</h3></div>
+  <div class="li" style="margin-top:6px">
+    <span class="dt"><small>SUN</small><span class="n">22</span></span>
+    <span class="col" style="flex:1;min-width:0"><span class="row" style="font-weight:700">Upper A%DMARK:16%</span><span class="mut" style="font-size:14px">Moved from Friday · 55 min</span></span>
+  </div>
+  <div class="an" style="margin-top:4px">
+    %DIV:36%
+    <div class="bd">
+      <b>Moved by Div</b>
+      <p>You missed Friday. Sunday is free and rests your chest after today.</p>
+      <div class="acts"><span class="pb w">%I:undo:15% Undo</span><span class="pb w">Skip this week</span></div>
+    </div>
+  </div>
+</div>
+%NAV:dumbbell%
+%HB%

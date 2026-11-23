@@ -1,0 +1,56 @@
+<!--title: Scan result-->
+<!--css-->
+.ms{position:absolute;display:flex;flex-direction:column}
+.ms span:first-child{font-size:12.5px;font-weight:600;color:var(--mut)}
+.ms span:last-child{font-size:17px;font-weight:800;letter-spacing:-.02em}
+.ms em{font-style:normal;font-size:12.5px;font-weight:700;letter-spacing:0;margin-left:4px;color:var(--pk)}
+.ld{position:absolute;height:0;border-top:1.5px dashed var(--ghost)}
+.tl{display:grid;grid-template-columns:1fr 1fr;row-gap:0;column-gap:24px}
+.tl>div{display:flex;flex-direction:column;padding:12px 0}
+.tl>div:nth-child(n+3){box-shadow:inset 0 1px 0 var(--line)}
+.tl .k{font-size:13.5px;font-weight:600;color:var(--mut)}
+.tl .v{font-size:24px;font-weight:800;letter-spacing:-.03em;line-height:30px}
+.tl .v small{font-size:14px;font-weight:600;color:var(--mut);letter-spacing:0}
+<!--/css-->
+%SB%
+<div class="top">%BACK:Body.dc.html%<span class="ttl">Scan · Nov 21</span><a class="ib" href="Progress.dc.html" aria-label="Share scan">%I:share:20%</a></div>
+
+<div class="abs row" style="left:24px;right:24px;top:120px;align-items:flex-end;justify-content:space-between">
+  <span class="col"><span class="lab">Body fat</span><span class="n" style="font-size:52px;line-height:56px;font-weight:800;letter-spacing:-.04em">14-17<span style="font-size:26px">%</span></span></span>
+  <span class="n" style="height:30px;padding:0 12px;border-radius:15px;background:var(--peach);color:var(--pk);font-size:14px;font-weight:700;display:inline-flex;align-items:center;margin-bottom:10px">-1.5% since Oct 24</span>
+</div>
+
+<div class="abs" style="left:24px;right:24px;top:198px;height:268px;border-radius:32px;background:var(--fill)">
+  <div class="abs" style="left:126px;top:18px">%FIGF:sr:94:244:000000000:Body outline with measurements%</div>
+  <div class="ms" style="left:18px;top:54px"><span>Chest</span><span class="n">104.2</span></div>
+  <span class="ld" style="left:76px;width:70px;top:74px"></span>
+  <div class="ms" style="left:18px;top:118px"><span>Waist</span><span class="n">81.4<em>-1.2</em></span></div>
+  <span class="ld" style="left:108px;width:44px;top:138px"></span>
+  <div class="ms" style="left:18px;top:182px"><span>Hips</span><span class="n">97.0</span></div>
+  <span class="ld" style="left:66px;width:84px;top:202px"></span>
+  <div class="ms" style="right:18px;top:88px;align-items:flex-end"><span>Arm</span><span class="n">36.4<em>+0.4</em></span></div>
+  <span class="ld" style="right:96px;width:44px;top:108px"></span>
+  <div class="ms" style="right:18px;top:156px;align-items:flex-end"><span>Thigh</span><span class="n">58.8</span></div>
+  <span class="ld" style="right:70px;width:76px;top:176px"></span>
+  <div class="ms" style="right:18px;top:220px;align-items:flex-end"><span>Calf</span><span class="n">38.1</span></div>
+  <span class="ld" style="right:66px;width:84px;top:240px"></span>
+  <span class="abs lt" style="left:18px;bottom:14px;font-size:12px;font-weight:600">cm</span>
+</div>
+
+<div class="abs tl n" style="left:24px;right:24px;top:478px">
+  <div><span class="k">Lean mass</span><span class="v">69.3<small> kg</small></span></div>
+  <div><span class="k">Fat mass</span><span class="v">12.7<small> kg</small></span></div>
+  <div><span class="k">Scale weight</span><span class="v">82.0<small> kg</small></span></div>
+  <div><span class="k">Waist to height</span><span class="v">0.45<small> healthy</small></span></div>
+</div>
+
+<div class="abs an" style="left:24px;right:24px;top:630px">
+  %DIV:36:proud%
+  <div class="bd">
+    <b>Waist down, arms holding</b>
+    <p>That's fat coming off, not muscle. The 2,350 target is doing its job.</p>
+    <div class="acts"><a href="Calibrate.dc.html" class="pb w">Why 2,350</a></div>
+  </div>
+</div>
+<p class="abs row mut" style="left:24px;right:24px;bottom:34px;gap:8px;font-size:13px;line-height:17px">%I:depth:16% LiDAR is accurate to about ±3%. Div reads the trend.</p>
+%HB%

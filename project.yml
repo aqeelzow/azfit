@@ -1,0 +1,116 @@
+# XcodeGen spec. The .xcodeproj is generated and not checked in: run `make gen`.
+# See docs/decisions.md D-004.
+name: AZfit
+options:
+  bundleIdPrefix: com.azfit
+  deploymentTarget:
+    iOS: "26.0"
+    macOS: "26.0"
+  createIntermediateGroups: true
+  groupSortPosition: top
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
+    SWIFT_APPROACHABLE_CONCURRENCY: YES
+    SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
+    GCC_TREAT_WARNINGS_AS_ERRORS: YES
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    DEAD_CODE_STRIPPING: YES
+    CURRENT_PROJECT_VERSION: 1
+    MARKETING_VERSION: "0.1.0"
+    DEVELOPMENT_TEAM: "" # set locally in Xcode, or export DEVELOPMENT_TEAM before `make gen`
+
+packages:
+  AZKit:
+    path: AZKit
+  Bridge:
+    path: Bridge
+
+targets:
+  AZfit:
+    type: application
+    platform: iOS
+    sources:
+      - path: App/Sources
+      - path: App/Resources
+    dependencies:
+      - package: AZKit
+        products: [AZModel, AZMath, AZStore, AZSync]
+      - sdk: HealthKit.framework
+    entitlements:
+      path: App/AZfit.entitlements
+      properties:
+        com.apple.developer.healthkit: true
+        com.apple.developer.healthkit.access: []
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleDisplayName: AZfit
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UIAppFonts: [Figtree-Variable.ttf] # resources are flattened into the bundle root
+        ITSAppUsesNonExemptEncryption: false
+        NSCameraUsageDescription: AZfit uses the camera to photograph meals and to scan your body with LiDAR.
+        NSPhotoLibraryUsageDescription: Pick a meal photo to log it.
+        NSHealthShareUsageDescription: AZfit reads only the Health categories you turn on, such as weight, sleep and steps, to adjust your plan.
+        NSHealthUpdateUsageDescription: AZfit can save workouts and weigh-ins to Health if you turn that on.
+        NSLocalNetworkUsageDescription: AZfit talks to the AZfit Bridge on your Mac to run Div with your own Claude account.
+        NSBonjourServices: [_azfit-bridge._tcp]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.azfit.app
+        TARGETED_DEVICE_FAMILY: "1"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        ENABLE_PREVIEWS: YES
+
+  AZfitTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [App/Tests]
+    dependencies:
+      - target: AZfit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.azfit.app.tests
+        GENERATE_INFOPLIST_FILE: YES
+
+  AZfitBridge:
+    type: application
+    platform: macOS
+    sources: [Bridge/App]
+    dependencies:
+      - package: Bridge
+        product: BridgeKit
+    info:
+      path: Bridge/Info.plist
+      properties:
+        CFBundleDisplayName: AZfit Bridge
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSUIElement: true # menu bar only, no Dock icon
+        NSLocalNetworkUsageDescription: AZfit Bridge listens for your phone on the local network.
+        NSBonjourServices: [_azfit-bridge._tcp]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.azfit.bridge
+        ENABLE_HARDENED_RUNTIME: YES
+        # Not sandboxed: the bridge runs the user's `claude` CLI. See docs/decisions.md D-007.
+        ENABLE_APP_SANDBOX: NO
+
+schemes:
+  AZfit:
+    build:
+      targets: { AZfit: all, AZfitTests: [test] }
+    test:
+      targets: [AZfitTests]
+      gatherCoverageData: true
+  AZfitBridge:
+    build:
+      targets: { AZfitBridge: all }

@@ -1,0 +1,54 @@
+<!--title: Workout complete-->
+<!--css-->
+.st{display:grid;grid-template-columns:1fr 1fr 1fr}
+.st>div{display:flex;flex-direction:column;gap:2px;padding-left:16px}
+.st>div:first-child{padding-left:0}
+.st>div+div{box-shadow:inset 1px 0 0 var(--line)}
+.st b{font-size:24px;line-height:28px;font-weight:800;letter-spacing:-.02em}
+.st b small{font-size:14px;font-weight:600;color:var(--mut);margin-left:2px}
+.tl{width:48px;height:48px;border-radius:14px;background:var(--peach);color:var(--o);display:grid;place-items:center;flex-shrink:0}
+.up{font-size:13px;font-weight:700;color:var(--pk);background:var(--peach);border-radius:8px;padding:2px 8px}
+.ls{display:flex;flex-direction:column;gap:6px;margin-top:2px}
+.ls p{display:flex;gap:8px}
+.ls p::before{content:"";width:3px;flex-shrink:0;border-radius:2px;background:var(--o2);margin:3px 0}
+<!--/css-->
+%SB%
+<div class="top">
+  <a class="ib" href="Home.dc.html" aria-label="Close">%I:close:20::2.2%</a>
+  <a class="ib" href="#" aria-label="Share">%I:share:20::2%</a>
+</div>
+
+<div class="abs col" style="left:24px;right:24px;top:122px;gap:14px">
+  %DIV:72:proud%
+  <div class="col" style="gap:4px"><h1 class="h1">Nice work, Alex</h1><span class="mut" style="font-size:15px">Push A · 52:18 · Saturday, Nov 21</span></div>
+</div>
+
+<div class="abs st n" style="left:24px;right:24px;top:290px">
+  <div><span class="lab">Volume</span><b>8,420<small>kg</small></b></div>
+  <div><span class="lab">Sets</span><b>17<small>of 17</small></b></div>
+  <div><span class="lab">Records</span><b>1</b></div>
+</div>
+
+<div class="abs" style="left:24px;right:24px;top:374px">
+  <div class="sec"><h3>New record</h3><a href="Progress.dc.html">History</a></div>
+  <div class="li" style="margin-top:4px">
+    <span class="tl">%I:trend:22::2.2%</span>
+    <span class="col" style="flex:1;min-width:0"><span style="font-weight:700">Bench press</span><span class="mut n" style="font-size:14px">82.5 kg × 8 · best estimated 1RM</span></span>
+    <span class="col n" style="align-items:flex-end;gap:2px"><span style="font-weight:800;font-size:17px">104 kg</span><span class="up">+2.5</span></span>
+  </div>
+</div>
+
+<div class="abs an" style="left:24px;right:24px;top:488px">
+  %DIV:36%
+  <div class="bd">
+    <b>What I changed today</b>
+    <div class="ls">
+      <p>I lowered set 3 to 6 reps - next week we retry 8.</p>
+      <p>Landmine press felt easy at 25 kg. Next time 27.5 kg.</p>
+    </div>
+    <div class="acts"><a class="pb w" href="Review.dc.html">See Div's log</a></div>
+  </div>
+</div>
+
+<a class="abs btn" href="Home.dc.html" style="left:24px;right:24px;width:auto;bottom:34px">Done</a>
+%HB%

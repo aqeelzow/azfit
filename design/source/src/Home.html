@@ -1,0 +1,64 @@
+<!--title: Home-->
+<!--css-->
+.wk{display:flex;justify-content:space-between}
+.wk a{display:flex;flex-direction:column;align-items:center;gap:6px;width:42px;position:relative}
+.wk b{font-size:12px;font-weight:600;color:var(--mut)}
+.wk i{width:42px;height:44px;border-radius:14px;display:grid;place-items:center;font-style:normal;font-size:14px;font-weight:700;background:var(--fill);color:var(--mut)}
+.wk .d i{background:var(--peach);color:var(--o)}
+.wk .m i{background:transparent;box-shadow:inset 0 0 0 1.5px var(--line);color:var(--lt);text-decoration:line-through}
+.wk .t i{background:var(--btn);color:var(--btnk)}
+.wk .t b{color:var(--ink)}
+.wk .am{position:absolute;right:-5px;bottom:-5px;margin:0}
+.hx{display:flex;align-items:center;justify-content:space-between;font-size:14.5px;height:26px}
+.hx span:last-child{color:var(--pm)}
+.tile{border-radius:26px;padding:16px 18px;display:flex;flex-direction:column;background:var(--fill)}
+<!--/css-->
+%SB%
+<div class="abs row" style="left:24px;right:24px;top:62px;justify-content:space-between">
+  <div class="col" style="gap:2px"><span class="lab">Saturday, Nov 21</span><h1 class="h1">Morning, Alex</h1></div>
+  <a href="Memory.dc.html" style="width:44px;height:44px;border-radius:14px;overflow:hidden" aria-label="Profile"><img class="cover" src="%IMG:avatar%" alt=""></a>
+</div>
+
+<div class="abs wk n" style="left:24px;right:24px;top:138px">
+  <a class="d" href="Train.dc.html"><b>M</b><i>%I:check:16::3%</i></a>
+  <a class="d" href="Train.dc.html"><b>T</b><i>%I:check:16::3%</i></a>
+  <a href="Train.dc.html"><b>W</b><i>18</i></a>
+  <a class="d" href="Train.dc.html"><b>T</b><i>%I:check:16::3%</i></a>
+  <a class="m" href="Train.dc.html" aria-label="Friday, missed"><b>F</b><i>20</i></a>
+  <a class="t" href="Train.dc.html" aria-current="date"><b>S</b><i>21</i></a>
+  <a href="Train.dc.html" aria-label="Sunday, Upper A moved here by Div"><b>S</b><i>22</i>%DMARK:16%</a>
+</div>
+
+<a href="Workout.dc.html" class="abs col" style="left:24px;right:24px;top:222px;height:288px;border-radius:32px;background:var(--peach);padding:24px 24px 22px">
+  <span style="font-size:14px;font-weight:600;color:var(--pk)">Today · 52 min</span>
+  <span style="font-size:40px;line-height:44px;font-weight:800;letter-spacing:-.035em">Push A</span>
+  <div class="col" style="margin-top:14px">
+    <div class="hx"><span>Bench press</span><span class="n">4 × 8</span></div>
+    <div class="hx"><span>Incline dumbbell press</span><span class="n">3 × 10</span></div>
+    <div class="hx"><span class="row">Landmine press%DMARK:16%</span><span class="n">3 × 10</span></div>
+    <div class="hx"><span style="color:var(--pm)">+3 more</span><span></span></div>
+  </div>
+  <span class="btn" style="margin-top:auto;width:128px;height:50px">%I:play:15% Start</span>
+</a>
+
+<a href="Review.dc.html" class="abs row" style="left:24px;right:24px;top:526px;height:68px;border-radius:24px;background:var(--fill);padding:0 16px 0 12px;gap:12px">
+  %DIV:44%
+  <span class="col" style="flex:1;line-height:1.3"><span style="font-size:15px;font-weight:700">Div made 3 changes this week</span><span class="mut" style="font-size:13.5px">And has 1 question for you</span></span>
+  <span class="lt">%I:chev:18%</span>
+</a>
+
+<div class="abs row" style="left:24px;right:24px;top:608px;gap:12px">
+  <a href="Eat.dc.html" class="tile" style="flex:1;height:112px">
+    <span class="lab">Food</span>
+    <span class="n" style="margin-top:auto;font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1">1,110</span>
+    <span class="mut" style="font-size:13.5px;margin-bottom:8px">kcal left</span>
+    <span class="bar" style="height:6px"><i style="width:53%"></i></span>
+  </a>
+  <a href="Progress.dc.html" class="tile" style="flex:1;height:112px">
+    <span class="row" style="justify-content:space-between"><span class="lab">Weight</span>
+      <svg width="58" height="24" viewBox="0 0 58 24" aria-hidden="true"><path d="M2 4C10 4 14 9 20 10S30 9 36 14S48 18 56 21" fill="none" style="stroke:var(--o)" stroke-width="3" stroke-linecap="round"/></svg></span>
+    <span class="n" style="margin-top:auto;font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1">82.2<span style="font-size:15px;font-weight:600;color:var(--mut)"> kg</span></span>
+    <span class="mut" style="font-size:13.5px">-2.1 kg in 3 weeks</span>
+  </a>
+</div>
+%NAV:home%

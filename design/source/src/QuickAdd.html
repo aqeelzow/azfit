@@ -1,0 +1,33 @@
+<!--title: Quick add-->
+<!--css-->
+.qa{height:64px;border-radius:20px;background:var(--fill);padding:0 12px;display:flex;align-items:center;gap:12px}
+.qa .ic{width:38px;height:38px;border-radius:12px;background:var(--card);color:var(--ink);display:grid;place-items:center}
+.qa b{font-size:15px;font-weight:700;white-space:nowrap}
+.qa.p{background:var(--peach)}
+.qa.p .ic{background:var(--o);color:#FFFFFF}
+<!--/css-->
+<div class="abs" style="inset:0;background:var(--peach)"></div>
+<div class="abs" style="inset:0;background:rgba(17,16,21,.42)"></div>
+%SB%
+
+<div class="abs" style="left:0;right:0;top:300px;bottom:0;background:var(--bg);border-radius:36px 36px 0 0">
+  <span class="grab"></span>
+  <h2 class="abs h2" style="left:24px;top:32px;font-size:24px">What are we logging?</h2>
+
+  <a href="Snap.dc.html" class="abs an" style="left:20px;right:20px;top:82px;align-items:center">
+    %DIV:36%
+    <div class="bd"><b>Log Thursday's dinner?</b><p>You logged about half your usual.</p></div>
+    <span style="color:var(--pm);display:flex">%I:chev:18%</span>
+  </a>
+
+  <div class="abs" style="left:20px;right:20px;top:172px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <a href="Snap.dc.html" class="qa p"><span class="ic">%I:camera:20::2%</span><b>Snap a meal</b></a>
+    <a href="Meal.dc.html" class="qa"><span class="ic">%I:text:20::2%</span><b>Describe food</b></a>
+    <a href="Voice.dc.html" class="qa"><span class="ic">%I:mic:20::2%</span><b>Say it</b></a>
+    <a href="Workout.dc.html" class="qa"><span class="ic">%I:dumbbell:20::2%</span><b>Start Push A</b></a>
+    <a href="Progress.dc.html" class="qa"><span class="ic">%I:scale:20::2%</span><b>Weigh in</b></a>
+    <a href="Coach.dc.html" class="qa"><span class="ic" style="overflow:hidden;background:none">%DIV:38:curious:var(--o):#16141A%</span><b>Ask Div</b></a>
+  </div>
+</div>
+
+%NAV:x%

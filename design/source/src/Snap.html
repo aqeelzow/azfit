@@ -1,0 +1,47 @@
+<!--title: Snap camera-->
+<!--class: dark-->
+<!--css-->
+.ib.d{background:rgba(17,16,21,.42);color:#FFFFFF}
+.ctx{height:36px;padding:0 14px 0 12px;border-radius:18px;background:rgba(17,16,21,.42);color:#FFFFFF;font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.det{position:absolute;height:30px;padding:0 11px 0 9px;border-radius:10px;background:rgba(255,255,255,.94);color:#1D1B22;font-size:13px;font-weight:700;display:flex;align-items:center;gap:7px;white-space:nowrap}
+.det i{width:3px;height:14px;border-radius:2px;background:#7C5CFF}
+.brk{position:absolute;width:34px;height:34px;border-color:rgba(255,255,255,.9);border-style:solid;border-width:0}
+.mode{height:34px;padding:0 14px;border-radius:17px;font-size:14px;font-weight:600;display:inline-flex;align-items:center;color:rgba(255,255,255,.62)}
+.mode.on{background:#FFFFFF;color:#1D1B22}
+.sug{background:rgba(24,22,30,.86);border-radius:22px;padding:10px 10px 10px 10px;display:flex;align-items:center;gap:12px;color:#FFFFFF}
+<!--/css-->
+<img class="abs cover" src="%IMG:chicken%" alt="Grilled chicken breast with roasted zucchini, peppers and lemon" style="inset:0;object-position:58% center">
+<div class="abs" style="left:0;right:0;top:0;height:170px;background:linear-gradient(rgba(14,13,18,.55),rgba(14,13,18,0))"></div>
+<div class="abs" style="left:0;right:0;bottom:0;height:330px;background:linear-gradient(rgba(14,13,18,0),rgba(14,13,18,.9) 50%)"></div>
+%SBW%
+<div class="top">
+  <a class="ib d" href="Eat.dc.html" aria-label="Close camera">%I:close:20%</a>
+  <span class="ctx">%I:cal:16% Adding to Thu, Nov 19 · dinner</span>
+  <a class="ib d" href="Snap.dc.html" aria-label="Flash">%I:flash:20%</a>
+</div>
+
+<span class="brk" style="left:28px;top:146px;border-top-width:3px;border-left-width:3px;border-top-left-radius:18px"></span>
+<span class="brk" style="right:28px;top:146px;border-top-width:3px;border-right-width:3px;border-top-right-radius:18px"></span>
+<span class="brk" style="left:28px;top:476px;border-bottom-width:3px;border-left-width:3px;border-bottom-left-radius:18px"></span>
+<span class="brk" style="right:28px;top:476px;border-bottom-width:3px;border-right-width:3px;border-bottom-right-radius:18px"></span>
+
+<span class="det" style="left:176px;top:236px"><i></i>Grilled chicken</span>
+<span class="det" style="left:46px;top:300px"><i></i>Zucchini</span>
+<span class="det" style="left:96px;top:186px"><i></i>Peppers, carrots</span>
+
+<div class="abs sug" style="left:16px;right:16px;top:536px">
+  <span style="width:44px;height:44px;border-radius:12px;overflow:hidden;flex-shrink:0"><img class="cover" src="%IMG:wrap%" alt="Chicken wrap with fries, photo from Thursday"></span>
+  <span class="col" style="flex:1;min-width:0"><span style="font-size:14.5px;font-weight:700">Photo from Thu, 7:42 PM</span><span style="font-size:13px;color:#ADA3D6">Found in your library. Use this?</span></span>
+  <a href="Meal.dc.html" class="pb" style="background:#FFFFFF;color:#1D1B22">Use it</a>
+</div>
+
+<div class="abs row" style="left:0;right:0;top:620px;justify-content:center;gap:4px">
+  <span class="mode">Barcode</span><span class="mode on">Photo</span><span class="mode">Describe</span>
+</div>
+
+<div class="abs row" style="left:36px;right:36px;bottom:46px;justify-content:space-between;align-items:center">
+  <a href="Meal.dc.html" aria-label="Choose from photos" class="ib d" style="width:52px;height:52px;border-radius:16px;background:rgba(255,255,255,.14)">%I:image:22%</a>
+  <a href="Meal.dc.html" aria-label="Take photo" style="width:80px;height:80px;border-radius:28px;box-shadow:inset 0 0 0 4px #FFFFFF;display:grid;place-items:center"><span style="width:62px;height:62px;border-radius:21px;background:#FFFFFF;display:block"></span></a>
+  <a href="Meal.dc.html" class="ib d" aria-label="Describe instead" style="width:52px;height:52px;border-radius:16px;background:rgba(255,255,255,.14)">%I:text:22%</a>
+</div>
+%HBW%

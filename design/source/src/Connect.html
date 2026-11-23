@@ -1,0 +1,43 @@
+<!--title: Connect Div-->
+<!--css-->
+.prog{height:6px;border-radius:3px;background:var(--track);overflow:hidden}
+.prog i{display:block;height:100%;border-radius:3px;background:var(--o)}
+.dev{width:76px;height:76px;border-radius:24px;background:var(--fill);display:grid;place-items:center;color:var(--ink)}
+.stp{display:flex;align-items:center;gap:12px;height:54px;font-size:15px;font-weight:600}
+.stp+.stp{box-shadow:inset 0 1px 0 var(--line)}
+.stp .ok{width:26px;height:26px;border-radius:9px;background:var(--peach);color:var(--o);display:grid;place-items:center;flex-shrink:0}
+.lnk{flex:1;height:2px;margin:0 8px;background:repeating-linear-gradient(90deg,var(--o2) 0 6px,transparent 6px 12px);border-radius:1px}
+<!--/css-->
+%SB%
+<div class="top">
+  %BACK:Days.dc.html%
+  <div class="prog" style="flex:1;margin:0 6px"><i style="width:100%"></i></div>
+  <span style="font-size:15px;font-weight:600;color:var(--lt);padding:0 4px">3 / 3</span>
+</div>
+
+<div class="abs col" style="left:24px;right:24px;top:128px;gap:8px">
+  <span style="font-size:14px;font-weight:600;color:var(--o)">Step 3 of 3</span>
+  <h1 class="h1">Connect Div</h1>
+  <p class="mut" style="font-size:15.5px;line-height:22px">Div runs on your Claude plan through AZfit Bridge, a free app on your Mac. No extra AI bill.</p>
+</div>
+
+<div class="abs row" style="left:44px;right:44px;top:290px;align-items:flex-start">
+  <span class="col" style="align-items:center;gap:8px;width:76px"><span class="dev">%I:phone:30::1.9%</span><span style="font-size:13px;font-weight:600;white-space:nowrap">This iPhone</span></span>
+  <span class="row" style="flex:1;height:76px"><i class="lnk"></i>%DIV:40%<i class="lnk"></i></span>
+  <span class="col" style="align-items:center;gap:8px;width:76px"><span class="dev">%I:mac:30::1.9%</span><span style="font-size:13px;font-weight:600;white-space:nowrap">MacBook Pro</span></span>
+</div>
+
+<div class="abs" style="left:24px;right:24px;top:418px">
+  <div class="stp"><span class="ok">%I:check:14::3%</span>Install AZfit Bridge on your Mac</div>
+  <div class="stp"><span class="ok">%I:check:14::3%</span>Sign in to Claude Code</div>
+  <div class="stp"><span class="ok">%I:check:14::3%</span>Pair with the code on screen</div>
+</div>
+
+<div class="abs row" style="left:20px;right:20px;top:600px;gap:12px;padding:14px 16px 14px 14px;border-radius:22px;background:var(--peach)">
+  <span style="width:36px;height:36px;border-radius:12px;background:var(--o);color:#FFFFFF;display:grid;place-items:center;flex-shrink:0">%I:wifi:18::2.2%</span>
+  <span class="col" style="flex:1;gap:1px"><span style="font-size:15px;font-weight:700">Connected · Claude Opus</span><span style="font-size:13.5px;color:var(--pm)">Div replies in about 2 seconds</span></span>
+</div>
+<p class="abs row mut" style="left:24px;right:24px;top:684px;gap:8px;font-size:13.5px"><span class="lt" style="display:flex">%I:lock:15%</span> Your logs and photos stay on your Mac.</p>
+
+<a class="abs btn" href="Home.dc.html" style="left:20px;right:20px;width:auto;bottom:34px">Start training %I:arrow:18%</a>
+%HB%

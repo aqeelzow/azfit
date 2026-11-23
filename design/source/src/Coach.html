@@ -1,0 +1,69 @@
+<!--title: Div chat-->
+<!--css-->
+.msg{font-size:15.5px;line-height:22px}
+.me{align-self:flex-end;max-width:262px;background:var(--btn);color:var(--btnk);border-radius:22px 22px 6px 22px;padding:11px 16px}
+.ah{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700}
+.ah small{font-size:13px;font-weight:500;color:var(--lt)}
+.day{align-self:center;font-size:12.5px;font-weight:600;color:var(--lt)}
+.tool{display:flex;align-items:center;gap:12px;background:var(--peach);border-radius:20px;padding:12px 12px 12px 14px}
+.tool .ic{width:36px;height:36px;border-radius:12px;background:var(--o);color:#FFFFFF;display:grid;place-items:center;flex-shrink:0}
+.tool b{font-size:14.5px;font-weight:700;white-space:nowrap}
+.tool small{font-size:13px;color:var(--pm);white-space:nowrap}
+.tool.off{background:var(--fill)}
+.tool.off .ic{background:var(--track);color:var(--lt)}
+.tool.off small{color:var(--mut)}
+<!--/css-->
+%SB%
+<div class="top">
+  %BACK:Home.dc.html%
+  <a href="Memory.dc.html" class="col" style="align-items:center;gap:1px"><span class="ttl">Div</span><span class="mut" style="font-size:13px;font-weight:500">Opus · on your MacBook</span></a>
+  <a class="ib" href="Voice.dc.html" aria-label="Talk to Div">%I:mic:20%</a>
+</div>
+
+<div class="abs col" style="left:24px;right:24px;top:122px;gap:12px">
+  <span class="day">Tuesday</span>
+  <div class="me msg">Shoulder felt tight on overhead press today.</div>
+  <div class="ah">%DIV:26% Div <small>8:12 PM</small></div>
+  <p class="msg">Thanks for telling me. I'll take overhead pressing out for two weeks.</p>
+  <div class="{{toolCls}}">
+    <span class="ic">%I:swap:18::2.4%</span>
+    <span class="col" style="flex:1;min-width:0;gap:1px"><b>{{toolT}}</b><small>{{toolS}}</small></span>
+    <button type="button" class="pb w" onClick="{{toggle}}">{{toolBtn}}</button>
+  </div>
+  <p class="msg">Same movement pattern, less strain. Tell me how it feels Saturday.</p>
+  <span class="day" style="margin-top:4px">Today</span>
+  <div class="me msg">Why did my calories go up?</div>
+  <div class="ah">%DIV:26% Div <small>9:40 AM</small></div>
+  <p class="msg">You've lost 0.7 kg a week for 3 weeks. Faster than that starts to cost muscle, so I added 150 kcal.</p>
+  <a href="Calibrate.dc.html" class="pb f" style="align-self:flex-start">See the math %I:chev:15%</a>
+</div>
+
+<div class="abs row" style="left:24px;right:0;bottom:102px;gap:8px;overflow:hidden">
+  <a class="chip" href="Eat.dc.html">Plan my dinner</a><a class="chip" href="Review.dc.html">What did you change?</a>
+</div>
+<div class="abs row" style="left:16px;right:16px;bottom:34px;gap:8px">
+  <a class="ib" href="Snap.dc.html" aria-label="Attach photo" style="width:52px;height:52px;border-radius:18px">%I:plus:22%</a>
+  <label class="row" style="flex:1;height:52px;border-radius:18px;background:var(--fill);padding:0 14px 0 16px;gap:8px">
+    <input aria-label="Message Div" placeholder="Message Div" style="flex:1;min-width:0;border:0;background:transparent;outline:none;font:inherit;font-size:15.5px;color:var(--ink)">
+    <a class="mut" href="Voice.dc.html" aria-label="Talk">%I:mic:20%</a>
+  </label>
+  <button type="button" aria-label="Send" style="width:52px;height:52px;border-radius:18px;background:var(--o);color:#FFFFFF;display:grid;place-items:center;flex-shrink:0">%I:arrowu:22::2.4%</button>
+</div>
+%HB%
+<!--script-->
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { undone: false };
+  }
+  renderVals() {
+    const u = this.state.undone;
+    return {
+      toolCls: 'tool' + (u ? ' off' : ''),
+      toolT: u ? 'Overhead press is back' : 'Swapped in landmine press',
+      toolS: u ? 'Plan restored · you undid this' : 'For overhead press · 2 weeks',
+      toolBtn: u ? 'Redo' : 'Undo',
+      toggle: () => this.setState({ undone: !u }),
+    };
+  }
+}
