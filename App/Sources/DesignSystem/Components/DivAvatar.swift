@@ -83,7 +83,7 @@ struct DivAvatar: View {
 }
 
 /// The spiky outline, in a 100×100 box. Same path as the design's mascot.
-struct DivBodyShape: Shape {
+nonisolated struct DivBodyShape: Shape {
     func path(in rect: CGRect) -> Path {
         let pts: [(CGFloat, CGFloat)] = [
             (-4, 112), (0, 58), (-8, 40), (14, 40), (22, 18), (38, 32), (56, 12), (62, 38), (84, 34), (76, 56), (96, 70), (80, 82),
