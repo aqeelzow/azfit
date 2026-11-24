@@ -109,7 +109,7 @@ struct BodyScanView: View {
         }
     }
 
-    private struct Brackets: Shape {
+    private nonisolated struct Brackets: Shape {
         func path(in rect: CGRect) -> Path {
             let arm: CGFloat = 30
             let r: CGFloat = 16

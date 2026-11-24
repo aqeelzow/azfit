@@ -142,7 +142,7 @@ struct SnapMealView: View {
             background: size > 44 ? AZColor.Camera.glass : AZColor.Camera.scrim, foreground: .white, action: action)
     }
 
-    private struct Brackets: Shape {
+    private nonisolated struct Brackets: Shape {
         func path(in rect: CGRect) -> Path {
             let arm: CGFloat = 34
             let r: CGFloat = 18
