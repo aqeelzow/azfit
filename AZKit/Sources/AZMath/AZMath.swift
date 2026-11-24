@@ -1,8 +1,13 @@
 import AZModel
+import Foundation
 
-// AZMath: pure functions over AZModel types. Same input, same output, easy to test.
+// AZMath: pure functions over AZModel types. Same input, same output, easy to test (D-010).
 //
-// TODO: the formulas and rules from the brief (docs/product-brief.html):
-// - Pillar 1: estimated 1RM, effective sets, muscle fatigue and recovery.
-// - Pillar 2: trend weight, implied maintenance calories, protein targets.
-// - "When the target moves": the five decision rules for changing the calorie target.
+// Built: the numbers Div's jobs read (WeeklyMath, Strength, MealMath, WeightTrend).
+// TODO, from the brief (docs/product-brief.html): effective sets, muscle fatigue and recovery.
+
+/// Rounds to `places` decimal places, half away from zero.
+func rounded(_ value: Double, _ places: Int = 1) -> Double {
+    let scale = pow(10, Double(places))
+    return (value * scale).rounded() / scale
+}

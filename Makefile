@@ -13,7 +13,7 @@ TEST_FLAGS := -Xswiftc -F$(CLT)/Frameworks -Xlinker -F$(CLT)/Frameworks \
 	-Xlinker -rpath -Xlinker $(CLT)/Frameworks -Xlinker -rpath -Xlinker $(CLT)/usr/lib
 endif
 
-.PHONY: help bootstrap gen open test test-% lint format design check clean
+.PHONY: help bootstrap gen open test test-% lint format design check clean div eval
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z%_-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  \033[1m%-12s\033[0m %s\n", $$1, $$2}'
@@ -40,6 +40,12 @@ lint: ## Check formatting and lint rules (fails on any warning)
 
 format: ## Format all Swift code in place
 	swift format format -i -r $(SWIFT_DIRS)
+
+div: ## Build the div command line (Bridge/.build/debug/div)
+	cd Bridge && swift build --product div
+
+eval: div ## Run Div's evals through your Claude plan, e.g. make eval or make eval JOB=chat
+	Bridge/.build/debug/div eval $(JOB) $(FILTER)
 
 design: ## Rebuild design/screens and design/index.html from design/source
 	python3 design/source/build.py

@@ -84,7 +84,12 @@ targets:
   AZfitBridge:
     type: application
     platform: macOS
-    sources: [Bridge/App]
+    sources:
+      - path: Bridge/App
+      # Div's prompts, schemas and tools, copied into the app as a folder. DivFiles.locate() finds them there.
+      - path: Div
+        type: folder
+        buildPhase: resources
     dependencies:
       - package: Bridge
         product: BridgeKit

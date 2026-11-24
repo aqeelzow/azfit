@@ -1,0 +1,17 @@
+{
+  "name": "move-thursday",
+  "description": "Can't train Thursdays: Div should move Legs to another day.",
+  "data": "data.json",
+  "request": {
+    "message": "I can't train Thursdays anymore, can you move that session?",
+    "history": []
+  },
+  "expected": {
+    "change_types": [
+      "move_session"
+    ],
+    "tools_any": [
+      "get_plan"
+    ]
+  }
+}

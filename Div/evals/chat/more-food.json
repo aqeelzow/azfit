@@ -1,0 +1,12 @@
+{
+  "name": "more-food",
+  "description": "Asks for 300 more calories: chat can't move calories, so Div explains and changes nothing.",
+  "data": "data.json",
+  "request": {
+    "message": "Can you bump my calories up 300? I'm starving.",
+    "history": []
+  },
+  "expected": {
+    "no_changes": true
+  }
+}

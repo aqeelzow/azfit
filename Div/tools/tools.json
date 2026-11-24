@@ -1,0 +1,58 @@
+[
+  {
+    "name": "get_profile",
+    "description": "The person's goal, age, height, calorie and protein targets, calorie floor, whether protein is set by their doctor, and what Div remembers about them.",
+    "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false }
+  },
+  {
+    "name": "get_plan",
+    "description": "The current training plan: each session with its weekday and exercises (sets, rep range, working load in kg).",
+    "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false }
+  },
+  {
+    "name": "get_training_log",
+    "description": "Workouts set by set (load kg, reps, reps in reserve) with each exercise's best estimated 1RM per session, newest first.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "days": { "type": "integer", "description": "How many days back from today. Default 28.", "minimum": 1, "maximum": 365 },
+        "exercise": { "type": "string", "description": "Only this exercise (case-insensitive). Omit for all." }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "get_food_log",
+    "description": "Meals between two dates with each day's totals (kcal, protein, carbs, fat) and whether the day was logged completely.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "from": { "type": "string", "description": "YYYY-MM-DD. Default 7 days before today." },
+        "to": { "type": "string", "description": "YYYY-MM-DD. Default today." }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "get_weight_trend",
+    "description": "Weigh-ins with the smoothed trend weight, the weekly rate of change of the trend, and waist measurements.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "days": { "type": "integer", "description": "How many days back from today. Default 28.", "minimum": 1, "maximum": 365 }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "get_div_log",
+    "description": "Changes Div made, newest first: what changed, which job made it, the reason, and whether it is applied, waiting for approval, or undone.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "days": { "type": "integer", "description": "How many days back from today. Default 30.", "minimum": 1, "maximum": 365 }
+      },
+      "additionalProperties": false
+    }
+  }
+]

@@ -1,6 +1,6 @@
 # Architecture
 
-How the pieces are meant to fit. For why, see [decisions.md](decisions.md). Most of this is not built yet: the folders and packages exist with TODO stubs that say what goes in them.
+How the pieces are meant to fit. For why, see [decisions.md](decisions.md). Div's side is built (the jobs, policy, read tools and evals in BridgeKit, the math in AZMath); storage, sync, pairing and the app's data are still TODO stubs that say what goes in them.
 
 ## The big picture
 
@@ -15,7 +15,7 @@ How the pieces are meant to fit. For why, see [decisions.md](decisions.md). Most
 
 1. You log on the phone. It is saved locally first, so the app works offline.
 2. The phone syncs to the bridge on your Mac and asks it to run a Div job (after a workout, for a meal photo, in chat). The bridge runs the Sunday review on its own.
-3. The bridge runs `claude -p` with Div's prompts, the read tools and the answer schema from `Div/`.
+3. The bridge runs `claude -p` with Div's prompts and the answer schema from `Div/`. Fixed jobs get a snapshot of the data in the prompt; chat looks things up with read tools the bridge serves over MCP (D-021).
 4. Div answers with a list of changes, each with a reason.
 5. The bridge decides which changes apply now, which wait for your tap, and which are refused, then saves them.
 6. They sync back to the phone, shown in lavender with the Div mark and an Undo.
@@ -40,7 +40,8 @@ AZKit/                  shared Swift package, no UI. Used by the app and the bri
 
 Bridge/                 Mac menu bar app
 ├── App/                the SwiftUI shell (menu with phone, Claude and queue status)
-└── Sources/BridgeKit/  the real work: pairing, running Div, applying changes
+├── Sources/BridgeKit/  the real work: running Div, the policy, read tools, evals (pairing and saving: TODO)
+└── Sources/DivCLI/     `div`: run Div's jobs and evals from the Terminal
 
 Div/                    the agent's prompts, tools, schema and evals. No Swift. See Div/README.md.
 ```
