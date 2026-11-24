@@ -419,7 +419,7 @@ struct ConnectView: View {
                 .padding(.horizontal, 8)
         }
 
-        struct Line: Shape {
+        nonisolated struct Line: Shape {
             func path(in rect: CGRect) -> Path {
                 Path { p in
                     p.move(to: CGPoint(x: rect.minX, y: rect.midY))

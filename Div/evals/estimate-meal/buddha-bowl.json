@@ -1,0 +1,12 @@
+{
+  "name": "buddha-bowl",
+  "description": "Avocado, chickpeas, sweet potato and salad. Dressing is the unknown that matters.",
+  "photo": "design/img/bowl.jpg",
+  "request": {},
+  "expected": {
+    "kcal_between": [
+      350,
+      900
+    ]
+  }
+}

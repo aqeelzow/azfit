@@ -1,0 +1,12 @@
+{
+  "name": "chicken-plate",
+  "description": "Grilled chicken breast with grilled vegetables. No oil visible.",
+  "photo": "design/img/chicken.jpg",
+  "request": {},
+  "expected": {
+    "kcal_between": [
+      250,
+      650
+    ]
+  }
+}

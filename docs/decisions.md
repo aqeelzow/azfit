@@ -130,7 +130,7 @@ claude -p <prompt> --model <opus|sonnet|haiku> --output-format json --json-schem
 Tried by hand on 2026-11-22; the answer is in `structured_output` of the JSON envelope. No API keys to manage, no markup, and the user's data only goes to their own account. `--tools ""` and `--strict-mcp-config` mean Div sees only our read tools, nothing on the user's machine. `--setting-sources ""` keeps the user's personal Claude settings out of Div's runs. The bridge is not sandboxed because it must run the user's CLI; it is hardened-runtime signed.
 
 ### D-008 Div returns the whole diff; it has no tools that write
-**Accepted.** The brief lists write tools (`set_prescription`, `swap_exercise`, ...). We keep those names but they are entries in the `actions` array of one JSON result (a schema in `Div/schemas/`), not tool calls. Div reads through MCP tools, thinks, and returns everything at the end. Why: a run that dies halfway changes nothing; the batch is checked by the policy and applied in one transaction; evals compare JSON; there is no way for a prompt injection in a meal note to make a tool call that changes data.
+**Accepted** (reads changed by D-021). The brief lists write tools (`set_prescription`, `swap_exercise`, ...). We keep those names but they are entries in the `changes` array of one JSON result (a schema in `Div/schemas/`), not tool calls. Div reads through MCP tools, thinks, and returns everything at the end. Why: a run that dies halfway changes nothing; the batch is checked by the policy and applied in one transaction; evals compare JSON; there is no way for a prompt injection in a meal note to make a tool call that changes data.
 
 ### D-009 Autonomy is enforced in code, not in the prompt
 **Accepted.** A policy in Swift decides every action: apply (undoable for 7 days), propose (waits for a tap), ask, or refuse. The prompt explains the rules so Div proposes sensible things, but the code is what actually gates them, and it should have tests. Hard rules that no setting can change: Div never logs food, never decides a day was partial (it asks), never goes below the calorie floor, never touches doctor-set protein, and structural changes (add volume, deload, new workout, macros) are always proposals.
@@ -159,7 +159,7 @@ The design's argument: every auto change is marked, explained and undoable, whic
 **Accepted.** `import Testing`, `@Test`, `#expect`. On a Mac with only the Command Line Tools (no Xcode), `swift test` needs extra framework flags; `make test` adds them automatically. CI uses Xcode and needs nothing extra.
 
 ### D-015 Div evals run in BridgeKit
-**Accepted, not built yet.** Scenarios live in `Div/evals/` (state + job + expected outcome). The runner belongs in BridgeKit because it needs the real `claude -p` path, the MCP read tools and the policy. It checks outcomes (which actions, which verdicts, no forbidden actions), not wording. Run before changing a prompt; add a scenario for every behavior bug.
+**Accepted, built** (`DivEvals`, run with `make eval`). Scenarios live in `Div/evals/` (state + job + expected outcome). The runner belongs in BridgeKit because it needs the real `claude -p` path, the MCP read tools and the policy. It checks outcomes (which actions, which verdicts, no forbidden actions), not wording. Run before changing a prompt; add a scenario for every behavior bug.
 
 ### D-016 Apple Health consent per category, and a separate consent for Claude
 **Accepted.** Each Health category is its own switch. Reading Health into AZfit and sending it to Claude are separate consents (Apple requires explicit consent before health data goes to a third party, the user's own Claude account included). Until the second one is given, Health read tools return `not_shared` and Div works without them. Images (meal photos, scans) never go to Div except a meal photo for its own estimate.
@@ -168,7 +168,7 @@ The design's argument: every auto change is marked, explained and undoable, whic
 **Open.** Proposed default: 1,200. That is a common floor for women and low for most men; a per-person floor (for example from BMR) may be better. Div refuses anything below the floor either way. Aqeel and Moiz to decide.
 
 ### D-018 Model per job
-**Accepted.** Weekly review and chat: Opus (reasoning over many signals). Session review: Sonnet (frequent, narrow). Meal estimate: Haiku (fast, cheap, one image).
+**Accepted.** Weekly review and chat: Opus (reasoning over many signals). Session review: Sonnet (frequent, narrow). Meal estimate: Haiku (fast, cheap, one image). Added 2026-11-23: revising a meal and the in-workout set tweak also run on Haiku, because they're narrow and the person is waiting (mid-workout, between sets).
 
 ### D-019 UUIDs stored as lowercase text
 **Accepted.** Readable in the SQLite shell, stable across platforms, and the same string Div sees in tool results and returns in actions. In GRDB, set this with `databaseUUIDEncodingStrategy`.
@@ -177,6 +177,12 @@ The design's argument: every auto change is marked, explained and undoable, whic
 **Accepted.** The design's typeface, under the SIL Open Font License (`App/Resources/Fonts/OFL.txt`). One variable font file covers every weight.
 
 ---
+
+### D-021 Fixed jobs get a snapshot; chat looks things up
+**Accepted** (Aqeel, 2026-11-23). Supersedes the "reads through MCP tools" part of D-008. The weekly review, session review and meal estimate get exactly the data they need in the prompt (a `WeeklySnapshot`, a `SessionReport`, a photo) plus the numbers AZMath derived from it. One model turn, so they're faster, use less of the person's plan, and evals are repeatable: the same fixture always shows Div the same data. Chat can't know in advance what it will be asked, so it gets six read tools (`Div/tools/tools.json`) served by the bridge over MCP (`DivToolServer`, started by Claude Code as `div tools`). Chat can't change calories or protein (only the weekly review does, from two weeks of data); its schema leaves them out and the policy refuses them anyway. Today the tools answer from a `DivData` file the bridge writes per run; with sync they'll read the bridge's copy of the database.
+
+### D-022 The agent is Swift; the Node prototype is gone
+**Accepted** (Aqeel, 2026-11-23). The first bridge was Node (branch `bridge`, before this). It was ported so the app and the bridge share one model and one set of formulas: types in `AZModel`, formulas in `AZMath`, the `claude -p` runner, policy, read tools and evals in `BridgeKit`, and a `div` command line (`Bridge/Sources/DivCLI`) for running jobs and evals by hand. The policy's verdicts are D-009's: `apply`, `propose` (ask first) and `refuse`. Autonomy is a value passed to the policy (`Autonomy`, the three switches on "What Div knows"); it defaults to the design's (all on) until D-012 is settled. The Node version's HTTP server and QR pairing weren't ported: phone-to-bridge transport belongs with sync (D-006).
 
 ## Open questions
 

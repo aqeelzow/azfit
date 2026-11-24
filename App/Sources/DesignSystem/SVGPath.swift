@@ -206,7 +206,7 @@ nonisolated enum SVGPath {
 }
 
 /// A shape drawn from SVG path data in a fixed view box, scaled to fit the frame it is given.
-struct SVGShape: Shape {
+nonisolated struct SVGShape: Shape {
     var data: String
     var viewBox: CGRect
 

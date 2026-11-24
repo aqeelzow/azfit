@@ -133,7 +133,7 @@ struct ScanResultView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private struct Leader: Shape {
+    private nonisolated struct Leader: Shape {
         func path(in rect: CGRect) -> Path {
             Path { p in
                 p.move(to: CGPoint(x: rect.minX, y: rect.midY))

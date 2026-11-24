@@ -1,5 +1,6 @@
 # macOS
 .DS_Store
+node_modules/
 
 # SwiftPM
 .build/
@@ -23,3 +24,7 @@ DerivedData/
 .env
 .env.*
 .claude/settings.local.json
+
+# Python
+__pycache__/
+/build/

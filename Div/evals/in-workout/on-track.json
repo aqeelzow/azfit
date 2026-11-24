@@ -1,0 +1,27 @@
+{
+  "name": "on-track",
+  "description": "Set 1 landed mid-range at the planned RIR: keep going.",
+  "request": {
+    "exercise": "Bench press",
+    "prescribed": {
+      "sets": 3,
+      "rep_min": 6,
+      "rep_max": 10,
+      "rir": 2,
+      "load_kg": 80
+    },
+    "done": [
+      {
+        "load_kg": 80,
+        "reps": 8,
+        "rir": 2
+      }
+    ],
+    "rest_s": 150
+  },
+  "expected": {
+    "calls": [
+      "keep"
+    ]
+  }
+}

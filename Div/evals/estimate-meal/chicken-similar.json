@@ -1,0 +1,24 @@
+{
+  "name": "chicken-similar",
+  "description": "Logged before as 'Grilled chicken and veg': reuse those numbers.",
+  "photo": "design/img/chicken.jpg",
+  "request": {
+    "similar_meals": [
+      {
+        "name": "Grilled chicken and veg",
+        "kcal": 430,
+        "protein_g": 52,
+        "carbs_g": 22,
+        "fat_g": 14,
+        "logged_times": 6
+      }
+    ]
+  },
+  "expected": {
+    "kcal_between": [
+      370,
+      490
+    ],
+    "matched_similar": true
+  }
+}

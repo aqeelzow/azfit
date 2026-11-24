@@ -1,0 +1,15 @@
+{
+  "name": "bench-history",
+  "description": "Asks about recent bench sessions: Div should look it up, not guess.",
+  "data": "data.json",
+  "request": {
+    "message": "What did I bench last week?",
+    "history": []
+  },
+  "expected": {
+    "no_changes": true,
+    "tools_any": [
+      "get_training_log"
+    ]
+  }
+}

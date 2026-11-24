@@ -1,0 +1,10 @@
+{
+  "name": "not-food",
+  "description": "A gym photo: no items, ask for a retake.",
+  "photo": "design/img/gym.jpg",
+  "request": {},
+  "expected": {
+    "empty_items": true,
+    "follow_up": true
+  }
+}

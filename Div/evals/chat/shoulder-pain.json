@@ -1,0 +1,25 @@
+{
+  "name": "shoulder-pain",
+  "description": "Reports a tight shoulder on overhead press: Div should swap it for something easier on the shoulder.",
+  "data": "data.json",
+  "request": {
+    "message": "Shoulder felt tight on overhead press today.",
+    "history": []
+  },
+  "expected": {
+    "change_types": [
+      "swap_exercise"
+    ],
+    "tools_any": [
+      "get_plan"
+    ],
+    "forbidden_change_types": [
+      "set_calorie_target"
+    ],
+    "change_fields": {
+      "swap_exercise": {
+        "weeks": 2
+      }
+    }
+  }
+}

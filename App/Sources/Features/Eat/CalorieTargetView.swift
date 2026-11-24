@@ -164,7 +164,7 @@ private struct WeeklyLossChart: View {
         .accessibilityLabel("Weekly loss: 0.3, 0.4, 0.7, 0.8 and 0.6 kg against a 0.4 kg goal")
     }
 
-    private struct DashedLine: Shape {
+    private nonisolated struct DashedLine: Shape {
         func path(in rect: CGRect) -> Path {
             Path { p in
                 p.move(to: CGPoint(x: rect.minX, y: rect.midY))

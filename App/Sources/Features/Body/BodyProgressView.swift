@@ -158,7 +158,7 @@ struct BodyProgressView: View {
         .frame(height: 56)
     }
 
-    private struct DashedRule: Shape {
+    private nonisolated struct DashedRule: Shape {
         func path(in rect: CGRect) -> Path {
             Path { p in
                 p.move(to: CGPoint(x: rect.minX, y: rect.midY))
@@ -168,7 +168,7 @@ struct BodyProgressView: View {
     }
 
     /// Seven points in a 64 by 24 box, as in the design's polyline.
-    private struct Sparkline: Shape {
+    private nonisolated struct Sparkline: Shape {
         var points: [CGFloat]
 
         func path(in rect: CGRect) -> Path {

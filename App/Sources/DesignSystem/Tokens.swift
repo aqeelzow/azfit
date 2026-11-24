@@ -67,7 +67,7 @@ enum AZColor {
     }
 }
 
-extension Color {
+nonisolated extension Color {
     fileprivate init(hex: UInt32, opacity: Double = 1) {
         self.init(
             .sRGB, red: Double((hex >> 16) & 0xFF) / 255, green: Double((hex >> 8) & 0xFF) / 255, blue: Double(hex & 0xFF) / 255,
@@ -89,11 +89,11 @@ enum AZSpacing {
     static let stack: CGFloat = 12
 }
 
-extension Color {
+nonisolated extension Color {
     /// A color that follows light and dark mode.
     init(light: UInt32, dark: UInt32) {
         #if canImport(UIKit)
-        self.init(uiColor: UIColor { $0.userInterfaceStyle == .dark ? UIColor(hex: dark) : UIColor(hex: light) })
+        self.init(uiColor: UIColor { @Sendable in $0.userInterfaceStyle == .dark ? UIColor(hex: dark) : UIColor(hex: light) })
         #else
         self.init(
             nsColor: NSColor(name: nil) { $0.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua ? NSColor(hex: dark) : NSColor(hex: light) })
@@ -102,14 +102,14 @@ extension Color {
 }
 
 #if canImport(UIKit)
-extension UIColor {
+nonisolated extension UIColor {
     fileprivate convenience init(hex: UInt32) {
         self.init(
             red: CGFloat((hex >> 16) & 0xFF) / 255, green: CGFloat((hex >> 8) & 0xFF) / 255, blue: CGFloat(hex & 0xFF) / 255, alpha: 1)
     }
 }
 #else
-extension NSColor {
+nonisolated extension NSColor {
     fileprivate convenience init(hex: UInt32) {
         self.init(
             srgbRed: CGFloat((hex >> 16) & 0xFF) / 255, green: CGFloat((hex >> 8) & 0xFF) / 255, blue: CGFloat(hex & 0xFF) / 255, alpha: 1)

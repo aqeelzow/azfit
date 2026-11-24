@@ -1,0 +1,1533 @@
+{
+  "today": "2026-11-23",
+  "profile": {
+    "name": "Alex",
+    "age": 29,
+    "height_cm": 180,
+    "goal": "cut",
+    "target_rate_pct_per_week": -0.5,
+    "calories_kcal": 2350,
+    "protein_g_per_kg": 2.1,
+    "calorie_floor_kcal": 1700,
+    "kidney_disease": false
+  },
+  "memories": [
+    {
+      "text": "Right knee: no deep lunges",
+      "source": "onboarding",
+      "date": "2026-09-24"
+    },
+    {
+      "text": "Trains mornings, about 50 min",
+      "source": "learned",
+      "date": "2026-11-03"
+    },
+    {
+      "text": "Short answers, no pep talks",
+      "source": "chat",
+      "date": "2026-10-03"
+    }
+  ],
+  "plan": [
+    {
+      "day": "Monday",
+      "name": "Push A",
+      "exercises": [
+        {
+          "exercise": "Bench press",
+          "sets": 3,
+          "rep_min": 6,
+          "rep_max": 10,
+          "load_kg": 80,
+          "hit_top_of_range_sessions": 1
+        },
+        {
+          "exercise": "Overhead press",
+          "sets": 3,
+          "rep_min": 6,
+          "rep_max": 8,
+          "load_kg": 50,
+          "hit_top_of_range_sessions": 0
+        },
+        {
+          "exercise": "Cable fly",
+          "sets": 3,
+          "rep_min": 12,
+          "rep_max": 15,
+          "load_kg": 15,
+          "hit_top_of_range_sessions": 0
+        }
+      ]
+    },
+    {
+      "day": "Wednesday",
+      "name": "Pull B",
+      "exercises": [
+        {
+          "exercise": "Barbell row",
+          "sets": 3,
+          "rep_min": 8,
+          "rep_max": 10,
+          "load_kg": 70,
+          "hit_top_of_range_sessions": 2
+        },
+        {
+          "exercise": "Pull-up",
+          "sets": 3,
+          "rep_min": 6,
+          "rep_max": 10,
+          "load_kg": 0,
+          "hit_top_of_range_sessions": 0
+        },
+        {
+          "exercise": "Face pull",
+          "sets": 2,
+          "rep_min": 12,
+          "rep_max": 15,
+          "load_kg": 20,
+          "hit_top_of_range_sessions": 0
+        }
+      ]
+    },
+    {
+      "day": "Thursday",
+      "name": "Legs",
+      "exercises": [
+        {
+          "exercise": "Back squat",
+          "sets": 3,
+          "rep_min": 6,
+          "rep_max": 8,
+          "load_kg": 110,
+          "hit_top_of_range_sessions": 1
+        },
+        {
+          "exercise": "Romanian deadlift",
+          "sets": 3,
+          "rep_min": 8,
+          "rep_max": 10,
+          "load_kg": 90,
+          "hit_top_of_range_sessions": 2
+        },
+        {
+          "exercise": "Leg curl",
+          "sets": 3,
+          "rep_min": 10,
+          "rep_max": 12,
+          "load_kg": 40,
+          "hit_top_of_range_sessions": 0
+        }
+      ]
+    },
+    {
+      "day": "Saturday",
+      "name": "Upper A",
+      "exercises": [
+        {
+          "exercise": "Incline DB press",
+          "sets": 3,
+          "rep_min": 8,
+          "rep_max": 10,
+          "load_kg": 30,
+          "hit_top_of_range_sessions": 0
+        },
+        {
+          "exercise": "Lateral raise",
+          "sets": 3,
+          "rep_min": 12,
+          "rep_max": 15,
+          "load_kg": 10,
+          "hit_top_of_range_sessions": 0
+        }
+      ]
+    }
+  ],
+  "weigh_ins": [
+    {
+      "date": "2026-10-19",
+      "kg": 84.5
+    },
+    {
+      "date": "2026-10-20",
+      "kg": 84.2
+    },
+    {
+      "date": "2026-10-21",
+      "kg": 84.5
+    },
+    {
+      "date": "2026-10-22",
+      "kg": 84.0
+    },
+    {
+      "date": "2026-10-23",
+      "kg": 84.2
+    },
+    {
+      "date": "2026-10-24",
+      "kg": 84.0
+    },
+    {
+      "date": "2026-10-25",
+      "kg": 83.6
+    },
+    {
+      "date": "2026-10-26",
+      "kg": 83.9
+    },
+    {
+      "date": "2026-10-27",
+      "kg": 83.4
+    },
+    {
+      "date": "2026-10-28",
+      "kg": 83.6
+    },
+    {
+      "date": "2026-10-29",
+      "kg": 83.3
+    },
+    {
+      "date": "2026-10-30",
+      "kg": 83.2
+    },
+    {
+      "date": "2026-10-31",
+      "kg": 83.3
+    },
+    {
+      "date": "2026-11-01",
+      "kg": 83.6
+    },
+    {
+      "date": "2026-11-02",
+      "kg": 82.9
+    },
+    {
+      "date": "2026-11-03",
+      "kg": 82.9
+    },
+    {
+      "date": "2026-11-04",
+      "kg": 83.1
+    },
+    {
+      "date": "2026-11-05",
+      "kg": 83.3
+    },
+    {
+      "date": "2026-11-06",
+      "kg": 82.9
+    },
+    {
+      "date": "2026-11-07",
+      "kg": 82.6
+    },
+    {
+      "date": "2026-11-08",
+      "kg": 83.0
+    },
+    {
+      "date": "2026-11-09",
+      "kg": 82.1
+    },
+    {
+      "date": "2026-11-10",
+      "kg": 82.9
+    },
+    {
+      "date": "2026-11-11",
+      "kg": 82.4
+    },
+    {
+      "date": "2026-11-12",
+      "kg": 82.2
+    },
+    {
+      "date": "2026-11-13",
+      "kg": 82.2
+    },
+    {
+      "date": "2026-11-14",
+      "kg": 82.3
+    },
+    {
+      "date": "2026-11-15",
+      "kg": 82.7
+    },
+    {
+      "date": "2026-11-16",
+      "kg": 82.1
+    },
+    {
+      "date": "2026-11-17",
+      "kg": 82.4
+    },
+    {
+      "date": "2026-11-18",
+      "kg": 82.4
+    },
+    {
+      "date": "2026-11-19",
+      "kg": 82.2
+    },
+    {
+      "date": "2026-11-20",
+      "kg": 82.3
+    },
+    {
+      "date": "2026-11-21",
+      "kg": 81.9
+    },
+    {
+      "date": "2026-11-22",
+      "kg": 81.9
+    }
+  ],
+  "waist": [
+    {
+      "date": "2026-10-26",
+      "cm": 88.0
+    },
+    {
+      "date": "2026-11-09",
+      "cm": 87.1
+    },
+    {
+      "date": "2026-11-22",
+      "cm": 86.4
+    }
+  ],
+  "days": [
+    {
+      "date": "2026-11-09",
+      "complete": true,
+      "meals": [
+        {
+          "time": "08:10",
+          "name": "Greek yogurt, berries, granola",
+          "kcal": 420,
+          "protein_g": 32,
+          "carbs_g": 48,
+          "fat_g": 11
+        },
+        {
+          "time": "12:40",
+          "name": "Chicken shawarma plate",
+          "kcal": 780,
+          "protein_g": 52,
+          "carbs_g": 74,
+          "fat_g": 28
+        },
+        {
+          "time": "16:00",
+          "name": "Protein shake, banana",
+          "kcal": 280,
+          "protein_g": 30,
+          "carbs_g": 32,
+          "fat_g": 3
+        },
+        {
+          "time": "19:30",
+          "name": "Salmon, rice, broccoli",
+          "kcal": 720,
+          "protein_g": 45,
+          "carbs_g": 70,
+          "fat_g": 26
+        }
+      ]
+    },
+    {
+      "date": "2026-11-10",
+      "complete": true,
+      "meals": [
+        {
+          "time": "08:10",
+          "name": "Greek yogurt, berries, granola",
+          "kcal": 420,
+          "protein_g": 32,
+          "carbs_g": 48,
+          "fat_g": 11
+        },
+        {
+          "time": "12:40",
+          "name": "Chicken shawarma plate",
+          "kcal": 780,
+          "protein_g": 52,
+          "carbs_g": 74,
+          "fat_g": 28
+        },
+        {
+          "time": "16:00",
+          "name": "Protein shake, banana",
+          "kcal": 280,
+          "protein_g": 30,
+          "carbs_g": 32,
+          "fat_g": 3
+        },
+        {
+          "time": "19:30",
+          "name": "Salmon, rice, broccoli",
+          "kcal": 720,
+          "protein_g": 45,
+          "carbs_g": 70,
+          "fat_g": 26
+        }
+      ]
+    },
+    {
+      "date": "2026-11-11",
+      "complete": true,
+      "meals": [
+        {
+          "time": "08:10",
+          "name": "Greek yogurt, berries, granola",
+          "kcal": 420,
+          "protein_g": 32,
+          "carbs_g": 48,
+          "fat_g": 11
+        },
+        {
+          "time": "12:40",
+          "name": "Chicken shawarma plate",
+          "kcal": 780,
+          "protein_g": 52,
+          "carbs_g": 74,
+          "fat_g": 28
+        },
+        {
+          "time": "16:00",
+          "name": "Protein shake, banana",
+          "kcal": 280,
+          "protein_g": 30,
+          "carbs_g": 32,
+          "fat_g": 3
+        },
+        {
+          "time": "19:30",
+          "name": "Salmon, rice, broccoli",
+          "kcal": 720,
+          "protein_g": 45,
+          "carbs_g": 70,
+          "fat_g": 26
+        }
+      ]
+    },
+    {
+      "date": "2026-11-12",
+      "complete": true,
+      "meals": [
+        {
+          "time": "08:10",
+          "name": "Greek yogurt, berries, granola",
+          "kcal": 420,
+          "protein_g": 32,
+          "carbs_g": 48,
+          "fat_g": 11
+        },
+        {
+          "time": "12:40",
+          "name": "Chicken shawarma plate",
+          "kcal": 780,
+          "protein_g": 52,
+          "carbs_g": 74,
+          "fat_g": 28
+        },
+        {
+          "time": "16:00",
+          "name": "Protein shake, banana",
+          "kcal": 280,
+          "protein_g": 30,
+          "carbs_g": 32,
+          "fat_g": 3
+        },
+        {
+          "time": "19:30",
+          "name": "Salmon, rice, broccoli",
+          "kcal": 720,
+          "protein_g": 45,
+          "carbs_g": 70,
+          "fat_g": 26
+        }
+      ]
+    },
+    {
+      "date": "2026-11-13",
+      "complete": true,
+      "meals": [
+        {
+          "time": "08:10",
+          "name": "Greek yogurt, berries, granola",
+          "kcal": 420,
+          "protein_g": 32,
+          "carbs_g": 48,
+          "fat_g": 11
+        },
+        {
+          "time": "12:40",
+          "name": "Chicken shawarma plate",
+          "kcal": 780,
+          "protein_g": 52,
+          "carbs_g": 74,
+          "fat_g": 28
+        },
+        {
+          "time": "16:00",
+          "name": "Protein shake, banana",
+          "kcal": 280,
+          "protein_g": 30,
+          "carbs_g": 32,
+          "fat_g": 3
+        },
+        {
+          "time": "19:30",
+          "name": "Salmon, rice, broccoli",
+          "kcal": 720,
+          "protein_g": 45,
+          "carbs_g": 70,
+          "fat_g": 26
+        }
+      ]
+    },
+    {
+      "date": "2026-11-14",
+      "complete": true,
+      "meals": [
+        {
+          "time": "08:10",
+          "name": "Greek yogurt, berries, granola",
+          "kcal": 420,
+          "protein_g": 32,
+          "carbs_g": 48,
+          "fat_g": 11
+        },
+        {
+          "time": "12:40",
+          "name": "Chicken shawarma plate",
+          "kcal": 780,
+          "protein_g": 52,
+          "carbs_g": 74,
+          "fat_g": 28
+        },
+        {
+          "time": "16:00",
+          "name": "Protein shake, banana",
+          "kcal": 280,
+          "protein_g": 30,
+          "carbs_g": 32,
+          "fat_g": 3
+        },
+        {
+          "time": "19:30",
+          "name": "Salmon, rice, broccoli",
+          "kcal": 720,
+          "protein_g": 45,
+          "carbs_g": 70,
+          "fat_g": 26
+        }
+      ]
+    },
+    {
+      "date": "2026-11-15",
+      "complete": true,
+      "meals": [
+        {
+          "time": "08:10",
+          "name": "Greek yogurt, berries, granola",
+          "kcal": 420,
+          "protein_g": 32,
+          "carbs_g": 48,
+          "fat_g": 11
+        },
+        {
+          "time": "12:40",
+          "name": "Chicken shawarma plate",
+          "kcal": 780,
+          "protein_g": 52,
+          "carbs_g": 74,
+          "fat_g": 28
+        },
+        {
+          "time": "16:00",
+          "name": "Protein shake, banana",
+          "kcal": 280,
+          "protein_g": 30,
+          "carbs_g": 32,
+          "fat_g": 3
+        },
+        {
+          "time": "19:30",
+          "name": "Salmon, rice, broccoli",
+          "kcal": 720,
+          "protein_g": 45,
+          "carbs_g": 70,
+          "fat_g": 26
+        }
+      ]
+    },
+    {
+      "date": "2026-11-16",
+      "complete": true,
+      "meals": [
+        {
+          "time": "08:10",
+          "name": "Greek yogurt, berries, granola",
+          "kcal": 420,
+          "protein_g": 32,
+          "carbs_g": 48,
+          "fat_g": 11
+        },
+        {
+          "time": "12:40",
+          "name": "Chicken shawarma plate",
+          "kcal": 780,
+          "protein_g": 52,
+          "carbs_g": 74,
+          "fat_g": 28
+        },
+        {
+          "time": "16:00",
+          "name": "Protein shake, banana",
+          "kcal": 280,
+          "protein_g": 30,
+          "carbs_g": 32,
+          "fat_g": 3
+        },
+        {
+          "time": "19:30",
+          "name": "Salmon, rice, broccoli",
+          "kcal": 720,
+          "protein_g": 45,
+          "carbs_g": 70,
+          "fat_g": 26
+        }
+      ]
+    },
+    {
+      "date": "2026-11-17",
+      "complete": true,
+      "meals": [
+        {
+          "time": "08:10",
+          "name": "Greek yogurt, berries, granola",
+          "kcal": 420,
+          "protein_g": 32,
+          "carbs_g": 48,
+          "fat_g": 11
+        },
+        {
+          "time": "12:40",
+          "name": "Chicken shawarma plate",
+          "kcal": 780,
+          "protein_g": 52,
+          "carbs_g": 74,
+          "fat_g": 28
+        },
+        {
+          "time": "16:00",
+          "name": "Protein shake, banana",
+          "kcal": 280,
+          "protein_g": 30,
+          "carbs_g": 32,
+          "fat_g": 3
+        },
+        {
+          "time": "19:30",
+          "name": "Salmon, rice, broccoli",
+          "kcal": 720,
+          "protein_g": 45,
+          "carbs_g": 70,
+          "fat_g": 26
+        }
+      ]
+    },
+    {
+      "date": "2026-11-18",
+      "complete": true,
+      "meals": [
+        {
+          "time": "08:10",
+          "name": "Greek yogurt, berries, granola",
+          "kcal": 420,
+          "protein_g": 32,
+          "carbs_g": 48,
+          "fat_g": 11
+        },
+        {
+          "time": "12:40",
+          "name": "Chicken shawarma plate",
+          "kcal": 780,
+          "protein_g": 52,
+          "carbs_g": 74,
+          "fat_g": 28
+        },
+        {
+          "time": "16:00",
+          "name": "Protein shake, banana",
+          "kcal": 280,
+          "protein_g": 30,
+          "carbs_g": 32,
+          "fat_g": 3
+        },
+        {
+          "time": "19:30",
+          "name": "Salmon, rice, broccoli",
+          "kcal": 720,
+          "protein_g": 45,
+          "carbs_g": 70,
+          "fat_g": 26
+        }
+      ]
+    },
+    {
+      "date": "2026-11-19",
+      "complete": false,
+      "meals": [
+        {
+          "time": "08:10",
+          "name": "Greek yogurt, berries, granola",
+          "kcal": 420,
+          "protein_g": 32,
+          "carbs_g": 48,
+          "fat_g": 11
+        },
+        {
+          "time": "12:40",
+          "name": "Chicken shawarma plate",
+          "kcal": 780,
+          "protein_g": 52,
+          "carbs_g": 74,
+          "fat_g": 28
+        },
+        {
+          "time": "16:00",
+          "name": "Protein shake, banana",
+          "kcal": 280,
+          "protein_g": 30,
+          "carbs_g": 32,
+          "fat_g": 3
+        }
+      ]
+    },
+    {
+      "date": "2026-11-20",
+      "complete": true,
+      "meals": [
+        {
+          "time": "08:10",
+          "name": "Greek yogurt, berries, granola",
+          "kcal": 420,
+          "protein_g": 32,
+          "carbs_g": 48,
+          "fat_g": 11
+        },
+        {
+          "time": "12:40",
+          "name": "Chicken shawarma plate",
+          "kcal": 780,
+          "protein_g": 52,
+          "carbs_g": 74,
+          "fat_g": 28
+        },
+        {
+          "time": "16:00",
+          "name": "Protein shake, banana",
+          "kcal": 280,
+          "protein_g": 30,
+          "carbs_g": 32,
+          "fat_g": 3
+        },
+        {
+          "time": "19:30",
+          "name": "Salmon, rice, broccoli",
+          "kcal": 720,
+          "protein_g": 45,
+          "carbs_g": 70,
+          "fat_g": 26
+        }
+      ]
+    },
+    {
+      "date": "2026-11-21",
+      "complete": true,
+      "meals": [
+        {
+          "time": "08:10",
+          "name": "Greek yogurt, berries, granola",
+          "kcal": 420,
+          "protein_g": 32,
+          "carbs_g": 48,
+          "fat_g": 11
+        },
+        {
+          "time": "12:40",
+          "name": "Chicken shawarma plate",
+          "kcal": 780,
+          "protein_g": 52,
+          "carbs_g": 74,
+          "fat_g": 28
+        },
+        {
+          "time": "16:00",
+          "name": "Protein shake, banana",
+          "kcal": 280,
+          "protein_g": 30,
+          "carbs_g": 32,
+          "fat_g": 3
+        },
+        {
+          "time": "19:30",
+          "name": "Salmon, rice, broccoli",
+          "kcal": 720,
+          "protein_g": 45,
+          "carbs_g": 70,
+          "fat_g": 26
+        }
+      ]
+    },
+    {
+      "date": "2026-11-22",
+      "complete": true,
+      "meals": [
+        {
+          "time": "08:10",
+          "name": "Greek yogurt, berries, granola",
+          "kcal": 420,
+          "protein_g": 32,
+          "carbs_g": 48,
+          "fat_g": 11
+        },
+        {
+          "time": "12:40",
+          "name": "Chicken shawarma plate",
+          "kcal": 780,
+          "protein_g": 52,
+          "carbs_g": 74,
+          "fat_g": 28
+        },
+        {
+          "time": "16:00",
+          "name": "Protein shake, banana",
+          "kcal": 280,
+          "protein_g": 30,
+          "carbs_g": 32,
+          "fat_g": 3
+        },
+        {
+          "time": "19:30",
+          "name": "Salmon, rice, broccoli",
+          "kcal": 720,
+          "protein_g": 45,
+          "carbs_g": 70,
+          "fat_g": 26
+        }
+      ]
+    }
+  ],
+  "workouts": [
+    {
+      "date": "2026-11-21",
+      "name": "Upper A",
+      "sets": [
+        {
+          "exercise": "Incline DB press",
+          "load_kg": 30,
+          "reps": 10,
+          "rir": 2
+        },
+        {
+          "exercise": "Incline DB press",
+          "load_kg": 30,
+          "reps": 9,
+          "rir": 2
+        },
+        {
+          "exercise": "Incline DB press",
+          "load_kg": 30,
+          "reps": 9,
+          "rir": 2
+        },
+        {
+          "exercise": "Lateral raise",
+          "load_kg": 10,
+          "reps": 15,
+          "rir": 1
+        },
+        {
+          "exercise": "Lateral raise",
+          "load_kg": 10,
+          "reps": 14,
+          "rir": 1
+        },
+        {
+          "exercise": "Lateral raise",
+          "load_kg": 10,
+          "reps": 12,
+          "rir": 1
+        }
+      ]
+    },
+    {
+      "date": "2026-11-19",
+      "name": "Legs",
+      "sets": [
+        {
+          "exercise": "Back squat",
+          "load_kg": 110,
+          "reps": 8,
+          "rir": 2
+        },
+        {
+          "exercise": "Back squat",
+          "load_kg": 110,
+          "reps": 8,
+          "rir": 2
+        },
+        {
+          "exercise": "Back squat",
+          "load_kg": 110,
+          "reps": 7,
+          "rir": 2
+        },
+        {
+          "exercise": "Romanian deadlift",
+          "load_kg": 90,
+          "reps": 10,
+          "rir": 2
+        },
+        {
+          "exercise": "Romanian deadlift",
+          "load_kg": 90,
+          "reps": 10,
+          "rir": 2
+        },
+        {
+          "exercise": "Romanian deadlift",
+          "load_kg": 90,
+          "reps": 10,
+          "rir": 2
+        }
+      ]
+    },
+    {
+      "date": "2026-11-18",
+      "name": "Pull B",
+      "sets": [
+        {
+          "exercise": "Barbell row",
+          "load_kg": 70,
+          "reps": 10,
+          "rir": 2
+        },
+        {
+          "exercise": "Barbell row",
+          "load_kg": 70,
+          "reps": 10,
+          "rir": 2
+        },
+        {
+          "exercise": "Barbell row",
+          "load_kg": 70,
+          "reps": 9,
+          "rir": 2
+        },
+        {
+          "exercise": "Pull-up",
+          "load_kg": 0,
+          "reps": 8,
+          "rir": 1
+        },
+        {
+          "exercise": "Pull-up",
+          "load_kg": 0,
+          "reps": 7,
+          "rir": 1
+        },
+        {
+          "exercise": "Pull-up",
+          "load_kg": 0,
+          "reps": 7,
+          "rir": 1
+        }
+      ]
+    },
+    {
+      "date": "2026-11-16",
+      "name": "Push A",
+      "sets": [
+        {
+          "exercise": "Bench press",
+          "load_kg": 80.0,
+          "reps": 10,
+          "rir": 2
+        },
+        {
+          "exercise": "Bench press",
+          "load_kg": 80.0,
+          "reps": 9,
+          "rir": 2
+        },
+        {
+          "exercise": "Bench press",
+          "load_kg": 80.0,
+          "reps": 8,
+          "rir": 2
+        },
+        {
+          "exercise": "Overhead press",
+          "load_kg": 50,
+          "reps": 8,
+          "rir": 1
+        },
+        {
+          "exercise": "Overhead press",
+          "load_kg": 50,
+          "reps": 7,
+          "rir": 1
+        },
+        {
+          "exercise": "Overhead press",
+          "load_kg": 50,
+          "reps": 6,
+          "rir": 1
+        }
+      ]
+    },
+    {
+      "date": "2026-11-14",
+      "name": "Upper A",
+      "sets": [
+        {
+          "exercise": "Incline DB press",
+          "load_kg": 30,
+          "reps": 10,
+          "rir": 2
+        },
+        {
+          "exercise": "Incline DB press",
+          "load_kg": 30,
+          "reps": 9,
+          "rir": 2
+        },
+        {
+          "exercise": "Incline DB press",
+          "load_kg": 30,
+          "reps": 9,
+          "rir": 2
+        },
+        {
+          "exercise": "Lateral raise",
+          "load_kg": 10,
+          "reps": 15,
+          "rir": 1
+        },
+        {
+          "exercise": "Lateral raise",
+          "load_kg": 10,
+          "reps": 14,
+          "rir": 1
+        },
+        {
+          "exercise": "Lateral raise",
+          "load_kg": 10,
+          "reps": 12,
+          "rir": 1
+        }
+      ]
+    },
+    {
+      "date": "2026-11-12",
+      "name": "Legs",
+      "sets": [
+        {
+          "exercise": "Back squat",
+          "load_kg": 110,
+          "reps": 8,
+          "rir": 2
+        },
+        {
+          "exercise": "Back squat",
+          "load_kg": 110,
+          "reps": 8,
+          "rir": 2
+        },
+        {
+          "exercise": "Back squat",
+          "load_kg": 110,
+          "reps": 7,
+          "rir": 2
+        },
+        {
+          "exercise": "Romanian deadlift",
+          "load_kg": 90,
+          "reps": 10,
+          "rir": 2
+        },
+        {
+          "exercise": "Romanian deadlift",
+          "load_kg": 90,
+          "reps": 10,
+          "rir": 2
+        },
+        {
+          "exercise": "Romanian deadlift",
+          "load_kg": 90,
+          "reps": 10,
+          "rir": 2
+        }
+      ]
+    },
+    {
+      "date": "2026-11-11",
+      "name": "Pull B",
+      "sets": [
+        {
+          "exercise": "Barbell row",
+          "load_kg": 70,
+          "reps": 10,
+          "rir": 2
+        },
+        {
+          "exercise": "Barbell row",
+          "load_kg": 70,
+          "reps": 10,
+          "rir": 2
+        },
+        {
+          "exercise": "Barbell row",
+          "load_kg": 70,
+          "reps": 9,
+          "rir": 2
+        },
+        {
+          "exercise": "Pull-up",
+          "load_kg": 0,
+          "reps": 8,
+          "rir": 1
+        },
+        {
+          "exercise": "Pull-up",
+          "load_kg": 0,
+          "reps": 7,
+          "rir": 1
+        },
+        {
+          "exercise": "Pull-up",
+          "load_kg": 0,
+          "reps": 7,
+          "rir": 1
+        }
+      ]
+    },
+    {
+      "date": "2026-11-09",
+      "name": "Push A",
+      "sets": [
+        {
+          "exercise": "Bench press",
+          "load_kg": 80.0,
+          "reps": 10,
+          "rir": 2
+        },
+        {
+          "exercise": "Bench press",
+          "load_kg": 80.0,
+          "reps": 9,
+          "rir": 2
+        },
+        {
+          "exercise": "Bench press",
+          "load_kg": 80.0,
+          "reps": 8,
+          "rir": 2
+        },
+        {
+          "exercise": "Overhead press",
+          "load_kg": 50,
+          "reps": 8,
+          "rir": 1
+        },
+        {
+          "exercise": "Overhead press",
+          "load_kg": 50,
+          "reps": 7,
+          "rir": 1
+        },
+        {
+          "exercise": "Overhead press",
+          "load_kg": 50,
+          "reps": 6,
+          "rir": 1
+        }
+      ]
+    },
+    {
+      "date": "2026-11-07",
+      "name": "Upper A",
+      "sets": [
+        {
+          "exercise": "Incline DB press",
+          "load_kg": 30,
+          "reps": 10,
+          "rir": 2
+        },
+        {
+          "exercise": "Incline DB press",
+          "load_kg": 30,
+          "reps": 9,
+          "rir": 2
+        },
+        {
+          "exercise": "Incline DB press",
+          "load_kg": 30,
+          "reps": 9,
+          "rir": 2
+        },
+        {
+          "exercise": "Lateral raise",
+          "load_kg": 10,
+          "reps": 15,
+          "rir": 1
+        },
+        {
+          "exercise": "Lateral raise",
+          "load_kg": 10,
+          "reps": 14,
+          "rir": 1
+        },
+        {
+          "exercise": "Lateral raise",
+          "load_kg": 10,
+          "reps": 12,
+          "rir": 1
+        }
+      ]
+    },
+    {
+      "date": "2026-11-05",
+      "name": "Legs",
+      "sets": [
+        {
+          "exercise": "Back squat",
+          "load_kg": 110,
+          "reps": 8,
+          "rir": 2
+        },
+        {
+          "exercise": "Back squat",
+          "load_kg": 110,
+          "reps": 8,
+          "rir": 2
+        },
+        {
+          "exercise": "Back squat",
+          "load_kg": 110,
+          "reps": 7,
+          "rir": 2
+        },
+        {
+          "exercise": "Romanian deadlift",
+          "load_kg": 90,
+          "reps": 10,
+          "rir": 2
+        },
+        {
+          "exercise": "Romanian deadlift",
+          "load_kg": 90,
+          "reps": 10,
+          "rir": 2
+        },
+        {
+          "exercise": "Romanian deadlift",
+          "load_kg": 90,
+          "reps": 10,
+          "rir": 2
+        }
+      ]
+    },
+    {
+      "date": "2026-11-04",
+      "name": "Pull B",
+      "sets": [
+        {
+          "exercise": "Barbell row",
+          "load_kg": 70,
+          "reps": 10,
+          "rir": 2
+        },
+        {
+          "exercise": "Barbell row",
+          "load_kg": 70,
+          "reps": 10,
+          "rir": 2
+        },
+        {
+          "exercise": "Barbell row",
+          "load_kg": 70,
+          "reps": 9,
+          "rir": 2
+        },
+        {
+          "exercise": "Pull-up",
+          "load_kg": 0,
+          "reps": 8,
+          "rir": 1
+        },
+        {
+          "exercise": "Pull-up",
+          "load_kg": 0,
+          "reps": 7,
+          "rir": 1
+        },
+        {
+          "exercise": "Pull-up",
+          "load_kg": 0,
+          "reps": 7,
+          "rir": 1
+        }
+      ]
+    },
+    {
+      "date": "2026-11-02",
+      "name": "Push A",
+      "sets": [
+        {
+          "exercise": "Bench press",
+          "load_kg": 77.5,
+          "reps": 10,
+          "rir": 2
+        },
+        {
+          "exercise": "Bench press",
+          "load_kg": 77.5,
+          "reps": 9,
+          "rir": 2
+        },
+        {
+          "exercise": "Bench press",
+          "load_kg": 77.5,
+          "reps": 8,
+          "rir": 2
+        },
+        {
+          "exercise": "Overhead press",
+          "load_kg": 50,
+          "reps": 8,
+          "rir": 1
+        },
+        {
+          "exercise": "Overhead press",
+          "load_kg": 50,
+          "reps": 7,
+          "rir": 1
+        },
+        {
+          "exercise": "Overhead press",
+          "load_kg": 50,
+          "reps": 6,
+          "rir": 1
+        }
+      ]
+    },
+    {
+      "date": "2026-10-31",
+      "name": "Upper A",
+      "sets": [
+        {
+          "exercise": "Incline DB press",
+          "load_kg": 30,
+          "reps": 10,
+          "rir": 2
+        },
+        {
+          "exercise": "Incline DB press",
+          "load_kg": 30,
+          "reps": 9,
+          "rir": 2
+        },
+        {
+          "exercise": "Incline DB press",
+          "load_kg": 30,
+          "reps": 9,
+          "rir": 2
+        },
+        {
+          "exercise": "Lateral raise",
+          "load_kg": 10,
+          "reps": 15,
+          "rir": 1
+        },
+        {
+          "exercise": "Lateral raise",
+          "load_kg": 10,
+          "reps": 14,
+          "rir": 1
+        },
+        {
+          "exercise": "Lateral raise",
+          "load_kg": 10,
+          "reps": 12,
+          "rir": 1
+        }
+      ]
+    },
+    {
+      "date": "2026-10-29",
+      "name": "Legs",
+      "sets": [
+        {
+          "exercise": "Back squat",
+          "load_kg": 110,
+          "reps": 8,
+          "rir": 2
+        },
+        {
+          "exercise": "Back squat",
+          "load_kg": 110,
+          "reps": 8,
+          "rir": 2
+        },
+        {
+          "exercise": "Back squat",
+          "load_kg": 110,
+          "reps": 7,
+          "rir": 2
+        },
+        {
+          "exercise": "Romanian deadlift",
+          "load_kg": 90,
+          "reps": 10,
+          "rir": 2
+        },
+        {
+          "exercise": "Romanian deadlift",
+          "load_kg": 90,
+          "reps": 10,
+          "rir": 2
+        },
+        {
+          "exercise": "Romanian deadlift",
+          "load_kg": 90,
+          "reps": 10,
+          "rir": 2
+        }
+      ]
+    },
+    {
+      "date": "2026-10-28",
+      "name": "Pull B",
+      "sets": [
+        {
+          "exercise": "Barbell row",
+          "load_kg": 70,
+          "reps": 10,
+          "rir": 2
+        },
+        {
+          "exercise": "Barbell row",
+          "load_kg": 70,
+          "reps": 10,
+          "rir": 2
+        },
+        {
+          "exercise": "Barbell row",
+          "load_kg": 70,
+          "reps": 9,
+          "rir": 2
+        },
+        {
+          "exercise": "Pull-up",
+          "load_kg": 0,
+          "reps": 8,
+          "rir": 1
+        },
+        {
+          "exercise": "Pull-up",
+          "load_kg": 0,
+          "reps": 7,
+          "rir": 1
+        },
+        {
+          "exercise": "Pull-up",
+          "load_kg": 0,
+          "reps": 7,
+          "rir": 1
+        }
+      ]
+    },
+    {
+      "date": "2026-10-26",
+      "name": "Push A",
+      "sets": [
+        {
+          "exercise": "Bench press",
+          "load_kg": 77.5,
+          "reps": 10,
+          "rir": 2
+        },
+        {
+          "exercise": "Bench press",
+          "load_kg": 77.5,
+          "reps": 9,
+          "rir": 2
+        },
+        {
+          "exercise": "Bench press",
+          "load_kg": 77.5,
+          "reps": 8,
+          "rir": 2
+        },
+        {
+          "exercise": "Overhead press",
+          "load_kg": 50,
+          "reps": 8,
+          "rir": 1
+        },
+        {
+          "exercise": "Overhead press",
+          "load_kg": 50,
+          "reps": 7,
+          "rir": 1
+        },
+        {
+          "exercise": "Overhead press",
+          "load_kg": 50,
+          "reps": 6,
+          "rir": 1
+        }
+      ]
+    }
+  ],
+  "div_log": [
+    {
+      "date": "2026-11-15",
+      "job": "weekly-review",
+      "change": "Calorie target 2,200 to 2,350 kcal",
+      "reason": "You lost 0.7 kg a week for 3 weeks, faster than your 0.5% target, which starts to cost muscle.",
+      "evidence": [
+        "trend 84.6 to 82.6 kg over 21 days",
+        "rate -0.85% a week",
+        "21 of 21 days complete"
+      ],
+      "status": "applied"
+    },
+    {
+      "date": "2026-11-15",
+      "job": "weekly-review",
+      "change": "Face pull added to Pull B, 2 sets",
+      "reason": "Rear delts only got 2 sets last week, under the 6 they need to grow.",
+      "evidence": [
+        "rear delts 2 sets, MEV 6"
+      ],
+      "status": "applied"
+    },
+    {
+      "date": "2026-11-21",
+      "job": "session-review",
+      "change": "Barbell row stays at 70 kg",
+      "reason": "Set 3 stopped at 9 reps.",
+      "evidence": [],
+      "status": "applied"
+    }
+  ]
+}

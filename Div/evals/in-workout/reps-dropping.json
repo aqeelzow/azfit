@@ -1,0 +1,33 @@
+{
+  "name": "reps-dropping",
+  "description": "8 then 6 reps at RIR 1 on a 6-8 range: aim for 6, or drop a little load.",
+  "request": {
+    "exercise": "Overhead press",
+    "prescribed": {
+      "sets": 3,
+      "rep_min": 6,
+      "rep_max": 8,
+      "rir": 2,
+      "load_kg": 50
+    },
+    "done": [
+      {
+        "load_kg": 50,
+        "reps": 8,
+        "rir": 2
+      },
+      {
+        "load_kg": 50,
+        "reps": 6,
+        "rir": 1
+      }
+    ],
+    "rest_s": 120
+  },
+  "expected": {
+    "calls": [
+      "lower_reps",
+      "lower_load"
+    ]
+  }
+}

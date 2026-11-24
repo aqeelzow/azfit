@@ -1,0 +1,16 @@
+{
+  "name": "chicken-weighed",
+  "description": "Weighed on a kitchen scale: the items must add up to 420 g.",
+  "photo": "design/img/chicken.jpg",
+  "request": {
+    "food_weight_g": 420,
+    "plate_diameter_cm": 30
+  },
+  "expected": {
+    "kcal_between": [
+      250,
+      650
+    ],
+    "no_warnings": true
+  }
+}

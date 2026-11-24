@@ -1,0 +1,141 @@
+{
+  "name": "recomp",
+  "description": "Scale flat, waist down 1.2 cm, lifts up 4%. Fat loss with muscle gain.",
+  "expected": {
+    "calorie_action": [
+      "hold"
+    ],
+    "calorie_reading": [
+      "recomposition"
+    ]
+  },
+  "snapshot": {
+    "week_ending": "2026-11-22",
+    "user": {
+      "age": 28,
+      "height_cm": 178,
+      "goal": "recomp",
+      "target_rate_pct_per_week": 0,
+      "calorie_floor_kcal": 1700,
+      "kidney_disease": false
+    },
+    "targets": {
+      "calories_kcal": 2350,
+      "protein_g_per_kg": 2.0
+    },
+    "weight": {
+      "trend_kg_now": 82.05,
+      "trend_kg_window_start": 82.0,
+      "trend_kg_week_ago": 82.0,
+      "daily_this_week": [
+        82.3,
+        81.8,
+        82.1,
+        82.4,
+        81.9,
+        82.0,
+        82.2
+      ]
+    },
+    "intake": {
+      "window_days": 21,
+      "complete_days": 19,
+      "avg_kcal_complete_days": 2350,
+      "protein_hit_days_this_week": 6
+    },
+    "waist_cm": {
+      "now": 82.8,
+      "window_start": 84.0
+    },
+    "lifts": [
+      {
+        "name": "Bench press",
+        "e1rm_now": 104.0,
+        "e1rm_window_start": 100,
+        "avg_rir": 2
+      },
+      {
+        "name": "Back squat",
+        "e1rm_now": 145.6,
+        "e1rm_window_start": 140,
+        "avg_rir": 2
+      },
+      {
+        "name": "Romanian deadlift",
+        "e1rm_now": 135.2,
+        "e1rm_window_start": 130,
+        "avg_rir": 2
+      }
+    ],
+    "volume": [
+      {
+        "muscle": "Chest",
+        "sets_this_week": 12,
+        "mev": 10,
+        "mrv": 20
+      },
+      {
+        "muscle": "Back",
+        "sets_this_week": 14,
+        "mev": 10,
+        "mrv": 22
+      },
+      {
+        "muscle": "Rear delts",
+        "sets_this_week": 4,
+        "mev": 6,
+        "mrv": 16
+      },
+      {
+        "muscle": "Quads",
+        "sets_this_week": 10,
+        "mev": 8,
+        "mrv": 18
+      },
+      {
+        "muscle": "Hamstrings",
+        "sets_this_week": 8,
+        "mev": 6,
+        "mrv": 14
+      }
+    ],
+    "recovery": {
+      "sleep_avg_h": 7.4,
+      "sleep_baseline_h": 7.3,
+      "hrv_vs_baseline_pct": 2,
+      "steps_avg": 8900,
+      "steps_baseline": 9000
+    },
+    "water_events": [],
+    "recent_changes": [
+      {
+        "date": "2026-10-25",
+        "type": "set_calorie_target",
+        "detail": "2,450 → 2,350",
+        "reason": "Trend weight rising against a maintenance goal."
+      }
+    ],
+    "days_since_last_calorie_change": 28,
+    "current_loads": [
+      {
+        "exercise": "Bench press",
+        "load_kg": 80,
+        "rep_range": "6-10",
+        "hit_top_of_range_sessions": 2
+      },
+      {
+        "exercise": "Back squat",
+        "load_kg": 110,
+        "rep_range": "5-8",
+        "hit_top_of_range_sessions": 1
+      },
+      {
+        "exercise": "Incline DB press",
+        "load_kg": 30,
+        "rep_range": "8-12",
+        "hit_top_of_range_sessions": 0
+      }
+    ],
+    "memories": []
+  }
+}

@@ -74,7 +74,7 @@ struct TabBar: View {
 }
 
 /// The bar's outline with the notch for the quick add button, kept centered at any width.
-struct TabBarShape: Shape {
+nonisolated struct TabBarShape: Shape {
     func path(in rect: CGRect) -> Path {
         let c = rect.midX
         let w = rect.maxX

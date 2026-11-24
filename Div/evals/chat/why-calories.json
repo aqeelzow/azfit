@@ -1,0 +1,15 @@
+{
+  "name": "why-calories",
+  "description": "Asks why calories went up: Div should read its own log and explain, changing nothing.",
+  "data": "data.json",
+  "request": {
+    "message": "Why did my calories go up?",
+    "history": []
+  },
+  "expected": {
+    "no_changes": true,
+    "tools_any": [
+      "get_div_log"
+    ]
+  }
+}
