@@ -8,6 +8,7 @@ struct AZfitApp: App {
         WindowGroup {
             RootView()
                 .environment(environment)
+                .tint(AZColor.accent)
         }
     }
 }

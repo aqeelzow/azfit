@@ -15,3 +15,10 @@ enum AZFont {
     static let label = figtree(13.5, .semibold, relativeTo: .subheadline)
     static let caption = figtree(12.5, .semibold, relativeTo: .caption)
 }
+
+extension Font {
+    /// Figtree at an exact size from the design, e.g. `.az(15, .bold)`.
+    static func az(_ size: CGFloat, _ weight: Font.Weight = .regular) -> Font {
+        AZFont.figtree(size, weight)
+    }
+}
