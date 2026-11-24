@@ -138,12 +138,15 @@ public enum ChangePolicy {
             if !routine { return propose() }
             return autonomy.workoutTweaks ? apply("Routine progression.") : propose("Load changes ask first in your settings.")
 
-        case .swapExercise(let from, let to):
+        case .swapExercise(let from, let to, let weeks):
             if from.lowercased() == to.lowercased() { return refuse("Swapping \"\(from)\" for itself.") }
             if c.loads[from.lowercased()] == nil { return refuse("\"\(from)\" isn't in the plan.") }
+            if !Limits.swapWeeks.contains(weeks) {
+                return refuse("A swap of \(weeks) weeks is outside 0 to \(Limits.swapWeeks.upperBound).")
+            }
             return autonomy.swapsAndMoves ? apply() : propose("Swaps ask first in your settings.")
 
-        case .moveSession(let session, let toDay):
+        case .moveSession(let session, let toDay, _):
             guard Limits.weekdays.contains(where: { $0.lowercased() == toDay.lowercased() }) else {
                 return refuse("\"\(toDay)\" isn't a day of the week.")
             }

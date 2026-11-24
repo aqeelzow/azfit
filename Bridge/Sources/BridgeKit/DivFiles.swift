@@ -5,13 +5,15 @@ public enum DivJob: String, Codable, Sendable, CaseIterable {
     case weeklyReview = "weekly-review"
     case sessionReview = "session-review"
     case estimateMeal = "estimate-meal"
+    case reviseMeal = "revise-meal"
+    case inWorkout = "in-workout"
     case chat
 
     public var model: String {
         switch self {
         case .weeklyReview, .chat: "opus"
         case .sessionReview: "sonnet"
-        case .estimateMeal: "haiku"
+        case .estimateMeal, .reviseMeal, .inWorkout: "haiku"
         }
     }
 
@@ -19,7 +21,7 @@ public enum DivJob: String, Codable, Sendable, CaseIterable {
         switch self {
         case .weeklyReview: "medium"
         case .sessionReview, .chat: "low"
-        case .estimateMeal: nil
+        case .estimateMeal, .reviseMeal, .inWorkout: nil
         }
     }
 
@@ -27,7 +29,13 @@ public enum DivJob: String, Codable, Sendable, CaseIterable {
         switch self {
         case .weeklyReview: .seconds(300)
         case .sessionReview, .estimateMeal, .chat: .seconds(150)
+        case .reviseMeal, .inWorkout: .seconds(60)
         }
+    }
+
+    /// The schema file it returns. Revising a meal returns a new estimate.
+    public var schemaName: String {
+        self == .reviseMeal ? DivJob.estimateMeal.rawValue : rawValue
     }
 }
 
@@ -78,7 +86,7 @@ public struct DivFiles: Sendable {
 
     /// The job's output schema, as compact JSON for `--json-schema`.
     public func schema(for job: DivJob) throws -> String {
-        let object = try JSONSerialization.jsonObject(with: data("schemas/\(job.rawValue).json"))
+        let object = try JSONSerialization.jsonObject(with: data("schemas/\(job.schemaName).json"))
         return String(decoding: try JSONSerialization.data(withJSONObject: object, options: [.sortedKeys]), as: UTF8.self)
     }
 

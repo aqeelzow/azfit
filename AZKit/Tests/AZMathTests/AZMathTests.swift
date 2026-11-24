@@ -67,6 +67,17 @@ func session(_ name: String) throws -> SessionReport { try fixture("session-revi
     }
 }
 
+@Suite struct InWorkoutMathTests {
+    @Test func setsAreReadAgainstTheRangeAndRIR() throws {
+        let r = try fixture("in-workout", "reps-dropping", key: "request", as: InWorkoutRequest.self)
+        let d = Strength.derive(r)
+        #expect(d.setsDone == 2 && d.setsLeft == 1)
+        #expect(d.sets.map(\.repRange) == ["top", "in"])
+        #expect(d.sets.map(\.rirVsPrescribed) == [0, -1])
+        #expect(try #require(d.lastSetE1rm) < (try #require(d.firstSetE1rm)))
+    }
+}
+
 @Suite struct MealMathTests {
     @Test func totalsAddUpTheItems() {
         let rice = MealItem(name: "Rice", portion: "1 cup", grams: 200, kcal: 260, proteinG: 5, carbsG: 57, fatG: 0.6)

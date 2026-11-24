@@ -1,0 +1,12 @@
+{
+  "name": "salmon-bowl",
+  "description": "Salmon or tofu with eggs, edamame, corn and salad.",
+  "photo": "design/img/salmon.jpg",
+  "request": {},
+  "expected": {
+    "kcal_between": [
+      350,
+      900
+    ]
+  }
+}

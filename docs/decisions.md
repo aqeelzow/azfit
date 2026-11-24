@@ -168,7 +168,7 @@ The design's argument: every auto change is marked, explained and undoable, whic
 **Open.** Proposed default: 1,200. That is a common floor for women and low for most men; a per-person floor (for example from BMR) may be better. Div refuses anything below the floor either way. Aqeel and Moiz to decide.
 
 ### D-018 Model per job
-**Accepted.** Weekly review and chat: Opus (reasoning over many signals). Session review: Sonnet (frequent, narrow). Meal estimate: Haiku (fast, cheap, one image).
+**Accepted.** Weekly review and chat: Opus (reasoning over many signals). Session review: Sonnet (frequent, narrow). Meal estimate: Haiku (fast, cheap, one image). Added 2026-11-23: revising a meal and the in-workout set tweak also run on Haiku, because they're narrow and the person is waiting (mid-workout, between sets).
 
 ### D-019 UUIDs stored as lowercase text
 **Accepted.** Readable in the SQLite shell, stable across platforms, and the same string Div sees in tool results and returns in actions. In GRDB, set this with `databaseUUIDEncodingStrategy`.

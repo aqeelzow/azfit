@@ -1,0 +1,28 @@
+{
+  "name": "too-easy",
+  "description": "Top of the range with 4 in reserve against a planned 2: go up, or at least keep.",
+  "request": {
+    "exercise": "Back squat",
+    "prescribed": {
+      "sets": 3,
+      "rep_min": 6,
+      "rep_max": 8,
+      "rir": 2,
+      "load_kg": 100
+    },
+    "done": [
+      {
+        "load_kg": 100,
+        "reps": 8,
+        "rir": 4
+      }
+    ],
+    "rest_s": 180
+  },
+  "expected": {
+    "calls": [
+      "raise_load",
+      "keep"
+    ]
+  }
+}

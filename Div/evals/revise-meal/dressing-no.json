@@ -1,0 +1,63 @@
+{
+  "name": "dressing-no",
+  "description": "No dressing: nothing changes.",
+  "request": {
+    "previous": {
+      "meal_name": "Buddha bowl",
+      "items": [
+        {
+          "name": "Avocado",
+          "portion": "1/2 fruit",
+          "grams": 100,
+          "kcal": 160,
+          "protein_g": 2,
+          "carbs_g": 9,
+          "fat_g": 15
+        },
+        {
+          "name": "Chickpeas",
+          "portion": "1/2 cup",
+          "grams": 80,
+          "kcal": 130,
+          "protein_g": 7,
+          "carbs_g": 22,
+          "fat_g": 2
+        },
+        {
+          "name": "Roast sweet potato",
+          "portion": "1 cup",
+          "grams": 130,
+          "kcal": 120,
+          "protein_g": 2,
+          "carbs_g": 27,
+          "fat_g": 0.2
+        },
+        {
+          "name": "Salad vegetables",
+          "portion": "2 cups",
+          "grams": 150,
+          "kcal": 40,
+          "protein_g": 2,
+          "carbs_g": 8,
+          "fat_g": 0.3
+        }
+      ],
+      "kcal_low": 400,
+      "kcal_high": 650,
+      "confidence": "low",
+      "matched_similar_meal": "",
+      "assumptions": [
+        "No dressing visible"
+      ],
+      "follow_up_question": "Was there dressing on it?"
+    },
+    "question": "Was there dressing on it?",
+    "answer": "No, nothing on it"
+  },
+  "expected": {
+    "kcal_change_between": [
+      -20,
+      20
+    ]
+  }
+}

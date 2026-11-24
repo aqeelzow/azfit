@@ -12,6 +12,11 @@
     ],
     "tools_any": [
       "get_plan"
-    ]
+    ],
+    "change_fields": {
+      "move_session": {
+        "this_week_only": false
+      }
+    }
   }
 }

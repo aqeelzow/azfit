@@ -121,3 +121,16 @@ public struct MealTotals: Codable, Sendable, Equatable {
         self.grams = grams
     }
 }
+
+/// The person's answer to Div's follow-up question ("Was there dressing?"), to revise an estimate without the photo.
+public struct MealRevisionRequest: Codable, Sendable, Equatable {
+    public var previous: MealEstimate
+    public var question: String
+    public var answer: String
+
+    public init(previous: MealEstimate, question: String, answer: String) {
+        self.previous = previous
+        self.question = question
+        self.answer = answer
+    }
+}

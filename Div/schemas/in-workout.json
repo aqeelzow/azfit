@@ -1,0 +1,39 @@
+{
+  "type": "object",
+  "properties": {
+    "call": {
+      "type": "string",
+      "enum": [
+        "keep",
+        "lower_load",
+        "lower_reps",
+        "raise_load",
+        "stop"
+      ]
+    },
+    "next_load_kg": {
+      "type": "number",
+      "description": "Load for the next set."
+    },
+    "next_reps": {
+      "type": "integer",
+      "description": "Target reps for the next set."
+    },
+    "rest_s": {
+      "type": "integer",
+      "description": "Rest before the next set, in seconds."
+    },
+    "reason": {
+      "type": "string",
+      "description": "One short sentence shown on the set, with the number it rests on."
+    }
+  },
+  "required": [
+    "call",
+    "next_load_kg",
+    "next_reps",
+    "rest_s",
+    "reason"
+  ],
+  "additionalProperties": false
+}

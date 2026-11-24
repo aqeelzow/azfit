@@ -1,0 +1,23 @@
+{
+  "name": "away-thursday",
+  "description": "Away one Thursday: Div should move just this week's Legs session, not the plan.",
+  "data": "data.json",
+  "request": {
+    "message": "I'm away this Thursday, can I do legs on Friday instead?",
+    "history": []
+  },
+  "expected": {
+    "change_types": [
+      "move_session"
+    ],
+    "change_fields": {
+      "move_session": {
+        "this_week_only": true,
+        "to_day": "Friday"
+      }
+    },
+    "tools_any": [
+      "get_plan"
+    ]
+  }
+}

@@ -76,6 +76,36 @@ public struct Div: Sendable {
         return MealEstimateResult(estimate: estimate, totals: totals, warnings: warnings, run: run)
     }
 
+    /// Revises a meal estimate with the person's answer to Div's question. No photo: Div adjusts its own items,
+    /// so the meal stays consistent with the first estimate.
+    public func reviseMeal(_ request: MealRevisionRequest) async throws -> MealEstimateResult {
+        let prompt = try """
+        Revise this meal estimate with the person's answer.
+
+        \(DivJSON.string(request))
+        """
+        let (estimate, run): (MealEstimate, RunInfo) = try await ask(.reviseMeal, prompt)
+        let totals = MealMath.totals(estimate.items)
+        return MealEstimateResult(
+            estimate: estimate, totals: totals, warnings: MealChecks.warnings(estimate, totals: totals, foodWeightG: nil), run: run)
+    }
+
+    /// After a set: what the next one should be. Fast and narrow, so it runs on Haiku.
+    public func inWorkout(_ request: InWorkoutRequest) async throws -> InWorkoutResult {
+        let derived = Strength.derive(request)
+        let prompt = try """
+        A set just finished. Decide the next one.
+
+        exercise:
+        \(DivJSON.string(request))
+
+        derived:
+        \(DivJSON.string(derived))
+        """
+        let (output, run): (InWorkoutOutput, RunInfo) = try await ask(.inWorkout, prompt)
+        return InWorkoutResult(derived: derived, checked: InWorkoutPolicy.check(output, request: request, autonomy: autonomy), run: run)
+    }
+
     /// A chat message. Div looks up what it needs with the read tools (D-021), served from `data`.
     public func chat(_ request: ChatRequest, data: DivData) async throws -> ChatResult {
         guard let toolServer, let command = toolServer.first else { throw ClaudeError.failed("chat needs the read-tool server") }

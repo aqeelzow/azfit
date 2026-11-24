@@ -92,11 +92,13 @@ func verdicts(_ s: WeeklySnapshot, _ autonomy: Autonomy = .standard, _ changes: 
         func check(_ change: PlanChange, _ autonomy: Autonomy = .standard) -> Verdict {
             ChangePolicy.check([Proposal(change)], context: context, autonomy: autonomy)[0].verdict
         }
-        #expect(check(.swapExercise(from: "Overhead press", to: "Landmine press")) == .apply)
-        #expect(check(.swapExercise(from: "Overhead press", to: "Landmine press"), .askFirst) == .propose)
-        #expect(check(.swapExercise(from: "Snatch", to: "Landmine press")) == .refuse)
-        #expect(check(.moveSession(session: "Legs", toDay: "Friday")) == .apply)
-        #expect(check(.moveSession(session: "Legs", toDay: "Someday")) == .refuse)
-        #expect(check(.moveSession(session: "Arms", toDay: "Friday")) == .refuse)
+        #expect(check(.swapExercise(from: "Overhead press", to: "Landmine press", weeks: 2)) == .apply)
+        #expect(check(.swapExercise(from: "Overhead press", to: "Landmine press", weeks: 0)) == .apply)
+        #expect(check(.swapExercise(from: "Overhead press", to: "Landmine press", weeks: 2), .askFirst) == .propose)
+        #expect(check(.swapExercise(from: "Overhead press", to: "Landmine press", weeks: 30)) == .refuse)
+        #expect(check(.swapExercise(from: "Snatch", to: "Landmine press", weeks: 2)) == .refuse)
+        #expect(check(.moveSession(session: "Legs", toDay: "Friday", thisWeekOnly: true)) == .apply)
+        #expect(check(.moveSession(session: "Legs", toDay: "Someday", thisWeekOnly: false)) == .refuse)
+        #expect(check(.moveSession(session: "Arms", toDay: "Friday", thisWeekOnly: false)) == .refuse)
     }
 }

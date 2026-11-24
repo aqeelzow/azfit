@@ -12,6 +12,16 @@ import Testing
         #expect(back == #"{"evidence":["e"],"exercise":"Bench press","new_load_kg":82.5,"reason":"r","type":"set_load"}"#)
     }
 
+    @Test func swapWeeksAndOneOffMovesRoundTrip() throws {
+        for change in [
+            PlanChange.swapExercise(from: "A", to: "B", weeks: 2), .moveSession(session: "Legs", toDay: "Friday", thisWeekOnly: true),
+        ] {
+            let p = Proposal(change, reason: "r")
+            #expect(try DivJSON.decode(Proposal.self, from: DivJSON.encode(p)) == p)
+        }
+        #expect(try DivJSON.string(Proposal(.moveSession(session: "Legs", toDay: "Friday", thisWeekOnly: true))).contains("this_week_only"))
+    }
+
     @Test func unknownChangeTypesAreRejected() {
         let json = #"{"type":"log_food","reason":"r","evidence":[]}"#
         #expect(throws: DecodingError.self) { try DivJSON.decode(Proposal.self, from: Data(json.utf8)) }

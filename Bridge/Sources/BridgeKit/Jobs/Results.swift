@@ -30,3 +30,9 @@ public struct ChatResult: Codable, Sendable {
     public var toolCalls: [String]
     public var run: RunInfo
 }
+
+public struct InWorkoutResult: Codable, Sendable {
+    public var derived: InWorkoutDerived
+    public var checked: Checked<InWorkoutOutput>
+    public var run: RunInfo
+}

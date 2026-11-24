@@ -142,6 +142,10 @@
               "to": {
                 "type": "string"
               },
+              "weeks": {
+                "type": "integer",
+                "description": "How long before the original comes back: 1 to 12 weeks, or 0 to keep the swap."
+              },
               "reason": {
                 "type": "string",
                 "description": "One sentence the user will read, with the number it rests on."
@@ -158,6 +162,7 @@
               "type",
               "from",
               "to",
+              "weeks",
               "reason",
               "evidence"
             ],
@@ -178,6 +183,10 @@
                 "type": "string",
                 "description": "Weekday, e.g. Sunday."
               },
+              "this_week_only": {
+                "type": "boolean",
+                "description": "True to move only this week's session; false to change the plan."
+              },
               "reason": {
                 "type": "string",
                 "description": "One sentence the user will read, with the number it rests on."
@@ -194,6 +203,7 @@
               "type",
               "session",
               "to_day",
+              "this_week_only",
               "reason",
               "evidence"
             ],

@@ -1,0 +1,27 @@
+{
+  "name": "below-range",
+  "description": "5 reps at RIR 0 on an 8-10 range: the load is too heavy today.",
+  "request": {
+    "exercise": "Barbell row",
+    "prescribed": {
+      "sets": 3,
+      "rep_min": 8,
+      "rep_max": 10,
+      "rir": 2,
+      "load_kg": 70
+    },
+    "done": [
+      {
+        "load_kg": 70,
+        "reps": 5,
+        "rir": 0
+      }
+    ],
+    "rest_s": 120
+  },
+  "expected": {
+    "calls": [
+      "lower_load"
+    ]
+  }
+}

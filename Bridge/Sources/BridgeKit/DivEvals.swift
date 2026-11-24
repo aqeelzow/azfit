@@ -1,3 +1,4 @@
+import AZMath
 import AZModel
 import Foundation
 
@@ -57,7 +58,9 @@ public struct DivEvals: Sendable {
             case .weeklyReview: return try await weekly(name, fixture, expected)
             case .sessionReview: return try await session(name, fixture, expected)
             case .chat: return try await chat(name, url, fixture, expected)
-            case .estimateMeal: return Outcome(job: job, name: name, passed: false, summary: "no meal evals yet", details: [])
+            case .estimateMeal: return try await meal(name, fixture, expected)
+            case .reviseMeal: return try await revise(name, fixture, expected)
+            case .inWorkout: return try await inWorkout(name, fixture, expected)
             }
         } catch {
             return Outcome(job: job, name: name, passed: false, summary: "error", details: ["\(error)"])
@@ -115,6 +118,14 @@ public struct DivEvals: Sendable {
         if expected["no_changes"] as? Bool == true && !kinds.isEmpty {
             failures.append("expected no changes, got \(kinds.joined(separator: ", "))")
         }
+        // Fields a change of that type must have, e.g. {"move_session": {"this_week_only": true}}.
+        for (kind, fields) in expected["change_fields"] as? [String: [String: Any]] ?? [:] {
+            guard let change = r.output.changes.first(where: { $0.change.kind == kind }) else { continue }
+            let actual = try JSONSerialization.jsonObject(with: DivJSON.encode(change)) as? [String: Any] ?? [:]
+            for (field, want) in fields where !sameJSON(actual[field], want) {
+                failures.append("\(kind).\(field) is \(actual[field].map { "\($0)" } ?? "missing"), expected \(want)")
+            }
+        }
         if let any = expected["tools_any"] as? [String], !any.contains(where: tools.contains) {
             failures.append("expected a call to \(any.joined(separator: " or "))")
         }
@@ -123,6 +134,62 @@ public struct DivEvals: Sendable {
         return Outcome(
             job: .chat, name: name, passed: failures.isEmpty, summary: summary,
             details: failures + ["reply: \(r.output.reply)"] + refused(r.checked))
+    }
+
+    func meal(_ name: String, _ fixture: [String: Any], _ expected: [String: Any]) async throws -> Outcome {
+        // The photo path is relative to the repo (the folder that holds Div/).
+        let photoURL = div.files.root.deletingLastPathComponent().appending(path: fixture["photo"] as? String ?? "")
+        var object = fixture["request"] as? [String: Any] ?? [:]
+        object["photo"] = try Data(contentsOf: photoURL).base64EncodedString()
+        object["media_type"] = photoURL.pathExtension.lowercased() == "png" ? "image/png" : "image/jpeg"
+        let r = try await div.estimateMeal(try decode(MealPhotoRequest.self, object))
+
+        var failures: [String] = []
+        if let range = expected["kcal_between"] as? [Double], range.count == 2, !(range[0]...range[1]).contains(Double(r.totals.kcal)) {
+            failures.append("\(r.totals.kcal) kcal, expected \(number(range[0])) to \(number(range[1]))")
+        }
+        if expected["no_warnings"] as? Bool == true && !r.warnings.isEmpty { failures += r.warnings.map { "warning: \($0)" } }
+        if expected["matched_similar"] as? Bool == true && r.estimate.matchedSimilarMeal.isEmpty {
+            failures.append("didn't match the similar meal")
+        }
+        if expected["empty_items"] as? Bool == true && !r.estimate.items.isEmpty {
+            failures.append("expected no items for a photo that isn't food")
+        }
+        if expected["follow_up"] as? Bool == true && r.estimate.followUpQuestion.isEmpty {
+            failures.append("expected a follow-up question")
+        }
+        let question = r.estimate.followUpQuestion.isEmpty ? "" : "; asks: \(r.estimate.followUpQuestion)"
+        return Outcome(
+            job: .estimateMeal, name: name, passed: failures.isEmpty,
+            summary: "\(r.estimate.mealName): \(r.totals.kcal) kcal (\(r.estimate.confidence.rawValue))\(question), \(seconds(r.run))",
+            details: failures)
+    }
+
+    func revise(_ name: String, _ fixture: [String: Any], _ expected: [String: Any]) async throws -> Outcome {
+        let request = try decode(MealRevisionRequest.self, fixture["request"])
+        let r = try await div.reviseMeal(request)
+        let before = MealMath.totals(request.previous.items).kcal
+        let change = r.totals.kcal - before
+        var failures: [String] = []
+        if let range = expected["kcal_change_between"] as? [Double], range.count == 2, !(range[0]...range[1]).contains(Double(change)) {
+            failures.append("changed by \(change) kcal, expected \(number(range[0])) to \(number(range[1]))")
+        }
+        return Outcome(
+            job: .reviseMeal, name: name, passed: failures.isEmpty,
+            summary: "\(before) -> \(r.totals.kcal) kcal, \(seconds(r.run))", details: failures + r.warnings.map { "warning: \($0)" })
+    }
+
+    func inWorkout(_ name: String, _ fixture: [String: Any], _ expected: [String: Any]) async throws -> Outcome {
+        let r = try await div.inWorkout(try decode(InWorkoutRequest.self, fixture["request"]))
+        let out = r.checked.item
+        let calls = expected["calls"] as? [String] ?? []
+        var failures: [String] = []
+        if !calls.contains(out.call.rawValue) { failures.append("\(out.call.rawValue), expected \(calls.joined(separator: " or "))") }
+        if r.checked.verdict == .refuse { failures.append("refused: \(r.checked.notes.joined(separator: " "))") }
+        return Outcome(
+            job: .inWorkout, name: name, passed: failures.isEmpty,
+            summary: "\(out.call.rawValue): \(number(out.nextLoadKg)) kg x \(out.nextReps), rest \(out.restS) s, \(seconds(r.run))",
+            details: failures + ["reason: \(out.reason)"])
     }
 
     func decode<T: Decodable>(_ type: T.Type, _ value: Any?) throws -> T {
@@ -134,6 +201,15 @@ public struct DivEvals: Sendable {
     }
 
     func seconds(_ run: RunInfo) -> String { "\(run.durationMs / 1000) s" }
+}
+
+/// Compares two JSON values; strings ignore case.
+func sameJSON(_ a: Any?, _ b: Any) -> Bool {
+    switch (a, b) {
+    case (let x as String, let y as String): x.lowercased() == y.lowercased()
+    case (let x as NSNumber, let y as NSNumber): x == y
+    default: false
+    }
 }
 
 func number(_ value: Double) -> String {

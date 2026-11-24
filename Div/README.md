@@ -10,6 +10,8 @@ Div/
 │       ├── weekly-review.md    every Sunday; the only job that moves calories
 │       ├── session-review.md   after each workout: a note and next time's loads
 │       ├── estimate-meal.md    photo + words -> items and a calorie range
+│       ├── revise-meal.md      the answer to Div's one meal question -> a revised estimate
+│       ├── in-workout.md       after each set: the next set's load, reps and rest
 │       └── chat.md             the Div screen
 ├── schemas/                    the JSON each job must return (one file per job)
 ├── tools/tools.json            the read tools chat can call (served over MCP)
@@ -35,6 +37,8 @@ phone ──job──▶ Mac bridge ──claude -p──▶ Claude (the person'
 | weekly-review | Opus | `WeeklySnapshot` + derived numbers | calories, protein, loads, swaps, moves, volume, deloads |
 | session-review | Sonnet | `SessionReport` + derived numbers | next time's load per exercise |
 | estimate-meal | Haiku | photo (read from the job's folder), note, plate size, scale weight, similar meals | nothing: it estimates, the person logs |
+| revise-meal | Haiku | the previous estimate, Div's question and the answer (no photo) | nothing |
+| in-workout | Haiku | the exercise in progress: prescription and sets so far | the next set: keep, fewer reps or less load apply; more load or stopping ask |
 | chat | Opus | the conversation; data through read tools | loads, swaps, moves, volume, deloads (never calories or protein) |
 
 Every run uses an empty temporary folder, no Claude Code settings, no MCP servers but Div's own, and no tools except Read (meal photo) or Div's read tools (chat). The bridge removes `ANTHROPIC_API_KEY` from the environment so runs always use the person's Claude login, never API billing.
@@ -46,8 +50,10 @@ make div                                                    # builds Bridge/.bui
 Bridge/.build/debug/div review Div/evals/weekly-review/recomp.json
 Bridge/.build/debug/div session Div/evals/session-review/push-day.json
 Bridge/.build/debug/div meal photo.jpg --note "half the rice" --plate 27
+Bridge/.build/debug/div revise Div/evals/revise-meal/dressing-yes.json
+Bridge/.build/debug/div workout Div/evals/in-workout/reps-dropping.json
 Bridge/.build/debug/div chat "Why did my calories go up?"   # uses Div/evals/chat/data.json
-make eval                                                   # every scenario; make eval JOB=chat for one job
+make eval                                                   # every scenario (27, about a minute); make eval JOB=chat for one job
 ```
 
 Add `--json` for the full result, `--ask-first` to turn off everything Div may do alone. Each run uses some of your Claude plan.
@@ -61,3 +67,5 @@ Add `--json` for the full result, `--ask-first` to turn off everything Div may d
 - **A behavior bug:** add a scenario to `evals/` that fails, then fix the prompt until it passes.
 
 Keys are snake_case in JSON and camelCase in Swift. Don't put a digit right after an underscore (`last_7`): it can't round-trip.
+
+Swaps carry `weeks` (1 to 12, or 0 for good) so the original exercise comes back on its own, and moves carry `this_week_only`. Bringing a swap back when it expires is the bridge's job once changes are saved.

@@ -82,15 +82,23 @@ public struct ClaudeCLI: ClaudeRunning {
         process.standardOutput = stdout
         process.standardError = stderr
 
+        // Set before run() so the exit can't be missed. Not waitUntilExit(): it needs a run loop, which Swift's
+        // concurrency threads don't have, so it can wait forever after Claude has exited.
+        let (exits, exited) = AsyncStream<Int32>.makeStream(bufferingPolicy: .bufferingNewest(1))
+        process.terminationHandler = { finished in
+            exited.yield(finished.terminationStatus)
+            exited.finish()
+        }
         do {
             try process.run()
         } catch {
             throw ClaudeError.failed("couldn't start \(executable.path): \(error.localizedDescription)")
         }
-        // Read both pipes while Claude runs, so a full pipe never blocks it.
-        let out = Task.detached { (try? stdout.fileHandleForReading.readToEnd()) ?? Data() }
-        let err = Task.detached { (try? stderr.fileHandleForReading.readToEnd()) ?? Data() }
-        Task.detached {
+        // Read both pipes while Claude runs, so a full pipe never blocks it. The reads block, so they run on
+        // dispatch threads, not Swift's small pool of concurrency threads.
+        async let output = readAll(stdout.fileHandleForReading)
+        async let errors = readAll(stderr.fileHandleForReading)
+        DispatchQueue.global().async {
             try? stdin.fileHandleForWriting.write(contentsOf: Data(call.userPrompt.utf8))
             try? stdin.fileHandleForWriting.close()
         }
@@ -102,11 +110,11 @@ public struct ClaudeCLI: ClaudeRunning {
         }
         defer { watchdog.cancel() }
 
-        let output = await out.value
-        let errors = await err.value
-        process.waitUntilExit()
+        var status: Int32 = -1
+        for await code in exits { status = code }
+        let result = (status, await output, await errors)
         if timedOut.load(ordering: .relaxed) { throw ClaudeError.timedOut(call.timeout) }
-        return (process.terminationStatus, output, errors)
+        return result
     }
 
     /// Reads the `--output-format json` envelope.
@@ -133,5 +141,12 @@ public struct ClaudeCLI: ClaudeRunning {
             costUsdEquivalent: envelope["total_cost_usd"] as? Double
         )
         return ClaudeReply(output: try JSONSerialization.data(withJSONObject: structured), run: run)
+    }
+}
+
+/// Reads a pipe to the end on a dispatch thread.
+private func readAll(_ handle: FileHandle) async -> Data {
+    await withCheckedContinuation { continuation in
+        DispatchQueue.global().async { continuation.resume(returning: (try? handle.readToEnd()) ?? Data()) }
     }
 }

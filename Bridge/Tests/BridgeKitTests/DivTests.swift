@@ -41,7 +41,7 @@ import Testing
 
     @Test func chatWiresTheToolServerAndReportsWhatItLookedUp() async throws {
         let answer = """
-            {"reply":"Swapped.","changes":[{"type":"swap_exercise","from":"Overhead press","to":"Landmine press","reason":"r","evidence":[]}],
+            {"reply":"Swapped.","changes":[{"type":"swap_exercise","from":"Overhead press","to":"Landmine press","weeks":2,"reason":"r","evidence":[]}],
              "remember":["Left shoulder tight overhead"]}
             """
         let claude = FakeClaude(answer: answer, collected: ["tool-calls.log": Data("get_plan\nget_profile\n".utf8)])
@@ -57,6 +57,37 @@ import Testing
         #expect(call.userPrompt.contains("Today is 2026-11-23"))
         #expect(r.toolCalls == ["get_plan", "get_profile"])
         #expect(r.checked.map(\.verdict) == [.apply])
+    }
+
+    @Test func revisingAMealSendsThePreviousEstimateAndNoPhoto() async throws {
+        let answer = """
+            {"meal_name":"Bowl","items":[{"name":"Rice","portion":"1 cup","grams":200,"kcal":260,"protein_g":5,"carbs_g":57,"fat_g":0.6},
+             {"name":"Tahini","portion":"2 tbsp","grams":30,"kcal":180,"protein_g":5,"carbs_g":6,"fat_g":16}],
+             "kcal_low":400,"kcal_high":480,"confidence":"medium","matched_similar_meal":"","assumptions":[],"follow_up_question":""}
+            """
+        let claude = FakeClaude(answer: answer)
+        let previous = MealEstimate(
+            items: [MealItem(name: "Rice", portion: "1 cup", grams: 200, kcal: 260, proteinG: 5, carbsG: 57, fatG: 0.6)], kcalLow: 230,
+            kcalHigh: 300)
+        let request = MealRevisionRequest(previous: previous, question: "Any dressing?", answer: "2 tbsp tahini")
+        let r = try await Div(files: divFiles, claude: claude).reviseMeal(request)
+        let call = try #require(claude.lastCall)
+        #expect(call.model == "haiku" && call.files.isEmpty && call.builtInTools.isEmpty)
+        #expect(call.systemPrompt.contains("# Job: revise meal"))
+        #expect(call.schema.contains("follow_up_question"))
+        #expect(call.userPrompt.contains("2 tbsp tahini"))
+        #expect(r.totals.kcal == 440)
+    }
+
+    @Test func inWorkoutSendsTheSetsSoFarAndChecksTheAnswer() async throws {
+        let claude = FakeClaude(
+            answer: #"{"call":"lower_reps","next_load_kg":50,"next_reps":6,"rest_s":150,"reason":"You got 6 on set 2."}"#)
+        let request = try fixture("in-workout", "reps-dropping", key: "request", as: InWorkoutRequest.self)
+        let r = try await Div(files: divFiles, claude: claude).inWorkout(request)
+        let call = try #require(claude.lastCall)
+        #expect(call.model == "haiku")
+        #expect(call.userPrompt.contains("\"sets_left\" : 1"))
+        #expect(r.checked.verdict == .apply)
     }
 
     @Test func anAnswerThatBreaksTheSchemaIsAnError() async throws {

@@ -4,8 +4,10 @@ public enum PlanChange: Sendable, Equatable {
     case setCalorieTarget(newKcal: Int)
     case setProteinTarget(gramsPerKg: Double)
     case setLoad(exercise: String, newLoadKg: Double)
-    case swapExercise(from: String, to: String)
-    case moveSession(session: String, toDay: String)
+    /// `weeks` until the original comes back; 0 keeps the swap.
+    case swapExercise(from: String, to: String, weeks: Int)
+    /// `thisWeekOnly` moves one session; otherwise the plan changes.
+    case moveSession(session: String, toDay: String, thisWeekOnly: Bool)
     case changeVolume(muscle: String, deltaSetsPerWeek: Int)
     case scheduleDeload(startDate: String, weeks: Int)
 
@@ -39,7 +41,7 @@ public struct Proposal: Codable, Sendable, Equatable {
     // Case names are camelCase because DivJSON converts keys from snake_case before matching them.
     private enum CodingKeys: String, CodingKey {
         case type, reason, evidence
-        case newKcal, gramsPerKg, exercise, newLoadKg, from, to, session, toDay, muscle, deltaSetsPerWeek, startDate, weeks
+        case newKcal, gramsPerKg, exercise, newLoadKg, from, to, session, toDay, thisWeekOnly, muscle, deltaSetsPerWeek, startDate, weeks
     }
 
     public init(from decoder: any Decoder) throws {
@@ -56,9 +58,13 @@ public struct Proposal: Codable, Sendable, Equatable {
             change = .setLoad(
                 exercise: try c.decode(String.self, forKey: .exercise), newLoadKg: try c.decode(Double.self, forKey: .newLoadKg))
         case "swap_exercise":
-            change = .swapExercise(from: try c.decode(String.self, forKey: .from), to: try c.decode(String.self, forKey: .to))
+            change = .swapExercise(
+                from: try c.decode(String.self, forKey: .from), to: try c.decode(String.self, forKey: .to),
+                weeks: try c.decodeIfPresent(Int.self, forKey: .weeks) ?? 0)
         case "move_session":
-            change = .moveSession(session: try c.decode(String.self, forKey: .session), toDay: try c.decode(String.self, forKey: .toDay))
+            change = .moveSession(
+                session: try c.decode(String.self, forKey: .session), toDay: try c.decode(String.self, forKey: .toDay),
+                thisWeekOnly: try c.decodeIfPresent(Bool.self, forKey: .thisWeekOnly) ?? false)
         case "change_volume":
             change = .changeVolume(
                 muscle: try c.decode(String.self, forKey: .muscle), deltaSetsPerWeek: try c.decode(Int.self, forKey: .deltaSetsPerWeek))
@@ -81,12 +87,14 @@ public struct Proposal: Codable, Sendable, Equatable {
         case .setLoad(let exercise, let newLoadKg):
             try c.encode(exercise, forKey: .exercise)
             try c.encode(newLoadKg, forKey: .newLoadKg)
-        case .swapExercise(let from, let to):
+        case .swapExercise(let from, let to, let weeks):
             try c.encode(from, forKey: .from)
             try c.encode(to, forKey: .to)
-        case .moveSession(let session, let toDay):
+            try c.encode(weeks, forKey: .weeks)
+        case .moveSession(let session, let toDay, let thisWeekOnly):
             try c.encode(session, forKey: .session)
             try c.encode(toDay, forKey: .toDay)
+            try c.encode(thisWeekOnly, forKey: .thisWeekOnly)
         case .changeVolume(let muscle, let deltaSetsPerWeek):
             try c.encode(muscle, forKey: .muscle)
             try c.encode(deltaSetsPerWeek, forKey: .deltaSetsPerWeek)

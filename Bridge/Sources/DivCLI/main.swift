@@ -11,8 +11,10 @@ let usage = """
       review  <file>                 weekly review of a snapshot (or a Div/evals/weekly-review fixture)
       session <file>                 session review of a workout (or a Div/evals/session-review fixture)
       meal    <photo> [--note text] [--plate cm] [--weight g]
+      revise  <file>                 revise a meal estimate with an answer (a Div/evals/revise-meal fixture)
+      workout <file>                 tweak the next set mid-workout (a Div/evals/in-workout fixture)
       chat    <message> [--data file]  chat with Div over a DivData file (default Div/evals/chat/data.json)
-      eval    [job] [filter]         run the evals: weekly-review, session-review, chat, or all
+      eval    [job] [filter]         run the evals for one job (e.g. chat, estimate-meal) or all of them
       tools   --data f --tools f [--log f]   serve the read tools over MCP on stdin/stdout (Claude starts this)
 
     Options: --json prints the full result. --ask-first turns off everything Div may do without asking.
@@ -59,8 +61,8 @@ func describe(_ change: PlanChange) -> String {
     case .setCalorieTarget(let kcal): "calorie target -> \(kcal) kcal"
     case .setProteinTarget(let g): "protein -> \(g) g/kg"
     case .setLoad(let exercise, let load): "\(exercise) -> \(load) kg"
-    case .swapExercise(let from, let to): "swap \(from) -> \(to)"
-    case .moveSession(let session, let day): "move \(session) -> \(day)"
+    case .swapExercise(let from, let to, let weeks): "swap \(from) -> \(to)" + (weeks > 0 ? " for \(weeks) weeks" : " for good")
+    case .moveSession(let session, let day, let once): "move \(session) -> \(day)" + (once ? " this week" : " in the plan")
     case .changeVolume(let muscle, let delta): "\(muscle) \(delta > 0 ? "+" : "")\(delta) sets/week"
     case .scheduleDeload(let start, let weeks): "deload \(weeks) week(s) from \(start)"
     }
@@ -158,6 +160,35 @@ do {
             printRun(r.run)
         }
 
+    case "revise":
+        let div = try makeDiv()
+        guard let path = args.first else { fail("revise needs a file") }
+        let request = try input(MealRevisionRequest.self, path, key: "request")
+        let r = try await div.reviseMeal(request)
+        if json {
+            try show(r)
+        } else {
+            print("Q: \(request.question)\nA: \(request.answer)\n")
+            print("\(r.estimate.mealName): \(r.totals.kcal) kcal (was \(Int(request.previous.items.map(\.kcal).reduce(0, +))))")
+            for item in r.estimate.items { print("  \(item.name), \(item.portion) (\(Int(item.grams)) g): \(Int(item.kcal)) kcal") }
+            for w in r.warnings { print("Warning: \(w)") }
+            printRun(r.run)
+        }
+
+    case "workout":
+        let div = try makeDiv()
+        guard let path = args.first else { fail("workout needs a file") }
+        let r = try await div.inWorkout(try input(InWorkoutRequest.self, path, key: "request"))
+        if json {
+            try show(r)
+        } else {
+            let o = r.checked.item
+            print("\(verdictLabel(r.checked.verdict)) \(o.call.rawValue): next set \(o.nextLoadKg) kg x \(o.nextReps), rest \(o.restS) s")
+            print("           \(o.reason)")
+            for note in r.checked.notes { print("           note: \(note)") }
+            printRun(r.run)
+        }
+
     case "chat":
         let div = try makeDiv()
         let dataPath = option("--data") ?? div.files.evalsURL.appending(path: "chat/data.json").path
@@ -177,7 +208,7 @@ do {
 
     case "eval":
         let div = try makeDiv()
-        let jobs = args.first.flatMap(DivJob.init(rawValue:)).map { [$0] } ?? [.weeklyReview, .sessionReview, .chat]
+        let jobs = args.first.flatMap(DivJob.init(rawValue:)).map { [$0] } ?? DivJob.allCases
         if args.first.flatMap(DivJob.init(rawValue:)) != nil { args.removeFirst() }
         let evals = DivEvals(div: div)
         let scenarios = evals.scenarios(jobs: jobs, filter: args.first)

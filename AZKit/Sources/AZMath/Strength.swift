@@ -29,3 +29,18 @@ public enum Strength {
         )
     }
 }
+
+extension Strength {
+    /// The exercise in progress, set by set, so Div can see where the reps and RIR are heading.
+    public static func derive(_ r: InWorkoutRequest) -> InWorkoutDerived {
+        let p = r.prescribed
+        let sets = r.done.map { s in
+            InWorkoutDerived.SetCheck(
+                reps: s.reps, loadKg: s.loadKg, repRange: s.reps < p.repMin ? "below" : s.reps >= p.repMax ? "top" : "in",
+                rirVsPrescribed: rounded(s.rir - p.rir))
+        }
+        let e1rms = r.done.map { rounded(e1rm(loadKg: $0.loadKg, reps: $0.reps, rir: $0.rir)) }
+        return InWorkoutDerived(
+            setsDone: r.done.count, setsLeft: max(p.sets - r.done.count, 0), sets: sets, firstSetE1rm: e1rms.first, lastSetE1rm: e1rms.last)
+    }
+}

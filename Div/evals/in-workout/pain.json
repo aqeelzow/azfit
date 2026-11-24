@@ -1,0 +1,28 @@
+{
+  "name": "pain",
+  "description": "Sharp pain reported: stop the exercise.",
+  "request": {
+    "exercise": "Overhead press",
+    "prescribed": {
+      "sets": 3,
+      "rep_min": 6,
+      "rep_max": 8,
+      "rir": 2,
+      "load_kg": 50
+    },
+    "done": [
+      {
+        "load_kg": 50,
+        "reps": 7,
+        "rir": 2
+      }
+    ],
+    "rest_s": 120,
+    "user_note": "sharp pain in my left shoulder on the last rep"
+  },
+  "expected": {
+    "calls": [
+      "stop"
+    ]
+  }
+}
