@@ -342,6 +342,7 @@
    "joint_stress": [],
    "muscles": {
     "upper_chest": 1.0,
+    "lower_chest": 0.5,
     "front_delts": 0.5,
     "triceps": 0.5
    }
@@ -360,6 +361,36 @@
     "lower_chest": 0.5,
     "front_delts": 0.5,
     "triceps": 0.5
+   }
+  },
+  {
+   "id": "smith_bench_press",
+   "name": "Smith machine bench press",
+   "pattern": "horizontal_push",
+   "equipment": "smith",
+   "fatigue_cost": 3,
+   "joint_stress": [
+    "shoulder"
+   ],
+   "muscles": {
+    "lower_chest": 1.0,
+    "upper_chest": 0.5,
+    "front_delts": 0.5,
+    "triceps": 0.5
+   }
+  },
+  {
+   "id": "incline_dumbbell_fly",
+   "name": "Incline dumbbell fly",
+   "pattern": "isolation",
+   "equipment": "dumbbell",
+   "fatigue_cost": 2,
+   "joint_stress": [
+    "shoulder"
+   ],
+   "muscles": {
+    "upper_chest": 1.0,
+    "lower_chest": 0.5
    }
   },
   {
@@ -448,6 +479,21 @@
    }
   },
   {
+   "id": "dumbbell_pullover",
+   "name": "Dumbbell pullover",
+   "pattern": "isolation",
+   "equipment": "dumbbell",
+   "fatigue_cost": 2,
+   "joint_stress": [
+    "shoulder"
+   ],
+   "muscles": {
+    "lats": 1.0,
+    "lower_chest": 0.5,
+    "triceps": 0.25
+   }
+  },
+  {
    "id": "overhead_press",
    "name": "Standing overhead press",
    "pattern": "vertical_push",
@@ -528,9 +574,7 @@
    "pattern": "isolation",
    "equipment": "dumbbell",
    "fatigue_cost": 1,
-   "joint_stress": [
-    "shoulder"
-   ],
+   "joint_stress": [],
    "muscles": {
     "side_delts": 1.0,
     "traps": 0.25
@@ -679,6 +723,7 @@
    "equipment": "bodyweight",
    "fatigue_cost": 3,
    "joint_stress": [
+    "shoulder",
     "elbow"
    ],
    "muscles": {
@@ -824,7 +869,7 @@
    "joint_stress": [],
    "muscles": {
     "upper_back": 1.0,
-    "lats": 1.0,
+    "lats": 0.5,
     "biceps": 0.5,
     "rear_delts": 0.25
    }
@@ -1074,6 +1119,28 @@
    }
   },
   {
+   "id": "bayesian_cable_curl",
+   "name": "Bayesian cable curl",
+   "pattern": "isolation",
+   "equipment": "cable",
+   "fatigue_cost": 1,
+   "joint_stress": [],
+   "muscles": {
+    "biceps": 1.0
+   }
+  },
+  {
+   "id": "spider_curl",
+   "name": "Spider curl",
+   "pattern": "isolation",
+   "equipment": "dumbbell",
+   "fatigue_cost": 1,
+   "joint_stress": [],
+   "muscles": {
+    "biceps": 1.0
+   }
+  },
+  {
    "id": "triceps_pushdown",
    "name": "Triceps pushdown",
    "pattern": "isolation",
@@ -1164,7 +1231,7 @@
     "quads": 1.0,
     "glutes": 1.0,
     "adductors": 0.5,
-    "lower_back": 0.5,
+    "lower_back": 0.25,
     "hamstrings": 0.25
    }
   },
@@ -1176,6 +1243,7 @@
    "fatigue_cost": 5,
    "joint_stress": [
     "knee",
+    "hip",
     "wrist"
    ],
    "muscles": {
@@ -1257,7 +1325,7 @@
    "muscles": {
     "quads": 1.0,
     "glutes": 0.5,
-    "adductors": 0.5
+    "adductors": 0.25
    }
   },
   {
@@ -1329,6 +1397,34 @@
    "muscles": {
     "quads": 1.0,
     "glutes": 1.0
+   }
+  },
+  {
+   "id": "single_leg_press",
+   "name": "Single-leg leg press",
+   "pattern": "squat",
+   "equipment": "machine",
+   "fatigue_cost": 2,
+   "joint_stress": [
+    "knee"
+   ],
+   "muscles": {
+    "quads": 1.0,
+    "glutes": 0.5,
+    "adductors": 0.25
+   }
+  },
+  {
+   "id": "sissy_squat",
+   "name": "Sissy squat",
+   "pattern": "squat",
+   "equipment": "bodyweight",
+   "fatigue_cost": 2,
+   "joint_stress": [
+    "knee"
+   ],
+   "muscles": {
+    "quads": 1.0
    }
   },
   {
@@ -1492,6 +1588,18 @@
    }
   },
   {
+   "id": "hip_thrust_machine",
+   "name": "Hip thrust machine",
+   "pattern": "hinge",
+   "equipment": "machine",
+   "fatigue_cost": 2,
+   "joint_stress": [],
+   "muscles": {
+    "glutes": 1.0,
+    "hamstrings": 0.25
+   }
+  },
+  {
    "id": "glute_bridge",
    "name": "Glute bridge",
    "pattern": "hinge",
@@ -1640,6 +1748,17 @@
    }
   },
   {
+   "id": "ab_crunch_machine",
+   "name": "Ab crunch machine",
+   "pattern": "core",
+   "equipment": "machine",
+   "fatigue_cost": 1,
+   "joint_stress": [],
+   "muscles": {
+    "abs": 1.0
+   }
+  },
+  {
    "id": "crunch",
    "name": "Crunch",
    "pattern": "core",
@@ -1729,7 +1848,7 @@
    "joint_stress": [],
    "muscles": {
     "forearms": 1.0,
-    "traps": 1.0,
+    "traps": 0.5,
     "abs": 0.5,
     "obliques": 0.5,
     "glutes": 0.25
