@@ -26,6 +26,7 @@ final class AppEnvironment {
         self.bridge = bridge
         bridge.store = store
         chat = ChatSession(bridge: bridge)
+        try? store.fillMissingTarget(today: Day.string(.now))
         profile = try? store.profile()
         chat.onChange = { [weak self] in self?.changed() }
     }

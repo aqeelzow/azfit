@@ -194,6 +194,9 @@ Tried by hand on 2026-11-22; the answer is in `structured_output` of the JSON en
 ### D-028 Plans start from a template
 **Accepted** (Aqeel, 2026-11-25). Onboarding picks a template from the goal and training days (for example Upper/Lower for 4 days). Div can change it afterwards through the usual changes and policy.
 
+### D-029 A starting target without sex
+**Accepted** (Aqeel, 2026-11-25). Onboarding doesn't require sex. When it's missing, the starting calorie target uses Mifflin-St Jeor with the midpoint of the male and female constants (-78), so everyone who gives height, age and weight gets a target. The floor stays at 1,200 (D-017). The Sunday review corrects the start from the scale either way (D-010).
+
 ## Open questions
 
 1. Bridge distribution: notarized download, or Mac App Store (sandboxing conflicts with running `claude`, so probably download).

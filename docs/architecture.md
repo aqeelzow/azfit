@@ -1,6 +1,6 @@
 # Architecture
 
-How the pieces are meant to fit. For why, see [decisions.md](decisions.md). Div's side is built (the jobs, policy, read tools and evals in BridgeKit, the math in AZMath); pairing and the phone-to-bridge connection work for chat (AZSync, D-023); storage, sync and the app's data are still TODO stubs that say what goes in them.
+How the pieces are meant to fit. For why, see [decisions.md](decisions.md). Div's side is built (the jobs, policy, read tools and evals in BridgeKit, the math in AZMath); pairing and the phone-to-bridge connection work for chat (AZSync, D-023); storage and sync work (AZStore). Home, Train, Eat, Body, Div's log and the workout screen read the database through `AZStore+Screens.swift`, and workouts log real sets. Still sample data: meal logging (snap, describe, say), meal and exercise detail, body scan and progress, the calorie target screen and Div's memory.
 
 ## The big picture
 

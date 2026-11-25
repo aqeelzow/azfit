@@ -104,6 +104,22 @@ public final class AZStore: Sendable {
 
     // MARK: Starting out
 
+    /// Sets a starting target for someone who finished onboarding without one (D-029). Does nothing once any exists.
+    public func fillMissingTarget(today: String) throws {
+        try writer.write { db in
+            guard try NutritionTarget.fetchCount(db) == 0, let profile = try Profile.fetchOne(db),
+                let weightKg = try WeighIn.order(Column("day").desc).fetchOne(db)?.kg, let heightCm = profile.heightCm,
+                let age = profile.age(on: today)
+            else { return }
+            let kcal = Targets.startingCalories(
+                sex: profile.sex, weightKg: weightKg, heightCm: heightCm, age: age, goal: profile.goal,
+                ratePctPerWeek: profile.targetRatePctPerWeek)
+            try NutritionTarget(
+                startDay: today, kcal: kcal, proteinGPerKg: Targets.startingProtein(goal: profile.goal), source: .onboarding
+            ).insert(db)
+        }
+    }
+
     /// Onboarding: saves the person, their starting targets and a plan from the template for their training days
     /// (D-028). `weightKg` gives the first weigh-in when the person entered it.
     public func start(_ profile: Profile, weightKg: Double?, today: String, library: Library = .standard) throws {
@@ -112,9 +128,9 @@ public final class AZStore: Sendable {
             try profile.save(db)
             if let weightKg {
                 try WeighIn(day: today, kg: weightKg).insert(db)
-                if let sex = profile.sex, let heightCm = profile.heightCm, let age = profile.age(on: today) {
+                if let heightCm = profile.heightCm, let age = profile.age(on: today) {
                     let kcal = Targets.startingCalories(
-                        sex: sex, weightKg: weightKg, heightCm: heightCm, age: age, goal: profile.goal,
+                        sex: profile.sex, weightKg: weightKg, heightCm: heightCm, age: age, goal: profile.goal,
                         ratePctPerWeek: profile.targetRatePctPerWeek)
                     try NutritionTarget(
                         startDay: today, kcal: kcal, proteinGPerKg: Targets.startingProtein(goal: profile.goal), source: .onboarding

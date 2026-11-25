@@ -1,19 +1,19 @@
+import AZModel
+import AZStore
 import SwiftUI
 
-/// Div's log: the question Div needs you for, then every change it made this week, each undoable for 7 days.
+/// Div's log: changes waiting for you, then every change Div made this week, each undoable for 7 days.
 /// Design: design/source/src/Review.html
 struct DivLogView: View {
     @Environment(Router.self) private var router
-    @State private var undone: Set<Int> = []
-
-    private let changes = [
-        ("dumbbell.fill", "Set 3: 8 → 6 reps", "You got 6 on set 2 · Today"),
-        ("calendar", "Upper A → Sunday", "You missed Friday · Sat"),
-        ("arrow.left.arrow.right", "Overhead → landmine press", "Shoulder felt tight · Tue"),
-        ("flame.fill", "Target 2,200 → 2,350 kcal", "Losing 0.7 kg a week · Mon"),
-    ]
+    @Environment(AppEnvironment.self) private var environment
+    @State private var problem: String?
 
     var body: some View {
+        let today = environment.today
+        let changes = (try? environment.store.recentChanges(today: today)) ?? []
+        let waiting = changes.filter { $0.status == .proposed }
+        let made = changes.filter { $0.status != .proposed && $0.status != .declined }
         VStack(spacing: 0) {
             TopBar(title: "Div's log") {
                 BackButton()
@@ -23,26 +23,41 @@ struct DivLogView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     VStack(alignment: .leading, spacing: 6) {
-                        SectionLabel(text: "Nov 16 - 22").monospacedDigit()
-                        Text(headline).font(.az(34, .heavy)).tracking(-0.85).contentTransition(.numericText())
+                        SectionLabel(text: "Last 7 days")
+                        Text(headline(made: made.filter { $0.status != .undone }.count, waiting: waiting.count))
+                            .font(.az(34, .heavy)).tracking(-0.85).contentTransition(.numericText())
                     }
                     .padding(.top, 18)
 
-                    SectionLabel(text: "Needs you").padding(.top, 24)
-                    DivNote(
-                        title: "Did Thursday's dinner slip through?",
-                        message: "You logged 1,180 kcal, about half your usual, and your weight didn't move Friday."
-                    ) {
-                        PillButton(title: "Add it", style: .dark) { router.present(.snap) }
-                        PillButton(title: "No, that's right") { router.show(.eat) }
+                    if let problem {
+                        Text(problem).font(.az(13.5)).foregroundStyle(AZColor.muted).padding(.top, 10)
                     }
-                    .padding(.top, 10)
+
+                    if !waiting.isEmpty {
+                        SectionLabel(text: "Needs you").padding(.top, 24)
+                        ForEach(waiting) { change in
+                            let summary = change.proposal.change.summary
+                            DivNote(title: summary.title, message: change.proposal.reason.isEmpty ? summary.detail : change.proposal.reason)
+                            {
+                                PillButton(title: "Approve", style: .dark) {
+                                    act { try environment.store.approve(change.id, today: today) }
+                                }
+                                PillButton(title: "Not now") { act { try environment.store.decline(change.id) } }
+                            }
+                            .padding(.top, 10)
+                        }
+                    }
 
                     SectionLabel(text: "Changes").padding(.top, 24)
-                    HairlineStack {
-                        ForEach(changes.indices, id: \.self) { i in row(i) }
+                    if made.isEmpty {
+                        Text("Div hasn't changed anything yet. Changes show here with their reason and an Undo.")
+                            .font(.az(15)).foregroundStyle(AZColor.muted).padding(.top, 8)
+                    } else {
+                        HairlineStack {
+                            ForEach(made) { row($0) }
+                        }
+                        .padding(.top, 4)
                     }
-                    .padding(.top, 4)
 
                     HStack(spacing: 8) {
                         Image(systemName: "arrow.uturn.backward").font(.system(size: 13, weight: .semibold))
@@ -60,39 +75,60 @@ struct DivLogView: View {
         .azScreen()
     }
 
-    private var headline: String {
-        let n = changes.count - undone.count
-        return "\(n) \(n == 1 ? "change" : "changes"), 1 question"
+    private func headline(made: Int, waiting: Int) -> String {
+        let changes = "\(made) \(made == 1 ? "change" : "changes")"
+        return waiting == 0 ? changes : "\(changes), \(waiting) to check"
     }
 
-    private func row(_ i: Int) -> some View {
-        let (icon, title, reason) = changes[i]
-        let isOff = undone.contains(i)
+    /// Runs a store change, then refreshes every screen and syncs.
+    private func act(_ change: () throws -> Void) {
+        do {
+            try change()
+            problem = nil
+        } catch {
+            problem = "\(error)"
+        }
+        withAnimation(.snappy(duration: 0.2)) { environment.changed() }
+    }
+
+    private func icon(_ change: PlanChange) -> String {
+        switch change {
+        case .setCalorieTarget, .setProteinTarget: "flame.fill"
+        case .setLoad, .changeVolume: "dumbbell.fill"
+        case .swapExercise: "arrow.left.arrow.right"
+        case .moveSession: "calendar"
+        case .scheduleDeload: "arrow.down.right"
+        }
+    }
+
+    private func row(_ change: DivChange) -> some View {
+        let summary = change.proposal.change.summary
+        let isOff = change.status == .undone
+        let reason = change.proposal.reason.isEmpty ? summary.detail : change.proposal.reason
+        let when = change.createdAt.formatted(.dateTime.weekday(.abbreviated))
         return HStack(spacing: 14) {
             IconTile(
-                systemImage: icon, size: 44, foreground: isOff ? AZColor.faint : AZColor.divInk,
+                systemImage: icon(change.proposal.change), size: 44, foreground: isOff ? AZColor.faint : AZColor.divInk,
                 background: isOff ? AZColor.fill : AZColor.divTint)
             VStack(alignment: .leading, spacing: 1) {
-                Text(title)
+                Text(summary.title)
                     .font(.az(15.5, .bold))
                     .strikethrough(isOff, color: AZColor.muted)
                     .foregroundStyle(isOff ? AZColor.muted : AZColor.ink)
                     .monospacedDigit()
-                Text(isOff ? "Undone · back to how it was" : reason).font(.az(13.5)).foregroundStyle(AZColor.muted)
+                Text(isOff ? "Undone · back to how it was" : "\(reason) · \(when)").font(.az(13.5)).foregroundStyle(AZColor.muted)
             }
             .lineLimit(1)
             Spacer(minLength: 0)
-            PillButton(title: isOff ? "Redo" : "Undo", style: .fill) {
-                withAnimation(.snappy(duration: 0.2)) {
-                    if isOff { undone.remove(i) } else { undone.insert(i) }
-                }
+            if change.canUndo(at: .now) {
+                PillButton(title: "Undo", style: .fill) { act { try environment.store.undo(change.id) } }
+                    .accessibilityLabel("Undo: \(summary.title)")
             }
-            .accessibilityLabel("\(isOff ? "Redo" : "Undo"): \(title)")
         }
         .frame(minHeight: 72)
     }
 }
 
 #Preview {
-    NavigationStack { DivLogView() }.environment(Router())
+    NavigationStack { DivLogView() }.environment(Router()).environment(AppEnvironment.preview())
 }
