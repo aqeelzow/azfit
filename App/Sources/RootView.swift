@@ -1,15 +1,18 @@
 import SwiftUI
 
-/// The prototype runs the first-run flow on every launch, then the main app. "I already have an account" skips
-/// straight to the main app.
+/// First run until onboarding saves the person, then the main app. "I already have an account" skips straight to
+/// the main app for this launch.
 struct RootView: View {
-    @State private var isOnboarded = false
+    @Environment(AppEnvironment.self) private var environment
+    @State private var skipped = false
+
+    private var isOnboarded: Bool { skipped || environment.profile != nil }
 
     var body: some View {
         if isOnboarded {
             MainView().transition(.opacity)
         } else {
-            OnboardingFlow { withAnimation(.easeInOut(duration: 0.3)) { isOnboarded = true } }
+            OnboardingFlow { withAnimation(.easeInOut(duration: 0.3)) { skipped = true } }
         }
     }
 }
@@ -63,6 +66,7 @@ struct MainView: View {
         case .chat: DivChatView()
         case .divLog: DivLogView()
         case .memory: MemoryView()
+        case .connectMac: ConnectMacView()
         case .meal: MealView()
         case .calorieTarget: CalorieTargetView()
         case .scanResult: ScanResultView()

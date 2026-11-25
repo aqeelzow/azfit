@@ -12,11 +12,11 @@ func verdicts(_ s: WeeklySnapshot, _ autonomy: Autonomy = .standard, _ changes: 
 }
 
 @Suite struct CalorieTests {
-    @Test func validStepAppliesWhenAllowedAndAsksWhenNot() throws {
+    @Test func aValidStepAlwaysAsks() throws {
         let s = try snapshot("surplus-too-big")
-        #expect(verdicts(s, .standard, .setCalorieTarget(newKcal: 2700)) == [.apply])
+        #expect(verdicts(s, .standard, .setCalorieTarget(newKcal: 2700)) == [.propose])
         #expect(verdicts(s, .askFirst, .setCalorieTarget(newKcal: 2700)) == [.propose])
-        #expect(verdicts(s, .standard, .setCalorieTarget(newKcal: 2800)) == [.apply])
+        #expect(verdicts(s, .standard, .setCalorieTarget(newKcal: 2800)) == [.propose])
     }
 
     @Test func stepsOver200UnderTheFloorOrOffThe50sAreRefused() throws {
@@ -37,12 +37,12 @@ func verdicts(_ s: WeeklySnapshot, _ autonomy: Autonomy = .standard, _ changes: 
     @Test func cantCutWhileLosingTooFastButCanAddFood() throws {
         let s = try snapshot("deficit-too-steep")
         #expect(verdicts(s, .standard, .setCalorieTarget(newKcal: 1750)) == [.refuse])
-        #expect(verdicts(s, .standard, .setCalorieTarget(newKcal: 2100)) == [.apply])
+        #expect(verdicts(s, .standard, .setCalorieTarget(newKcal: 2100)) == [.propose])
     }
 
     @Test func onlyOneCalorieChangePerReview() throws {
         let s = try snapshot("surplus-too-big")
-        #expect(verdicts(s, .standard, .setCalorieTarget(newKcal: 2700), .setCalorieTarget(newKcal: 2750)) == [.apply, .refuse])
+        #expect(verdicts(s, .standard, .setCalorieTarget(newKcal: 2700), .setCalorieTarget(newKcal: 2750)) == [.propose, .refuse])
     }
 
     @Test func chatCantMoveCaloriesOrProtein() throws {
@@ -92,12 +92,14 @@ func verdicts(_ s: WeeklySnapshot, _ autonomy: Autonomy = .standard, _ changes: 
         func check(_ change: PlanChange, _ autonomy: Autonomy = .standard) -> Verdict {
             ChangePolicy.check([Proposal(change)], context: context, autonomy: autonomy)[0].verdict
         }
-        #expect(check(.swapExercise(from: "Overhead press", to: "Landmine press", weeks: 2)) == .apply)
-        #expect(check(.swapExercise(from: "Overhead press", to: "Landmine press", weeks: 0)) == .apply)
+        #expect(check(.swapExercise(from: "Overhead press", to: "Landmine press", weeks: 2)) == .propose)
+        #expect(check(.swapExercise(from: "Overhead press", to: "Landmine press", weeks: 2), .allOn) == .apply)
+        #expect(check(.swapExercise(from: "Overhead press", to: "Landmine press", weeks: 0), .allOn) == .apply)
         #expect(check(.swapExercise(from: "Overhead press", to: "Landmine press", weeks: 2), .askFirst) == .propose)
         #expect(check(.swapExercise(from: "Overhead press", to: "Landmine press", weeks: 30)) == .refuse)
         #expect(check(.swapExercise(from: "Snatch", to: "Landmine press", weeks: 2)) == .refuse)
         #expect(check(.moveSession(session: "Legs", toDay: "Friday", thisWeekOnly: true)) == .apply)
+        #expect(check(.moveSession(session: "Legs", toDay: "Friday", thisWeekOnly: true), .askFirst) == .propose)
         #expect(check(.moveSession(session: "Legs", toDay: "Someday", thisWeekOnly: false)) == .refuse)
         #expect(check(.moveSession(session: "Arms", toDay: "Friday", thisWeekOnly: false)) == .refuse)
     }

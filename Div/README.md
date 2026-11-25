@@ -53,6 +53,7 @@ Bridge/.build/debug/div meal photo.jpg --note "half the rice" --plate 27
 Bridge/.build/debug/div revise Div/evals/revise-meal/dressing-yes.json
 Bridge/.build/debug/div workout Div/evals/in-workout/reps-dropping.json
 Bridge/.build/debug/div chat "Why did my calories go up?"   # uses Div/evals/chat/data.json
+Bridge/.build/debug/div serve --pair                        # be the bridge for the iPhone app from Terminal
 make eval                                                   # every scenario (27, about a minute); make eval JOB=chat for one job
 ```
 

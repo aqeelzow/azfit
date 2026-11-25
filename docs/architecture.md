@@ -1,6 +1,6 @@
 # Architecture
 
-How the pieces are meant to fit. For why, see [decisions.md](decisions.md). Div's side is built (the jobs, policy, read tools and evals in BridgeKit, the math in AZMath); storage, sync, pairing and the app's data are still TODO stubs that say what goes in them.
+How the pieces are meant to fit. For why, see [decisions.md](decisions.md). Div's side is built (the jobs, policy, read tools and evals in BridgeKit, the math in AZMath); pairing and the phone-to-bridge connection work for chat (AZSync, D-023); storage, sync and the app's data are still TODO stubs that say what goes in them.
 
 ## The big picture
 
@@ -40,7 +40,7 @@ AZKit/                  shared Swift package, no UI. Used by the app and the bri
 
 Bridge/                 Mac menu bar app
 ├── App/                the SwiftUI shell (menu with phone, Claude and queue status)
-├── Sources/BridgeKit/  the real work: running Div, the policy, read tools, evals (pairing and saving: TODO)
+├── Sources/BridgeKit/  the real work: running Div, the policy, read tools, evals, pairing and the server phones talk to (saving: TODO)
 └── Sources/DivCLI/     `div`: run Div's jobs and evals from the Terminal
 
 Div/                    the agent's prompts, tools, schema and evals. No Swift. See Div/README.md.

@@ -1,11 +1,20 @@
+import AZModel
+import AZStore
+import AZSync
 import SwiftUI
 
-/// Chat with Div. When Div changes the plan from a message, the change shows as a tool card you can undo right there.
+/// Chat with Div, through AZfit Bridge on the Mac. When Div changes the plan from a message, the change shows
+/// as a card under its reply.
 /// Design: design/source/src/Coach.html
 struct DivChatView: View {
     @Environment(Router.self) private var router
-    @State private var isUndone = false
+    @Environment(AppEnvironment.self) private var environment
     @State private var draft = ""
+    @State private var chatProblem: String?
+    @FocusState private var isTyping: Bool
+
+    private var chat: ChatSession { environment.chat }
+    private var bridge: BridgeConnection { environment.bridge }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -13,9 +22,9 @@ struct DivChatView: View {
                 BackButton()
             } center: {
                 Button {
-                    router.push(.memory)
+                    router.push(.connectMac)
                 } label: {
-                    TopBarTitle(title: "Div", subtitle: "Opus · on your MacBook")
+                    TopBarTitle(title: "Div", subtitle: subtitle)
                 }
                 .buttonStyle(.plain)
             } trailing: {
@@ -24,32 +33,70 @@ struct DivChatView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 12) {
-                    day("Tuesday")
-                    mine("Shoulder felt tight on overhead press today.")
-                    divHeader(time: "8:12 PM")
-                    divText("Thanks for telling me. I'll take overhead pressing out for two weeks.")
-                    toolCard
-                    divText("Same movement pattern, less strain. Tell me how it feels Saturday.")
-                    day("Today").padding(.top, 4)
-                    mine("Why did my calories go up?")
-                    divHeader(time: "9:40 AM")
-                    divText("You've lost 0.7 kg a week for 3 weeks. Faster than that starts to cost muscle, so I added 150 kcal.")
-                    PillButton(title: "See the math", trailingImage: "chevron.right", style: .fill) { router.push(.calorieTarget) }
+                    if !bridge.isReady {
+                        BridgeStatusCard()
+                        if bridge.code == nil {
+                            PillButton(title: "Connect your Mac", trailingImage: "chevron.right", style: .fill) { router.push(.connectMac) }
+                        }
+                    }
+                    if chat.entries.isEmpty {
+                        divHeader(time: nil)
+                        divText("Ask me why anything changed, tell me what hurts, or ask for a change to your plan.")
+                    }
+                    ForEach(chat.entries) { entry in
+                        switch entry.kind {
+                        case .mine(let text):
+                            mine(text)
+                        case .div(let reply):
+                            divHeader(time: entry.date)
+                            divText(reply.reply)
+                            ForEach(Array(reply.changes.enumerated()), id: \.offset) { i, checked in
+                                if checked.verdict != .refuse {
+                                    changeCard(checked, id: i < reply.saved.count ? reply.saved[i] : nil)
+                                }
+                            }
+                        case .problem(let text):
+                            Text(text).font(.az(13.5)).foregroundStyle(AZColor.muted).frame(maxWidth: .infinity)
+                                .multilineTextAlignment(.center)
+                        }
+                    }
+                    if let chatProblem {
+                        Text(chatProblem).font(.az(13.5)).foregroundStyle(AZColor.muted).frame(maxWidth: .infinity)
+                    }
+                    if chat.isWaiting {
+                        HStack(spacing: 8) {
+                            DivAvatar(size: 26, mood: .side)
+                            Text("Thinking…").font(.az(14, .medium)).foregroundStyle(AZColor.faint)
+                        }
+                    }
                 }
                 .padding(.horizontal, AZSpacing.gutter)
                 .padding(.top, 22)
                 .padding(.bottom, 16)
+                .animation(.snappy(duration: 0.2), value: chat.entries)
             }
             .scrollIndicators(.hidden)
             .defaultScrollAnchor(.bottom)
+            .scrollDismissesKeyboard(.interactively)
 
             composer
         }
         .azScreen()
     }
 
-    private func day(_ text: String) -> some View {
-        Text(text).font(.az(12.5, .semibold)).foregroundStyle(AZColor.faint).frame(maxWidth: .infinity)
+    private var subtitle: String {
+        switch bridge.state {
+        case .connected(let status): status.claude == .ready ? "on \(status.bridgeName)" : "Claude signed out"
+        case .connecting: "Connecting…"
+        case .offline: "Mac offline"
+        case .unpaired: "Not connected"
+        }
+    }
+
+    private func send() {
+        let text = draft
+        draft = ""
+        Task { await chat.send(text) }
     }
 
     private func mine(_ text: String) -> some View {
@@ -67,11 +114,11 @@ struct DivChatView: View {
             .frame(maxWidth: .infinity, alignment: .trailing)
     }
 
-    private func divHeader(time: String) -> some View {
+    private func divHeader(time: Date?) -> some View {
         HStack(spacing: 8) {
             DivAvatar(size: 26)
             Text("Div").font(.az(14, .bold))
-            Text(time).font(.az(13, .medium)).foregroundStyle(AZColor.faint)
+            if let time { Text(time, format: .dateTime.hour().minute()).font(.az(13, .medium)).foregroundStyle(AZColor.faint) }
         }
     }
 
@@ -79,34 +126,84 @@ struct DivChatView: View {
         Text(text).font(.az(15.5)).lineSpacing(3).fixedSize(horizontal: false, vertical: true)
     }
 
-    /// The change Div made from this conversation, undoable in place. Lavender while it stands, neutral once undone.
-    private var toolCard: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "arrow.left.arrow.right")
+    /// A change Div made (lavender, with Undo) or suggests (neutral, with Approve). The buttons act on the saved
+    /// change, which syncs back from the Mac after the reply.
+    private func changeCard(_ checked: Checked<Proposal>, id: UUID?) -> some View {
+        let status = id.flatMap(changeStatus) ?? (checked.verdict == .apply ? .applied : .proposed)
+        let applied = status == .applied || status == .approved
+        let summary = checked.item.change.summary
+        return HStack(spacing: 12) {
+            Image(systemName: Self.icon(checked.item.change))
                 .font(.system(size: 15, weight: .bold))
-                .foregroundStyle(isUndone ? AZColor.faint : .white)
+                .foregroundStyle(applied ? .white : AZColor.muted)
                 .frame(width: 36, height: 36)
-                .background(isUndone ? AZColor.track : AZColor.accent, in: .rect(cornerRadius: 12, style: .continuous))
+                .background(applied ? AZColor.accent : AZColor.track, in: .rect(cornerRadius: 12, style: .continuous))
             VStack(alignment: .leading, spacing: 1) {
-                Text(isUndone ? "Overhead press is back" : "Swapped in landmine press").font(.az(14.5, .bold))
-                Text(isUndone ? "Plan restored · you undid this" : "For overhead press · 2 weeks")
-                    .font(.az(13)).foregroundStyle(isUndone ? AZColor.muted : AZColor.divMuted)
+                Text(summary.title).font(.az(14.5, .bold))
+                Text(Self.detail(summary.detail, status)).font(.az(13)).foregroundStyle(applied ? AZColor.divMuted : AZColor.muted)
             }
             .lineLimit(1)
             Spacer(minLength: 0)
-            PillButton(title: isUndone ? "Redo" : "Undo") {
-                withAnimation(.snappy(duration: 0.2)) { isUndone.toggle() }
+            if let id {
+                switch status {
+                case .applied, .approved:
+                    Button("Undo") { act(id) { try environment.store.undo(id) } }
+                        .font(.az(13.5, .bold)).foregroundStyle(AZColor.divInk).buttonStyle(.plain)
+                case .proposed:
+                    Button("Approve") { act(id) { try environment.store.approve(id, today: Day.string(.now)) } }
+                        .font(.az(13.5, .bold)).foregroundStyle(AZColor.ink).buttonStyle(.plain)
+                case .declined, .undone:
+                    EmptyView()
+                }
             }
         }
-        .padding(EdgeInsets(top: 12, leading: 14, bottom: 12, trailing: 12))
-        .background(isUndone ? AZColor.fill : AZColor.divTint, in: .rect(cornerRadius: 20, style: .continuous))
+        .padding(EdgeInsets(top: 12, leading: 14, bottom: 12, trailing: 14))
+        .background(applied ? AZColor.divTint : AZColor.fill, in: .rect(cornerRadius: 20, style: .continuous))
+    }
+
+    private func changeStatus(_ id: UUID) -> DivChange.Status? {
+        _ = environment.revision  // read so the card updates after Undo, Approve or a sync
+        return try? environment.store.divChange(id)?.status
+    }
+
+    private static func detail(_ detail: String, _ status: DivChange.Status) -> String {
+        switch status {
+        case .applied, .approved: detail
+        case .proposed: "Suggested · \(detail)"
+        case .undone: "Undone · \(detail)"
+        case .declined: "Not now · \(detail)"
+        }
+    }
+
+    /// Fetches the change from the Mac if it hasn't arrived yet, then acts on it.
+    private func act(_ id: UUID, _ action: @escaping () throws -> Void) {
+        Task {
+            if (try? environment.store.divChange(id)) == nil { try? await environment.bridge.sync() }
+            do {
+                try action()
+            } catch {
+                chatProblem = "Couldn't do that: \(error)"
+            }
+            environment.changed()
+        }
+    }
+
+    private static func icon(_ change: PlanChange) -> String {
+        switch change {
+        case .swapExercise: "arrow.left.arrow.right"
+        case .moveSession: "calendar"
+        case .setLoad: "scalemass"
+        case .changeVolume: "chart.bar"
+        case .scheduleDeload: "arrow.down.right"
+        case .setCalorieTarget, .setProteinTarget: "fork.knife"
+        }
     }
 
     private var composer: some View {
         VStack(alignment: .leading, spacing: 14) {
             ScrollView(.horizontal) {
                 HStack(spacing: 8) {
-                    Chip(title: "Plan my dinner") { router.show(.eat) }
+                    Chip(title: "Why did my calories change?") { draft = "Why did my calories change?" }
                     Chip(title: "What did you change?") { router.push(.divLog) }
                 }
                 .padding(.horizontal, AZSpacing.gutter)
@@ -116,9 +213,13 @@ struct DivChatView: View {
             HStack(spacing: 8) {
                 IconButton(systemImage: "plus", label: "Attach photo", size: 52) { router.present(.snap) }
                 HStack(spacing: 8) {
-                    TextField("Message Div", text: $draft)
+                    TextField("Message Div", text: $draft, axis: .vertical)
+                        .lineLimit(1...4)
                         .font(.az(15.5))
                         .textFieldStyle(.plain)
+                        .focused($isTyping)
+                        .submitLabel(.send)
+                        .onSubmit(send)
                     Button {
                         router.present(.voice)
                     } label: {
@@ -129,18 +230,17 @@ struct DivChatView: View {
                 }
                 .padding(.leading, 16)
                 .padding(.trailing, 14)
-                .frame(height: 52)
+                .frame(minHeight: 52)
                 .background(AZColor.fill, in: .rect(cornerRadius: 18, style: .continuous))
-                Button {
-                    draft = ""
-                } label: {
+                Button(action: send) {
                     Image(systemName: "arrow.up")
                         .font(.system(size: 20, weight: .bold))
                         .foregroundStyle(.white)
                         .frame(width: 52, height: 52)
-                        .background(AZColor.accent, in: .rect(cornerRadius: 18, style: .continuous))
+                        .background(canSend ? AZColor.accent : AZColor.accentSoft, in: .rect(cornerRadius: 18, style: .continuous))
                 }
                 .buttonStyle(.plain)
+                .disabled(!canSend)
                 .accessibilityLabel("Send")
             }
             .padding(.horizontal, 16)
@@ -148,8 +248,12 @@ struct DivChatView: View {
         .padding(.top, 8)
         .padding(.bottom, 8)
     }
+
+    private var canSend: Bool {
+        bridge.isReady && !chat.isWaiting && !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
 }
 
 #Preview {
-    NavigationStack { DivChatView() }.environment(Router())
+    NavigationStack { DivChatView() }.environment(Router()).environment(AppEnvironment.preview())
 }

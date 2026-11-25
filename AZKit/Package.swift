@@ -16,17 +16,18 @@ let package = Package(
         .package(url: "https://github.com/groue/GRDB.swift", from: "7.12.0")
     ],
     targets: [
-        // Plain value types. No dependencies, no I/O.
-        .target(name: "AZModel"),
+        // Plain value types and the bundled exercise library. No dependencies.
+        .target(name: "AZModel", resources: [.copy("Resources/exercises.json")]),
         // Pure functions: e1RM, trend weight, fatigue, maintenance, calorie review rules.
         .target(name: "AZMath", dependencies: ["AZModel"]),
         // SQLite schema, migrations, records and the sync log.
-        .target(name: "AZStore", dependencies: ["AZModel", .product(name: "GRDB", package: "GRDB.swift")]),
-        // Wire format between the phone and the bridge.
-        .target(name: "AZSync", dependencies: ["AZModel"]),
+        .target(name: "AZStore", dependencies: ["AZModel", "AZMath", .product(name: "GRDB", package: "GRDB.swift")]),
+        // The connection between the phone and the bridge: pairing, TLS channel, messages, sync.
+        .target(name: "AZSync", dependencies: ["AZModel", "AZStore"]),
 
         .testTarget(name: "AZModelTests", dependencies: ["AZModel"]),
         .testTarget(name: "AZMathTests", dependencies: ["AZMath"]),
-        .testTarget(name: "AZStoreTests", dependencies: ["AZStore"]),
+        .testTarget(name: "AZStoreTests", dependencies: ["AZStore", "AZModel"]),
+        .testTarget(name: "AZSyncTests", dependencies: ["AZSync", "AZModel"]),
     ]
 )

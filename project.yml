@@ -62,6 +62,10 @@ targets:
         NSHealthUpdateUsageDescription: AZfit can save workouts and weigh-ins to Health if you turn that on.
         NSLocalNetworkUsageDescription: AZfit talks to the AZfit Bridge on your Mac to run Div with your own Claude account.
         NSBonjourServices: [_azfit-bridge._tcp]
+        # A pairing code is also a link, so scanning the bridge's QR code with the Camera app opens AZfit and pairs.
+        CFBundleURLTypes:
+          - CFBundleURLName: com.azfit.pair
+            CFBundleURLSchemes: [azfit-pair]
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.azfit.app
@@ -93,6 +97,8 @@ targets:
     dependencies:
       - package: Bridge
         product: BridgeKit
+      - package: AZKit
+        products: [AZModel, AZSync]
     info:
       path: Bridge/Info.plist
       properties:

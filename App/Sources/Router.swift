@@ -10,7 +10,7 @@ final class Router {
     /// Screens pushed on top of the tabs.
     enum Route: Hashable {
         case workout, workoutDone, swapExercise, exercise
-        case chat, divLog, memory
+        case chat, divLog, memory, connectMac
         case meal, calorieTarget
         case scanResult, progress
     }

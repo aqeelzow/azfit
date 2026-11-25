@@ -141,16 +141,8 @@ Tried by hand on 2026-11-22; the answer is in `structured_output` of the JSON en
 ### D-011 The agent is called Div
 **Accepted.** Renamed from "Arnie" (and "Spark", the mascot sketch) on 2026-11-22. Code, prompts and the design folder say Div. The published canvas artifact still says Arnie.
 
-### D-012 Autonomy defaults: the design or the brief?
-**Open.** They disagree:
-
-| | Brief v0.2 | Approved design (current code) |
-|---|---|---|
-| Routine progression (load, reps) | auto | auto |
-| Swap exercise, move session | asks first | auto, undo for 7 days |
-| Calorie change | asks at 150 kcal or more | auto within 200 kcal, asks above |
-
-The design's argument: every auto change is marked, explained and undoable, which is less friction than approving routine swaps, and the user can turn either switch off on "What Div knows". The brief's argument: early trust, and calories are sensitive. Aqeel and Moiz to decide before TestFlight.
+### D-012 Autonomy defaults
+**Accepted** (Aqeel, 2026-11-25). Routine progression (load, reps) applies on its own. Swapping an exercise asks first. Every calorie change asks first, whatever its size, so the calorie switch on "What Div knows" goes away. Moving a session wasn't decided and stays as the design has it (applies, undo for 7 days). Not yet in the policy code: `Autonomy.standard` still has the design's all-on defaults.
 
 ### D-013 Design rules are product rules
 **Accepted.** From the approved design: no yellow, no circles (no dots, rings or round crops; icons and Div's eyes excepted), no emoji, no em dashes, lavender plus the Div mark means "Div changed this". The brief's "protein ring" is therefore a **bar**. Every change shows what, before and after, why, and a way out. These apply to SwiftUI code as much as to the HTML.
@@ -164,8 +156,8 @@ The design's argument: every auto change is marked, explained and undoable, whic
 ### D-016 Apple Health consent per category, and a separate consent for Claude
 **Accepted.** Each Health category is its own switch. Reading Health into AZfit and sending it to Claude are separate consents (Apple requires explicit consent before health data goes to a third party, the user's own Claude account included). Until the second one is given, Health read tools return `not_shared` and Div works without them. Images (meal photos, scans) never go to Div except a meal photo for its own estimate.
 
-### D-017 Calorie floor 1,200 kcal
-**Open.** Proposed default: 1,200. That is a common floor for women and low for most men; a per-person floor (for example from BMR) may be better. Div refuses anything below the floor either way. Aqeel and Moiz to decide.
+### D-017 Calorie floor per person
+**Accepted** (Aqeel, 2026-11-25). Each person gets their own floor, worked out from their profile (for example from BMR), instead of a fixed 1,200. Div refuses anything below it. The formula is still to choose.
 
 ### D-018 Model per job
 **Accepted.** Weekly review and chat: Opus (reasoning over many signals). Session review: Sonnet (frequent, narrow). Meal estimate: Haiku (fast, cheap, one image). Added 2026-11-23: revising a meal and the in-workout set tweak also run on Haiku, because they're narrow and the person is waiting (mid-workout, between sets).
@@ -184,12 +176,29 @@ The design's argument: every auto change is marked, explained and undoable, whic
 ### D-022 The agent is Swift; the Node prototype is gone
 **Accepted** (Aqeel, 2026-11-23). The first bridge was Node (branch `bridge`, before this). It was ported so the app and the bridge share one model and one set of formulas: types in `AZModel`, formulas in `AZMath`, the `claude -p` runner, policy, read tools and evals in `BridgeKit`, and a `div` command line (`Bridge/Sources/DivCLI`) for running jobs and evals by hand. The policy's verdicts are D-009's: `apply`, `propose` (ask first) and `refuse`. Autonomy is a value passed to the policy (`Autonomy`, the three switches on "What Div knows"); it defaults to the design's (all on) until D-012 is settled. The Node version's HTTP server and QR pairing weren't ported: phone-to-bridge transport belongs with sync (D-006).
 
+### D-023 Pairing is TLS with a pre-shared key from a QR code
+**Accepted** (Aqeel, 2026-11-24). Implements D-006's pairing. "Pair a phone" on the bridge makes a `PairingCode`: the bridge's ID and name, a pairing ID, 32 random bytes, and an address for when Bonjour can't help (Tailscale). It shows as a QR code and as text (`azfit-pair:...`, base64url JSON), which is also a link: scanning it with the Camera app opens AZfit and pairs. Every connection is TLS 1.2 with that key as the pre-shared key (`ChannelSecurity`), so only a paired phone gets past the handshake and the traffic is encrypted, with no certificates or accounts. A code expires after 15 minutes if unused; "Forget" on the bridge removes a phone's key. The phone keeps its code in the Keychain (this device only); the bridge keeps keys in `~/Library/Application Support/AZfit Bridge/pairings.json`, mode 600. The phone finds the bridge with Bonjour (`_azfit-bridge._tcp`, TXT `id` = bridge ID), tries the code's address if that fails, and reconnects while the app is open. Messages are length-prefixed JSON (`AZSync.Message`): hello, status (Claude signed in or not), request and response. Only chat goes over it so far, and until sync exists the bridge answers chat from the sample person in `Div/evals/chat/data.json`.
+
+### D-024 Several phones per bridge
+**Accepted** (Aqeel, 2026-11-25). One Mac can serve several people (a couple sharing a Mac). Every record the bridge keeps says whose it is, and Div only ever sees one person's data per job.
+
+### D-025 Muscles are grouped
+**Accepted** (Aqeel, 2026-11-25). Screens show muscle groups (Shoulders, Legs, ...). Tapping one opens the muscles inside it (front, side and rear delts). Exercises, volume and fatigue are tracked per muscle and added up per group. The draft list is `docs/library/review.md`.
+
+### D-026 Three unit systems
+**Accepted** (Aqeel, 2026-11-25). Canadian (kg or lb for lifts, lb for body weight, cm for tape, kcal), American (lb, in) and British (kg for lifts, stone and lb for body weight, cm). Everything is stored metric and converted for display.
+
+### D-027 Food logging has barcode scanning
+**Accepted** (Aqeel, 2026-11-25). Packaged food is logged by scanning its barcode, alongside photos and favourites. Which food database answers the barcode is still to choose (Open Food Facts is free and covers Canada, the US and the UK).
+
+### D-028 Plans start from a template
+**Accepted** (Aqeel, 2026-11-25). Onboarding picks a template from the goal and training days (for example Upper/Lower for 4 days). Div can change it afterwards through the usual changes and policy.
+
 ## Open questions
 
-1. **D-012** autonomy defaults: design or brief.
-2. **D-017** calorie floor: fixed 1,200 or per person.
-3. Bridge distribution: notarized download, or Mac App Store (sandboxing conflicts with running `claude`, so probably download).
-4. What happens when the Mac is off for a week: the phone keeps working; reviews wait. Should the phone show "Div is offline since Tuesday"?
-5. Pairing more than one phone to a bridge (couples sharing a Mac).
-6. LiDAR scan and food depth: build in v1 or after the first TestFlight.
-7. Bundle identifiers and the Apple team: `com.azfit.*` is a placeholder.
+1. Bridge distribution: notarized download, or Mac App Store (sandboxing conflicts with running `claude`, so probably download).
+2. What happens when the Mac is off for a week: the phone keeps working; reviews wait. Should the phone show "Div is offline since Tuesday"?
+3. LiDAR scan and food depth: build in v1 or after the first TestFlight.
+4. Bundle identifiers and the Apple team: `com.azfit.*` is a placeholder.
+5. Moving a session: apply or ask (D-012).
+6. The per-person calorie floor formula (D-017) and the barcode food database (D-027).

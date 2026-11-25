@@ -1,3 +1,4 @@
+import AZSync
 import Foundation
 import Synchronization
 
@@ -55,7 +56,8 @@ public struct ClaudeCLI: ClaudeRunning {
             try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: workDir.appending(path: name).path)
         }
 
-        let (status, stdout, stderr) = try await execute(arguments: Self.arguments(for: call, workDir: workDir), in: workDir, call: call)
+        let (status, stdout, stderr) = try await execute(
+            arguments: Self.arguments(for: call, workDir: workDir), in: workDir, input: call.userPrompt, timeout: call.timeout)
         var reply = try Self.parse(stdout: stdout, stderr: stderr, status: status, model: call.model)
         for name in call.collect {
             if let data = try? Data(contentsOf: workDir.appending(path: name)) { reply.collected[name] = data }
@@ -63,7 +65,22 @@ public struct ClaudeCLI: ClaudeRunning {
         return reply
     }
 
-    private func execute(arguments: [String], in workDir: URL, call: ClaudeCall) async throws -> (Int32, Data, Data) {
+    /// Whether Claude Code is signed in (`claude auth status`), for the bridge's menu and the phone.
+    public func authStatus() async -> ClaudeStatus {
+        let home = FileManager.default.homeDirectoryForCurrentUser
+        guard let (status, stdout, _) = try? await execute(arguments: ["auth", "status"], in: home, input: "", timeout: .seconds(20)) else {
+            return .unknown
+        }
+        return Self.parseAuthStatus(stdout: stdout, status: status)
+    }
+
+    static func parseAuthStatus(stdout: Data, status: Int32) -> ClaudeStatus {
+        guard let object = try? JSONSerialization.jsonObject(with: stdout) as? [String: Any], let loggedIn = object["loggedIn"] as? Bool
+        else { return status == 0 ? .unknown : .signedOut }
+        return loggedIn ? .ready : .signedOut
+    }
+
+    private func execute(arguments: [String], in workDir: URL, input: String, timeout: Duration) async throws -> (Int32, Data, Data) {
         let process = Process()
         process.executableURL = executable
         process.arguments = arguments
@@ -99,12 +116,12 @@ public struct ClaudeCLI: ClaudeRunning {
         async let output = readAll(stdout.fileHandleForReading)
         async let errors = readAll(stderr.fileHandleForReading)
         DispatchQueue.global().async {
-            try? stdin.fileHandleForWriting.write(contentsOf: Data(call.userPrompt.utf8))
+            try? stdin.fileHandleForWriting.write(contentsOf: Data(input.utf8))
             try? stdin.fileHandleForWriting.close()
         }
         let timedOut = Atomic<Bool>(false)
         let watchdog = Task.detached {
-            try await Task.sleep(for: call.timeout)
+            try await Task.sleep(for: timeout)
             timedOut.store(true, ordering: .relaxed)
             process.terminate()
         }
@@ -113,7 +130,7 @@ public struct ClaudeCLI: ClaudeRunning {
         var status: Int32 = -1
         for await code in exits { status = code }
         let result = (status, await output, await errors)
-        if timedOut.load(ordering: .relaxed) { throw ClaudeError.timedOut(call.timeout) }
+        if timedOut.load(ordering: .relaxed) { throw ClaudeError.timedOut(timeout) }
         return result
     }
 
