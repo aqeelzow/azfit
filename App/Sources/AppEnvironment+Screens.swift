@@ -11,6 +11,12 @@ extension AppEnvironment {
 
     var units: UnitSystem { profile?.units ?? .canadian }
 
+    /// Div's latest Sunday review, while it's still this week's news (8 days).
+    var recentWeekReview: WeekReview? {
+        guard let review = try? store.latestWeekReview(), review.weekEnding >= Day.adding(-8, to: today) else { return nil }
+        return review
+    }
+
     /// "Wednesday, Nov 25"
     static func caption(_ day: String) -> String {
         Day.date(day)?.formatted(.dateTime.weekday(.wide).month(.abbreviated).day()) ?? day

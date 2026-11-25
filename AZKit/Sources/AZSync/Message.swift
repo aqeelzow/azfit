@@ -74,6 +74,30 @@ public enum Job: Sendable, Equatable {
     case chat(ChatRequest)
     /// Send the phone's new rows and get the bridge's back (D-006).
     case sync(SyncPush)
+    /// Review a finished workout (already synced): Div's note and next time's loads, saved on the bridge.
+    case sessionReview(SessionReviewRequest)
+}
+
+public struct SessionReviewRequest: Codable, Sendable, Equatable {
+    public var workoutID: UUID
+
+    public init(workoutID: UUID) {
+        self.workoutID = workoutID
+    }
+}
+
+/// What the session review decided. Its note and changes also arrive with the next sync.
+public struct SessionReviewReply: Codable, Sendable, Equatable {
+    public var note: String
+    /// Load changes applied now, and ones waiting for the person.
+    public var applied: Int
+    public var proposed: Int
+
+    public init(note: String, applied: Int, proposed: Int) {
+        self.note = note
+        self.applied = applied
+        self.proposed = proposed
+    }
 }
 
 /// The phone's rows since the bridge last confirmed, and how far the phone has the bridge's rows.
@@ -112,6 +136,7 @@ public struct Response: Codable, Sendable, Equatable {
 public enum Outcome: Sendable, Equatable {
     case chat(ChatReply)
     case synced(SyncPull)
+    case sessionReviewed(SessionReviewReply)
     /// The job couldn't run: Claude is signed out, timed out, or answered something invalid.
     case failed(String)
 }
@@ -187,7 +212,8 @@ extension Message: Codable {
 
 extension Job: Codable {
     private enum Keys: String, CodingKey {
-        case kind, chat, sync
+        // Swift names: the wire coder (DivJSON) makes them snake_case, and a snake_case raw value wouldn't read back.
+        case kind, chat, sync, sessionReview
     }
 
     public init(from decoder: any Decoder) throws {
@@ -195,6 +221,7 @@ extension Job: Codable {
         switch try container.decode(String.self, forKey: .kind) {
         case "chat": self = .chat(try container.decode(ChatRequest.self, forKey: .chat))
         case "sync": self = .sync(try container.decode(SyncPush.self, forKey: .sync))
+        case "session_review": self = .sessionReview(try container.decode(SessionReviewRequest.self, forKey: .sessionReview))
         case let other:
             throw DecodingError.dataCorruptedError(forKey: .kind, in: container, debugDescription: "unknown job \(other)")
         }
@@ -209,13 +236,16 @@ extension Job: Codable {
         case .sync(let push):
             try container.encode("sync", forKey: .kind)
             try container.encode(push, forKey: .sync)
+        case .sessionReview(let request):
+            try container.encode("session_review", forKey: .kind)
+            try container.encode(request, forKey: .sessionReview)
         }
     }
 }
 
 extension Outcome: Codable {
     private enum Keys: String, CodingKey {
-        case kind, chat, synced, error
+        case kind, chat, synced, error, sessionReviewed
     }
 
     public init(from decoder: any Decoder) throws {
@@ -223,6 +253,7 @@ extension Outcome: Codable {
         switch try container.decode(String.self, forKey: .kind) {
         case "chat": self = .chat(try container.decode(ChatReply.self, forKey: .chat))
         case "synced": self = .synced(try container.decode(SyncPull.self, forKey: .synced))
+        case "session_reviewed": self = .sessionReviewed(try container.decode(SessionReviewReply.self, forKey: .sessionReviewed))
         case "failed": self = .failed(try container.decode(String.self, forKey: .error))
         case let other:
             throw DecodingError.dataCorruptedError(forKey: .kind, in: container, debugDescription: "unknown outcome \(other)")
@@ -238,6 +269,9 @@ extension Outcome: Codable {
         case .synced(let pull):
             try container.encode("synced", forKey: .kind)
             try container.encode(pull, forKey: .synced)
+        case .sessionReviewed(let reply):
+            try container.encode("session_reviewed", forKey: .kind)
+            try container.encode(reply, forKey: .sessionReviewed)
         case .failed(let message):
             try container.encode("failed", forKey: .kind)
             try container.encode(message, forKey: .error)

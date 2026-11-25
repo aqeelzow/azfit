@@ -162,6 +162,43 @@ func tempStore() -> PairingStore {
         #expect(try bridge.all(DivChange.self).first?.status == .approved)
     }
 
+    @Test func sessionReviewSavesTheNoteAndLoadsAndTheySyncBack() async throws {
+        let phone = try AZStore.inMemory()
+        try phone.start(
+            Profile(name: "Sam", sex: .male, birthYear: 1996, heightCm: 180, goal: .cut, trainingDays: 4), weightKg: 82,
+            today: "2026-11-23")
+        let person = try #require(try phone.profile()?.id)
+        let push = try #require(try phone.plan().first?.session)
+        let workout = try phone.startWorkout(push, today: "2026-11-23")
+        for i in 0..<3 {
+            try phone.logSet(LoggedSet(workoutID: workout.id, exerciseID: "barbell_bench_press", position: i, loadKg: 80, reps: 8, rir: 2))
+        }
+        try phone.finishWorkout(workout.id)
+        let answer = """
+            {"note":"Every set at 8. Up next time.","next_time":[{"exercise":"Barbell bench press","call":"progress",
+             "next_load_kg":82.5,"reason":"All sets at the top of the range."}]}
+            """
+        let people = PeopleStores(folder: FileManager.default.temporaryDirectory.appending(path: "azfit-people-\(UUID().uuidString)"))
+        let jobs = PhoneJobs(
+            div: { Div(files: divFiles, claude: FakeClaude(answer: answer)) }, people: people, today: { "2026-11-23" })
+
+        func sync() async throws {
+            let push = SyncPush(
+                batch: try phone.changes(after: try phone.acknowledgedSeq(by: "bridge")), since: try phone.receivedSeq(from: "bridge"))
+            guard case .synced(let pull) = await jobs.handle(Request(job: .sync(push), person: person)) else { throw CancellationError() }
+            try phone.apply(pull.batch, from: "bridge")
+            try phone.setAcknowledged(pull.received, by: "bridge")
+        }
+
+        try await sync()
+        let outcome = await jobs.handle(Request(job: .sessionReview(SessionReviewRequest(workoutID: workout.id)), person: person))
+        #expect(outcome == .sessionReviewed(SessionReviewReply(note: "Every set at 8. Up next time.", applied: 1, proposed: 0)))
+        try await sync()
+        #expect(try phone.all(Workout.self).first?.divNote == "Every set at 8. Up next time.")
+        #expect(try phone.plan().first?.exercises.first?.loadKg == 82.5)
+        #expect(try phone.all(DivChange.self).first?.job == "session_review")
+    }
+
     @Test func syncNeedsAPerson() async {
         let jobs = PhoneJobs(div: { throw ClaudeError.notInstalled }, people: PeopleStores(folder: FileManager.default.temporaryDirectory))
         let push = SyncPush(batch: SyncBatch(rows: [], lastSeq: 0, more: false), since: 0)

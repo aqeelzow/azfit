@@ -21,6 +21,7 @@ struct RootView: View {
 /// Div lives behind its avatar and notes on every screen, not in a tab.
 struct MainView: View {
     @State private var router = Router()
+    @Environment(AppEnvironment.self) private var environment
 
     var body: some View {
         NavigationStack(path: $router.path) {
@@ -39,6 +40,10 @@ struct MainView: View {
                 .navigationDestination(for: Router.Route.self) { route in destination(route) }
         }
         .environment(router)
+        // Div reviews finished workouts whenever it can: right away, or once the Mac is back.
+        .onChange(of: environment.bridge.isReady, initial: true) { _, ready in
+            if ready { environment.reviewFinishedWorkouts() }
+        }
         #if os(iOS)
         .fullScreenCover(item: $router.cover) { cover in coverView(cover) }
         #else

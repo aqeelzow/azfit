@@ -5,7 +5,7 @@ enum Schema {
     /// Every synced table: each has a text `id` primary key.
     static let tables = [
         "profile", "nutrition_target", "planned_session", "planned_exercise", "workout", "logged_set", "meal", "food_day",
-        "weigh_in", "body_measurement", "div_change", "memory",
+        "weigh_in", "body_measurement", "div_change", "memory", "week_review",
     ]
 
     static var migrator: DatabaseMigrator {
@@ -154,19 +154,41 @@ enum Schema {
                         acknowledged_seq INTEGER NOT NULL
                     );
                     """)
-            for table in tables {
-                let notApplying = "WHEN (SELECT applying FROM sync_state) = 0"
-                try db.execute(
-                    sql: """
-                        CREATE TRIGGER \(table)_sync_insert AFTER INSERT ON \(table) \(notApplying)
-                        BEGIN INSERT INTO sync_log (table_name, row_id, deleted) VALUES ('\(table)', NEW.id, 0); END;
-                        CREATE TRIGGER \(table)_sync_update AFTER UPDATE ON \(table) \(notApplying)
-                        BEGIN INSERT INTO sync_log (table_name, row_id, deleted) VALUES ('\(table)', NEW.id, 0); END;
-                        CREATE TRIGGER \(table)_sync_delete AFTER DELETE ON \(table) \(notApplying)
-                        BEGIN INSERT INTO sync_log (table_name, row_id, deleted) VALUES ('\(table)', OLD.id, 1); END;
-                        """)
-            }
+            for table in tables where table != "week_review" { try logChanges(to: table, db) }
+        }
+        // Additive from here on: databases already made with v1 exist on phones and bridges.
+        migrator.registerMigration("v2 workout note") { db in
+            try db.execute(sql: "ALTER TABLE workout ADD COLUMN div_note TEXT")
+        }
+        migrator.registerMigration("v3 week review") { db in
+            try db.execute(
+                sql: """
+                    CREATE TABLE week_review (
+                        id TEXT PRIMARY KEY NOT NULL,
+                        week_ending TEXT NOT NULL,
+                        summary TEXT NOT NULL,
+                        calorie_reasoning TEXT NOT NULL,
+                        questions TEXT NOT NULL,
+                        created_at TEXT NOT NULL
+                    );
+                    CREATE INDEX week_review_week ON week_review(week_ending);
+                    """)
+            try logChanges(to: "week_review", db)
         }
         return migrator
+    }
+
+    /// Triggers that put every write to `table` in `sync_log`, except while applying the other side's rows.
+    static func logChanges(to table: String, _ db: Database) throws {
+        let notApplying = "WHEN (SELECT applying FROM sync_state) = 0"
+        try db.execute(
+            sql: """
+                CREATE TRIGGER \(table)_sync_insert AFTER INSERT ON \(table) \(notApplying)
+                BEGIN INSERT INTO sync_log (table_name, row_id, deleted) VALUES ('\(table)', NEW.id, 0); END;
+                CREATE TRIGGER \(table)_sync_update AFTER UPDATE ON \(table) \(notApplying)
+                BEGIN INSERT INTO sync_log (table_name, row_id, deleted) VALUES ('\(table)', NEW.id, 0); END;
+                CREATE TRIGGER \(table)_sync_delete AFTER DELETE ON \(table) \(notApplying)
+                BEGIN INSERT INTO sync_log (table_name, row_id, deleted) VALUES ('\(table)', OLD.id, 1); END;
+                """)
     }
 }

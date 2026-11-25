@@ -14,6 +14,7 @@ struct DivLogView: View {
         let changes = (try? environment.store.recentChanges(today: today)) ?? []
         let waiting = changes.filter { $0.status == .proposed }
         let made = changes.filter { $0.status != .proposed && $0.status != .declined }
+        let review = environment.recentWeekReview
         VStack(spacing: 0) {
             TopBar(title: "Div's log") {
                 BackButton()
@@ -31,6 +32,17 @@ struct DivLogView: View {
 
                     if let problem {
                         Text(problem).font(.az(13.5)).foregroundStyle(AZColor.muted).padding(.top, 10)
+                    }
+
+                    if let review {
+                        SectionLabel(text: "Sunday review · \(AppEnvironment.caption(review.weekEnding))").padding(.top, 24)
+                        DivNote(title: "Your week", message: review.summary, tone: .settled).padding(.top, 10)
+                        ForEach(review.questions, id: \.self) { question in
+                            DivNote(title: question, message: "Tell Div in chat and it'll take it into account.") {
+                                PillButton(title: "Answer", style: .dark) { router.push(.chat) }
+                            }
+                            .padding(.top, 10)
+                        }
                     }
 
                     if !waiting.isEmpty {

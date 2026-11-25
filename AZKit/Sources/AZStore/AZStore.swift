@@ -12,7 +12,10 @@ public final class AZStore: Sendable {
     /// Opens (or creates) the database at `url`, and brings its schema up to date.
     public convenience init(url: URL) throws {
         try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try self.init(writer: DatabasePool(path: url.path))
+        // Wait for a lock instead of failing at once: the bridge's menu app and `div serve` may share a file.
+        var config = Configuration()
+        config.busyMode = .timeout(5)
+        try self.init(writer: DatabasePool(path: url.path, configuration: config))
     }
 
     /// An empty database in memory, for tests and previews.

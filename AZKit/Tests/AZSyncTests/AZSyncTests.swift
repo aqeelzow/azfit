@@ -37,11 +37,15 @@ import Testing
                             changes: [Checked(item: Proposal(.swapExercise(from: "A", to: "B", weeks: 2), reason: "r"), verdict: .apply)],
                             model: "opus")))),
             .response(Response(id: UUID(), outcome: .failed("Claude is signed out."))),
+            .request(Request(job: .sessionReview(SessionReviewRequest(workoutID: UUID())), person: UUID())),
+            .response(Response(id: UUID(), outcome: .sessionReviewed(SessionReviewReply(note: "Good.", applied: 1, proposed: 0)))),
         ]
         for message in messages {
             #expect(try DivJSON.decode(Message.self, from: DivJSON.encode(message)) == message)
         }
         #expect(try DivJSON.string(Message.hello(Hello(phoneName: "iPhone")), pretty: false).contains(#""type":"hello""#))
+        let review = try DivJSON.string(Job.sessionReview(SessionReviewRequest(workoutID: UUID())), pretty: false)
+        #expect(review.contains(#""kind":"session_review""#) && review.contains(#""session_review":{"#))
     }
 
     @Test func framesSplitAndJoin() throws {

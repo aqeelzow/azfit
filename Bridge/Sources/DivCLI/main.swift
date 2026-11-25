@@ -17,7 +17,8 @@ let usage = """
       chat    <message> [--data file]  chat with Div over a DivData file (default Div/evals/chat/data.json)
       eval    [job] [filter]         run the evals for one job (e.g. chat, estimate-meal) or all of them
       tools   --data f --tools f [--log f]   serve the read tools over MCP on stdin/stdout (Claude starts this)
-      serve   [--pair]               be the bridge for the phone, like the menu bar app; --pair prints a pairing code
+      weekly  [--week YYYY-MM-DD]    run the Sunday review now for everyone paired (default: the last Sunday)
+      serve   [--pair]               be the bridge for the phone, like the menu bar app (and run Sunday reviews); --pair prints a pairing code
 
     Options: --json prints the full result. --ask-first turns off everything Div may do without asking.
     """
@@ -215,20 +216,23 @@ do {
         let cli = try ClaudeCLI.locate()
         let store = PairingStore.standard()
         let name = (Host.current().localizedName ?? "Mac") + " (div serve)"
+        let jobs = PhoneJobs(
+            div: { div }, people: .standard(), sampleData: PhoneJobs.sampleData(files),
+            onRun: { name, run in print("ran \(name): \(run.summary)") })
         let server = BridgeServer(
             store: store, bridgeName: name, status: { await cli.authStatus() },
             handle: { request in
-                let jobs = PhoneJobs(
-                    div: { div }, people: .standard(), sampleData: PhoneJobs.sampleData(files),
-                    onRun: { name, run in print("ran \(name): \(run.summary)") })
                 switch request.job {
                 case .chat(let chat): print("chat: \(chat.message)")
                 case .sync(let push): print("sync: \(push.batch.rows.count) rows from the phone")
+                case .sessionReview(let review): print("session review: workout \(review.workoutID)")
                 }
                 let outcome = await jobs.handle(request)
                 switch outcome {
                 case .chat(let reply): print("answer: \(reply.reply)")
                 case .synced(let pull): print("synced: \(pull.batch.rows.count) rows to the phone")
+                case .sessionReviewed(let reply):
+                    print("reviewed: \(reply.note) (\(reply.applied) applied, \(reply.proposed) to check)")
                 case .failed(let why): print("failed: \(why)")
                 }
                 return outcome
@@ -246,7 +250,27 @@ do {
             fail("No phones paired yet. Run with --pair.")
         }
         server.start()
-        while true { try await Task.sleep(for: .seconds(3600)) }
+        let reviews = WeeklyReviews(
+            div: { div }, people: .standard(), onRun: { name, run in print("ran \(name): \(run.summary)") })
+        while true {
+            for line in await reviews.runDue() { print("weekly review \(line)") }
+            try await Task.sleep(for: .seconds(3600))
+        }
+
+    case "weekly":
+        let div = try makeDiv()
+        let week = option("--week") ?? WeeklyReviews.sunday(onOrBefore: Day.string(.now))
+        let people = PeopleStores.standard()
+        let reviews = WeeklyReviews(div: { div }, people: people, onRun: { _, run in printRun(run) })
+        if people.people().isEmpty { print("No one has synced to this Mac yet.") }
+        for person in people.people() {
+            let outcome = try await reviews.review(person, week: week, today: Day.string(.now))
+            print("\(person.uuidString.prefix(8)), week ending \(week): \(outcome)")
+            if let review = try people.store(for: person).weekReview(weekEnding: week), outcome.hasPrefix("reviewed") {
+                print(review.summary)
+                for q in review.questions { print("  ? \(q)") }
+            }
+        }
 
     case "eval":
         let div = try makeDiv()

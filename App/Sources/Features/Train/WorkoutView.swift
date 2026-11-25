@@ -218,6 +218,7 @@ struct WorkoutView: View {
     private func finish(_ workout: Workout) {
         try? store.finishWorkout(workout.id)
         environment.changed()
+        environment.reviewFinishedWorkouts()
         dismiss()
     }
 

@@ -12,8 +12,16 @@ public final class PeopleStores: Sendable {
         self.folder = folder
     }
 
-    public static func standard() -> PeopleStores {
-        PeopleStores(folder: PairingStore.supportFolder.appending(path: "people"))
+    /// One per process, so each person's database is opened once: two pools on the same file lock each other out.
+    public static func standard() -> PeopleStores { shared }
+
+    private static let shared = PeopleStores(folder: PairingStore.supportFolder.appending(path: "people"))
+
+    /// Everyone with a database here.
+    public func people() -> [UUID] {
+        let files = (try? FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil)) ?? []
+        return files.filter { $0.pathExtension == "sqlite" }.compactMap { UUID(uuidString: $0.deletingPathExtension().lastPathComponent) }
+            .sorted { $0.uuidString < $1.uuidString }
     }
 
     /// The database for `person`, created on first use.

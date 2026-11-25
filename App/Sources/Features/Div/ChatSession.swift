@@ -43,7 +43,7 @@ final class ChatSession {
                 entries.append(Entry(kind: .div(reply), date: .now))
                 if reply.saved.contains(where: { $0 != nil }) || !reply.remember.isEmpty { onChange() }
             case .failed(let reason): entries.append(Entry(kind: .problem(reason), date: .now))
-            case .synced: break
+            case .synced, .sessionReviewed: break
             }
         } catch {
             entries.append(Entry(kind: .problem("\(error)"), date: .now))

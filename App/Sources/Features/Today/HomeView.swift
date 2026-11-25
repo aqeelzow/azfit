@@ -37,6 +37,7 @@ struct HomeView: View {
                 } else {
                     restCard.padding(.top, 20)
                 }
+                sessionNote.padding(.top, 16)
                 divChanges.padding(.top, 16)
                 HStack(spacing: 12) {
                     foodTile
@@ -123,10 +124,26 @@ struct HomeView: View {
         .frame(height: 26)
     }
 
+    /// Div's note on today's finished workout, or that it's still reviewing.
+    @ViewBuilder
+    private var sessionNote: some View {
+        if !environment.reviewing.isEmpty {
+            DivNote(title: "Reviewing your workout", message: "Div is looking at every set to plan next time.", tone: .settled) {
+                EmptyView()
+            }
+        } else if let workout = try? store.reviewedWorkout(on: today), let note = workout.divNote {
+            DivNote(title: "After \(workout.name)", message: note) {
+                PillButton(title: "See changes") { router.push(.divLog) }
+            }
+        } else if let problem = environment.reviewProblem {
+            DivNote(title: "Div couldn't review your workout", message: problem, tone: .settled) { EmptyView() }
+        }
+    }
+
     private var divChanges: some View {
         let changes = (try? store.recentChanges(today: today)) ?? []
         let made = changes.filter { $0.status == .applied || $0.status == .approved }.count
-        let questions = changes.filter { $0.status == .proposed }.count
+        let questions = changes.filter { $0.status == .proposed }.count + (environment.recentWeekReview?.questions.count ?? 0)
         return Button {
             router.push(.divLog)
         } label: {

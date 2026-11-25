@@ -197,6 +197,12 @@ Tried by hand on 2026-11-22; the answer is in `structured_output` of the JSON en
 ### D-029 A starting target without sex
 **Accepted** (Aqeel, 2026-11-25). Onboarding doesn't require sex. When it's missing, the starting calorie target uses Mifflin-St Jeor with the midpoint of the male and female constants (-78), so everyone who gives height, age and weight gets a target. The floor stays at 1,200 (D-017). The Sunday review corrects the start from the scale either way (D-010).
 
+### D-030 Div reviews every finished workout
+**Accepted** (Aqeel, 2026-11-25). Finish asks the bridge for a session review once the workout has synced. The bridge builds the `SessionReport` from its copy of the data (prescription from the plan, sets as logged, best e1RM from earlier sessions), Div writes a note and next time's loads, and `SessionPolicy` decides each load as usual. The note is saved on the workout (`div_note`) and shows on Home. A workout's first review sets any missing planned load to what was lifted, so loads start from reality. Sets logged without RIR count as RIR 2 until the workout screen asks for it. If the Mac is away, the review runs when it's back; each workout is tried once per app launch so a failing review can't keep spending the person's Claude usage.
+
+### D-031 The bridge runs the Sunday review on its own
+**Accepted** (Aqeel, 2026-11-25). From 6 pm Sunday until the end of Tuesday the bridge reviews every person whose week has no review yet, checking at launch and hourly, so a Mac asleep on Sunday catches up. People who joined less than 7 days before that Sunday are skipped. The summary and questions are saved as a `week_review` row and show in Div's log; changes go through `ChangePolicy` as `DivChange`s. Until the phone can mark a day as everything eaten, a food day counts as complete at 60% of the target or more. Recovery (sleep, HRV, steps) is left out until Health is read, so Div won't deload on recovery grounds. `div weekly` runs it on demand.
+
 ## Open questions
 
 1. Bridge distribution: notarized download, or Mac App Store (sandboxing conflicts with running `claude`, so probably download).

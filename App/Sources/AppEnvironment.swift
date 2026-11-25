@@ -20,6 +20,12 @@ final class AppEnvironment {
     private(set) var profile: Profile?
     /// Bumped after every write, so screens reading the store refresh.
     private(set) var revision = 0
+    /// Workouts Div is reviewing right now.
+    private(set) var reviewing: Set<UUID> = []
+    /// Why the last review couldn't run, for the screen.
+    private(set) var reviewProblem: String?
+    /// Tried this launch, so a failing review doesn't keep spending the person's Claude usage.
+    @ObservationIgnored private var attempted: Set<UUID> = []
 
     init(store: AZStore, bridge: BridgeConnection) {
         self.store = store
@@ -36,6 +42,35 @@ final class AppEnvironment {
         profile = try? store.profile()
         revision += 1
         Task { try? await bridge.sync() }
+    }
+
+    /// Asks Div to review finished workouts from the last two days that don't have a note yet. Runs after Finish and
+    /// whenever the Mac comes back; each workout is tried once per launch.
+    func reviewFinishedWorkouts() {
+        guard bridge.isReady else { return }
+        let since = Day.adding(-2, to: Day.string(.now))
+        let pending = ((try? store.workoutsAwaitingReview(since: since)) ?? []).filter { !attempted.contains($0.id) }
+        for workout in pending {
+            attempted.insert(workout.id)
+            reviewing.insert(workout.id)
+            Task {
+                defer {
+                    reviewing.remove(workout.id)
+                    revision += 1
+                }
+                do {
+                    if case .failed(let reason) = try await bridge.ask(.sessionReview(SessionReviewRequest(workoutID: workout.id))) {
+                        reviewProblem = reason
+                    } else {
+                        reviewProblem = nil
+                    }
+                    try await bridge.sync()
+                    profile = try? store.profile()
+                } catch {
+                    reviewProblem = "\(error)"
+                }
+            }
+        }
     }
 
     /// Saves who they are, their targets and a template plan (D-028).
