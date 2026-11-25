@@ -106,3 +106,45 @@ public struct Proposal: Codable, Sendable, Equatable {
         try c.encode(evidence, forKey: .evidence)
     }
 }
+
+extension PlanChange {
+    /// What the change card says: a short title ("Swapped in landmine press") and a detail line
+    /// ("For overhead press · 2 weeks"). Plain text, no markdown.
+    public var summary: (title: String, detail: String) {
+        switch self {
+        case .setCalorieTarget(let kcal):
+            ("Calories to \(kcal.formatted()) kcal", "Daily target")
+        case .setProteinTarget(let grams):
+            ("Protein to \(Self.number(grams)) g per kg", "Daily target")
+        case .setLoad(let exercise, let kg):
+            ("\(exercise) to \(Self.number(kg)) kg", "Next session")
+        case .swapExercise(let from, let to, let weeks):
+            (
+                "Swapped in \(to.lowercasedFirst)",
+                weeks == 0 ? "For \(from.lowercasedFirst) · for good" : "For \(from.lowercasedFirst) · \(Self.weeks(weeks))"
+            )
+        case .moveSession(let session, let day, let thisWeekOnly):
+            ("\(session) moved to \(day)", thisWeekOnly ? "This week only" : "From now on")
+        case .changeVolume(let muscle, let delta):
+            ("\(muscle): \(delta > 0 ? "+" : "")\(delta) sets a week", delta > 0 ? "More volume" : "Less volume")
+        case .scheduleDeload(let start, let weeks):
+            ("Deload from \(start)", Self.weeks(weeks) + ", lighter loads")
+        }
+    }
+
+    private static func number(_ value: Double) -> String {
+        value.formatted(.number.precision(.fractionLength(0...1)))
+    }
+
+    private static func weeks(_ count: Int) -> String {
+        count == 1 ? "1 week" : "\(count) weeks"
+    }
+}
+
+extension String {
+    /// "Overhead press" to "overhead press" for the middle of a sentence. Leaves acronyms ("RDL") alone.
+    var lowercasedFirst: String {
+        guard let first, first.isUppercase, !(dropFirst().first?.isUppercase ?? false) else { return self }
+        return first.lowercased() + dropFirst()
+    }
+}

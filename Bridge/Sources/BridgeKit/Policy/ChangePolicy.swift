@@ -113,7 +113,7 @@ public enum ChangePolicy {
             if !c.waterEvents.isEmpty && !c.losingTooFast {
                 return refuse("Water event in the window (\(c.waterEvents.joined(separator: ", "))); the window is extended instead.")
             }
-            return autonomy.calorieChanges ? apply() : propose("Calorie changes ask first in your settings.")
+            return propose("Calorie changes always ask first (D-012).")
 
         case .setProteinTarget(let gramsPerKg):
             guard c.job == .weeklyReview else { return refuse("Only the Sunday review changes protein.") }
@@ -144,7 +144,7 @@ public enum ChangePolicy {
             if !Limits.swapWeeks.contains(weeks) {
                 return refuse("A swap of \(weeks) weeks is outside 0 to \(Limits.swapWeeks.upperBound).")
             }
-            return autonomy.swapsAndMoves ? apply() : propose("Swaps ask first in your settings.")
+            return autonomy.swaps ? apply() : propose("Swaps ask first in your settings.")
 
         case .moveSession(let session, let toDay, _):
             guard Limits.weekdays.contains(where: { $0.lowercased() == toDay.lowercased() }) else {
@@ -152,7 +152,7 @@ public enum ChangePolicy {
             }
             guard let sessions = c.sessions else { return propose() }
             if !sessions.contains(session.lowercased()) { return refuse("\"\(session)\" isn't in the plan.") }
-            return autonomy.swapsAndMoves ? apply() : propose("Moves ask first in your settings.")
+            return autonomy.moves ? apply() : propose("Moves ask first in your settings.")
 
         case .changeVolume(let muscle, let delta):
             if delta == 0 || abs(delta) > Limits.volumeMaxDelta {

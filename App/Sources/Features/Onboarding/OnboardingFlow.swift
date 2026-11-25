@@ -1,24 +1,54 @@
+import AZMath
+import AZModel
 import SwiftUI
 
-/// First run: Welcome, then three steps (goal, training days, connect the Mac bridge).
-/// Design: design/source/src/Welcome.html, Goal.html, Days.html, Connect.html
+/// First run: Welcome, then four steps (goal, training days, about you, connect the Mac bridge). Finishing saves
+/// the person, their starting targets and a plan from the template for their days (D-028).
+/// Design: design/source/src/Welcome.html, Goal.html, Days.html, Connect.html. About you has no design yet.
 struct OnboardingFlow: View {
-    enum Step: Hashable { case goal, days, connect }
+    enum Step: Hashable { case goal, days, about, connect }
 
     var onFinish: () -> Void
+    @Environment(AppEnvironment.self) private var environment
     @State private var path: [Step] = []
+    @State private var answers = OnboardingAnswers()
 
     var body: some View {
         NavigationStack(path: $path) {
             WelcomeView(onStart: { path.append(.goal) }, onSignIn: onFinish)
                 .navigationDestination(for: Step.self) { step in
                     switch step {
-                    case .goal: GoalView { path.append(.days) }
-                    case .days: DaysView { path.append(.connect) }
-                    case .connect: ConnectView(onFinish: onFinish)
+                    case .goal: GoalView(pick: $answers.goalPick) { path.append(.days) }
+                    case .days: DaysView(days: $answers.days) { path.append(.about) }
+                    case .about: AboutYouView(answers: $answers) { path.append(.connect) }
+                    case .connect:
+                        ConnectView {
+                            environment.finishOnboarding(answers.profile, weightKg: answers.weightKg)
+                            onFinish()
+                        }
                     }
                 }
         }
+    }
+}
+
+/// What onboarding has asked so far. Stored metric, shown in the person's units.
+struct OnboardingAnswers {
+    var goalPick = 0
+    var days = 4
+    var units = UnitSystem.canadian
+    var sex: Sex?
+    var age = 30
+    var heightCm = 175.26  // 5' 9"
+    var weightKg = 77.0
+
+    /// The Goal screen's four choices. Strength and health map onto the three goals Div plans for.
+    var goal: Goal { [Goal.cut, .build, .build, .recomp][goalPick] }
+
+    var profile: Profile {
+        let year = Calendar.current.component(.year, from: .now)
+        return Profile(
+            sex: sex, birthYear: year - age, heightCm: heightCm, goal: goal, trainingDays: days, units: units)
     }
 }
 
@@ -114,7 +144,7 @@ struct WelcomeView: View {
 
 // MARK: - Shared step chrome
 
-/// Back button, progress bar and a trailing link, then the "Step n of 3" title block.
+/// Back button, progress bar and a trailing link, then the "Step n of 4" title block.
 private struct StepHeader: View {
     var progress: Double
     var trailing: String
@@ -148,7 +178,7 @@ private struct StepTitle: View {
     var title: String
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Step \(step) of 3").font(.az(14, .semibold)).foregroundStyle(AZColor.accent)
+            Text("Step \(step) of 4").font(.az(14, .semibold)).foregroundStyle(AZColor.accent)
             Text(title).font(.az(34, .heavy)).tracking(-0.85)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -159,8 +189,8 @@ private struct StepTitle: View {
 // MARK: - Goal
 
 struct GoalView: View {
+    @Binding var pick: Int
     var onContinue: () -> Void = {}
-    @State private var pick = 0
 
     private let options = [
         ("flame.fill", "Lose fat", "About 0.4 kg a week, keep muscle"),
@@ -171,7 +201,7 @@ struct GoalView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            StepHeader(progress: 0.33, trailing: "Skip", onTrailing: onContinue)
+            StepHeader(progress: 0.25, trailing: "Skip", onTrailing: onContinue)
             StepTitle(step: 1, title: "What's your\nmain goal?").padding(.top, 22)
             VStack(spacing: 10) {
                 ForEach(options.indices, id: \.self) { i in option(i) }
@@ -245,20 +275,16 @@ struct CheckBox: View {
 // MARK: - Days
 
 struct DaysView: View {
+    @Binding var days: Int
     var onContinue: () -> Void = {}
-    @State private var days = 4
 
-    private static let splits = [
-        2: "Full body, twice a week", 3: "Full body A, B and C", 4: "Push, Pull, Legs, Upper", 5: "Push, Pull, Legs, Upper, Lower",
-        6: "Push, Pull, Legs, twice",
-    ]
-    private static let pattern: [Int: Set<Int>] = [
-        2: [0, 3], 3: [0, 2, 4], 4: [0, 1, 3, 5], 5: [0, 1, 2, 4, 5], 6: [0, 1, 2, 3, 4, 5],
-    ]
+    /// From the templates, so the screen shows the plan the person will get.
+    private static let splits = PlanTemplate.splitNames
+    private static let pattern = PlanTemplate.trainingWeekdays.mapValues { Set($0.map { $0 - 1 }) }
 
     var body: some View {
         VStack(spacing: 0) {
-            StepHeader(progress: 0.66, trailing: "Skip", onTrailing: onContinue)
+            StepHeader(progress: 0.5, trailing: "Skip", onTrailing: onContinue)
             StepTitle(step: 2, title: "How often can\nyou train?").padding(.top, 22)
             Text("\(days)")
                 .font(.az(150, .heavy)).tracking(-9).monospacedDigit()
@@ -319,16 +345,106 @@ struct DaysView: View {
     }
 }
 
+// MARK: - About you
+
+/// Units, and what the calorie floor and starting targets need: sex, age, height, weight.
+struct AboutYouView: View {
+    @Binding var answers: OnboardingAnswers
+    var onContinue: () -> Void = {}
+
+    var body: some View {
+        VStack(spacing: 0) {
+            StepHeader(progress: 0.75, trailing: "Skip", onTrailing: onContinue)
+            StepTitle(step: 3, title: "About you").padding(.top, 22)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 22) {
+                    choices("Units", UnitSystem.allCases, selection: answers.units, name: \.name) { answers.units = $0 }
+                    choices("For your calorie target", Sex.allCases, selection: answers.sex, name: { $0 == .female ? "Female" : "Male" }) {
+                        answers.sex = $0
+                    }
+                    HairlineStack {
+                        stepper(
+                            "Age", "\(answers.age)", minus: { answers.age = max(14, answers.age - 1) },
+                            plus: { answers.age = min(99, answers.age + 1) })
+                        stepper(
+                            "Height", answers.units.height(answers.heightCm),
+                            minus: { answers.heightCm = max(120, answers.heightCm - UnitSystem.cmPerInch) },
+                            plus: { answers.heightCm = min(230, answers.heightCm + UnitSystem.cmPerInch) })
+                        stepper(
+                            "Weight", answers.units.bodyWeight(answers.weightKg),
+                            minus: { answers.weightKg = max(35, answers.weightKg - weightStep) },
+                            plus: { answers.weightKg = min(250, answers.weightKg + weightStep) })
+                    }
+                    HStack(spacing: 12) {
+                        DivAvatar(size: 36)
+                        Text("I use these for your first calorie target and the floor I'll never go below.")
+                            .font(.az(14.5)).foregroundStyle(AZColor.muted).lineSpacing(1.5).fixedSize(horizontal: false, vertical: true)
+                    }
+                    .padding(.horizontal, 4)
+                }
+                .padding(.top, 24)
+            }
+            .scrollIndicators(.hidden)
+            PrimaryButton(title: "Continue", trailingImage: "arrow.right", action: onContinue).padding(.vertical, 8)
+        }
+        .padding(.horizontal, 20)
+        .azScreen()
+    }
+
+    /// One pound, or half a kilogram.
+    private var weightStep: Double {
+        answers.units.bodyWeight == .kg ? 0.5 : 1 / UnitSystem.poundsPerKg
+    }
+
+    private func choices<T: Hashable>(
+        _ title: String, _ options: [T], selection: T?, name: @escaping (T) -> String, choose: @escaping (T) -> Void
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionLabel(text: title).padding(.horizontal, 4)
+            HStack(spacing: 8) {
+                ForEach(options, id: \.self) { option in
+                    let isOn = option == selection
+                    Button {
+                        withAnimation(.snappy(duration: 0.2)) { choose(option) }
+                    } label: {
+                        Text(name(option))
+                            .font(.az(15, .bold))
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 52)
+                            .foregroundStyle(isOn ? AZColor.buttonInk : AZColor.ink)
+                            .background(isOn ? AZColor.button : AZColor.fill, in: .rect(cornerRadius: 16, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityAddTraits(isOn ? .isSelected : [])
+                }
+            }
+        }
+    }
+
+    private func stepper(_ title: String, _ value: String, minus: @escaping () -> Void, plus: @escaping () -> Void) -> some View {
+        HStack(spacing: 10) {
+            Text(title).font(.az(15.5, .semibold))
+            Spacer(minLength: 8)
+            IconButton(systemImage: "minus", label: "Less \(title.lowercased())", size: 40, action: minus)
+            Text(value).font(.az(16, .bold)).monospacedDigit().frame(minWidth: 92)
+                .contentTransition(.numericText())
+            IconButton(systemImage: "plus", label: "More \(title.lowercased())", size: 40, action: plus)
+        }
+        .frame(height: 60)
+    }
+}
+
 // MARK: - Connect
 
 struct ConnectView: View {
+    @Environment(AppEnvironment.self) private var environment
     var onFinish: () -> Void = {}
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            StepHeader(progress: 1, trailing: "3 / 3", trailingIsLink: false)
+            StepHeader(progress: 1, trailing: "4 / 4", trailingIsLink: false)
             VStack(alignment: .leading, spacing: 8) {
-                StepTitle(step: 3, title: "Connect Div")
+                StepTitle(step: 4, title: "Connect Div")
                 Text("Div runs on your Claude plan through AZfit Bridge, a free app on your Mac. No extra AI bill.")
                     .font(.az(15.5)).foregroundStyle(AZColor.muted).fixedSize(horizontal: false, vertical: true).padding(.horizontal, 4)
             }
@@ -342,36 +458,13 @@ struct ConnectView: View {
                     DashedLink()
                 }
                 .frame(height: 76)
-                device("laptopcomputer", "MacBook Pro")
+                device("laptopcomputer", environment.bridge.bridgeName ?? "Your Mac")
             }
             .padding(.horizontal, 24)
             .padding(.top, 30)
 
-            VStack(spacing: 0) {
-                HairlineStack {
-                    step("Install AZfit Bridge on your Mac")
-                    step("Sign in to Claude Code")
-                    step("Pair with the code on screen")
-                }
-            }
-            .padding(.horizontal, 4)
-            .padding(.top, 22)
-
-            HStack(spacing: 12) {
-                Image(systemName: "wifi")
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundStyle(.white)
-                    .frame(width: 36, height: 36)
-                    .background(AZColor.accent, in: .rect(cornerRadius: 12, style: .continuous))
-                VStack(alignment: .leading, spacing: 1) {
-                    Text("Connected · Claude Opus").font(.az(15, .bold))
-                    Text("Div replies in about 2 seconds").font(.az(13.5)).foregroundStyle(AZColor.divMuted)
-                }
-                Spacer(minLength: 0)
-            }
-            .padding(EdgeInsets(top: 14, leading: 14, bottom: 14, trailing: 16))
-            .background(AZColor.divTint, in: .rect(cornerRadius: 22, style: .continuous))
-            .padding(.top, 20)
+            MacPairingPanel()
+                .padding(.top, 22)
 
             HStack(spacing: 8) {
                 Image(systemName: "lock").font(.system(size: 13, weight: .semibold)).foregroundStyle(AZColor.faint)
@@ -381,7 +474,11 @@ struct ConnectView: View {
             .padding(.top, 16)
 
             Spacer(minLength: 16)
-            PrimaryButton(title: "Start training", trailingImage: "arrow.right", action: onFinish).padding(.bottom, 8)
+            PrimaryButton(
+                title: environment.bridge.code == nil ? "Skip for now" : "Start training", trailingImage: "arrow.right",
+                style: environment.bridge.code == nil ? .soft : .dark, action: onFinish
+            )
+            .padding(.bottom, 8)
         }
         .padding(.horizontal, 20)
         .azScreen()
@@ -396,19 +493,6 @@ struct ConnectView: View {
             Text(name).font(.az(13, .semibold)).fixedSize()
         }
         .frame(width: 76)
-    }
-
-    private func step(_ text: String) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: "checkmark")
-                .font(.system(size: 12, weight: .heavy))
-                .foregroundStyle(AZColor.accent)
-                .frame(width: 26, height: 26)
-                .background(AZColor.divTint, in: .rect(cornerRadius: 9, style: .continuous))
-            Text(text).font(.az(15, .semibold))
-            Spacer(minLength: 0)
-        }
-        .frame(height: 54)
     }
 
     private struct DashedLink: View {
@@ -431,6 +515,7 @@ struct ConnectView: View {
 }
 
 #Preview("Welcome") { WelcomeView() }
-#Preview("Goal") { NavigationStack { GoalView() } }
-#Preview("Days") { NavigationStack { DaysView() } }
-#Preview("Connect") { NavigationStack { ConnectView() } }
+#Preview("Goal") { NavigationStack { GoalView(pick: .constant(0)) } }
+#Preview("Days") { NavigationStack { DaysView(days: .constant(4)) } }
+#Preview("About you") { NavigationStack { AboutYouView(answers: .constant(OnboardingAnswers())) } }
+#Preview("Connect") { NavigationStack { ConnectView() }.environment(AppEnvironment.preview()) }

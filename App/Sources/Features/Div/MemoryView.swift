@@ -1,16 +1,17 @@
 import SwiftUI
 
-/// What Div knows: what it may do without asking (three switches, one always off) and what it remembers.
+/// What Div knows: what it may do without asking (three switches, two always off) and what it remembers.
 /// The switches are the user-facing side of D-009: code, not the prompt, decides what Div may do alone.
 /// Design: design/source/src/Memory.html
 struct MemoryView: View {
     @Environment(Router.self) private var router
-    @State private var allowed = [true, true, true]
+    // D-012: swaps ask first by default. TODO: read and save these as the profile's `Autonomy`.
+    @State private var allowed = [true, false, true]
 
     private let tiers = [
         ("Reps, weight and rest", "During a workout, shown on the set"),
-        ("Swap exercises, move sessions", "Logged, undo for 7 days"),
-        ("Calorie target, up to 200 kcal", "Bigger changes ask you first"),
+        ("Swap exercises", "Logged, undo for 7 days"),
+        ("Move sessions", "Logged, undo for 7 days"),
     ]
 
     private let memories = [
@@ -19,6 +20,15 @@ struct MemoryView: View {
         ("Trains mornings, about 50 min", "Learned from 6 weeks of sessions"),
         ("Short answers, no pep talks", "You said so · Oct 3"),
     ]
+
+    private var lock: some View {
+        Image(systemName: "lock")
+            .font(.system(size: 14, weight: .semibold))
+            .foregroundStyle(AZColor.faint)
+            .frame(width: 50, height: 30)
+            .background(AZColor.fill, in: .rect(cornerRadius: 10, style: .continuous))
+            .accessibilityLabel("Always off")
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -45,14 +55,8 @@ struct MemoryView: View {
                                 SquareToggle(isOn: $allowed[i], label: tiers[i].0)
                             }
                         }
-                        item("Fill in food you didn't log", "Never. Div asks you instead.") {
-                            Image(systemName: "lock")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundStyle(AZColor.faint)
-                                .frame(width: 50, height: 30)
-                                .background(AZColor.fill, in: .rect(cornerRadius: 10, style: .continuous))
-                                .accessibilityLabel("Always off")
-                        }
+                        item("Calorie target", "Always asks you first") { lock }
+                        item("Fill in food you didn't log", "Never. Div asks you instead.") { lock }
                     }
                     .padding(.top, 2)
 

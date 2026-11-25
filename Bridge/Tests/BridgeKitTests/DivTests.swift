@@ -19,7 +19,7 @@ import Testing
         #expect(call.systemPrompt.contains("# Job: weekly review"))
         #expect(call.userPrompt.contains("\"implied_maintenance_kcal\" : 2390"))
         #expect(call.builtInTools.isEmpty && call.mcpConfig == nil)
-        #expect(r.checked.map(\.verdict) == [.apply, .refuse])
+        #expect(r.checked.map(\.verdict) == [.propose, .refuse])
     }
 
     @Test func mealPutsThePhotoInTheFolderAndKeepsItOutOfThePrompt() async throws {
@@ -56,7 +56,7 @@ import Testing
         #expect(call.files["data.json"] != nil)
         #expect(call.userPrompt.contains("Today is 2026-11-23"))
         #expect(r.toolCalls == ["get_plan", "get_profile"])
-        #expect(r.checked.map(\.verdict) == [.apply])
+        #expect(r.checked.map(\.verdict) == [.propose])  // swaps ask first (D-012)
     }
 
     @Test func revisingAMealSendsThePreviousEstimateAndNoPhoto() async throws {

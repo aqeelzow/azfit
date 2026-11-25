@@ -1,4 +1,5 @@
 import AZModel
+import AZSync
 import BridgeKit
 import Foundation
 
@@ -16,6 +17,7 @@ let usage = """
       chat    <message> [--data file]  chat with Div over a DivData file (default Div/evals/chat/data.json)
       eval    [job] [filter]         run the evals for one job (e.g. chat, estimate-meal) or all of them
       tools   --data f --tools f [--log f]   serve the read tools over MCP on stdin/stdout (Claude starts this)
+      serve   [--pair]               be the bridge for the phone, like the menu bar app; --pair prints a pairing code
 
     Options: --json prints the full result. --ask-first turns off everything Div may do without asking.
     """
@@ -77,8 +79,7 @@ func printChanges(_ checked: [Checked<Proposal>]) {
 }
 
 func printRun(_ run: RunInfo) {
-    let cost = run.costUsdEquivalent.map { String(format: ", about $%.3f at API prices", $0) } ?? ""
-    print("\n(\(run.model), \(run.durationMs / 1000) s\(run.turns.map { ", \($0) turns" } ?? "")\(cost))")
+    print("\n(\(run.summary))")
 }
 
 @MainActor func makeDiv() throws -> Div {
@@ -205,6 +206,47 @@ do {
             print("\nLooked up: " + (r.toolCalls.isEmpty ? "nothing" : r.toolCalls.joined(separator: ", ")))
             printRun(r.run)
         }
+
+    case "serve":
+        setvbuf(stdout, nil, _IOLBF, 0)  // a line at a time, so a log file shows each event as it happens
+        let pair = flag("--pair")
+        let div = try makeDiv()
+        let files = div.files
+        let cli = try ClaudeCLI.locate()
+        let store = PairingStore.standard()
+        let name = (Host.current().localizedName ?? "Mac") + " (div serve)"
+        let server = BridgeServer(
+            store: store, bridgeName: name, status: { await cli.authStatus() },
+            handle: { request in
+                let jobs = PhoneJobs(
+                    div: { div }, people: .standard(), sampleData: PhoneJobs.sampleData(files),
+                    onRun: { name, run in print("ran \(name): \(run.summary)") })
+                switch request.job {
+                case .chat(let chat): print("chat: \(chat.message)")
+                case .sync(let push): print("sync: \(push.batch.rows.count) rows from the phone")
+                }
+                let outcome = await jobs.handle(request)
+                switch outcome {
+                case .chat(let reply): print("answer: \(reply.reply)")
+                case .synced(let pull): print("synced: \(pull.batch.rows.count) rows to the phone")
+                case .failed(let why): print("failed: \(why)")
+                }
+                return outcome
+            },
+            onChange: { snapshot in
+                print("listening on \(snapshot.port.map(String.init) ?? "-"), phones: \(snapshot.phones.map(\.name))")
+                if let problem = snapshot.problem { print(problem) }
+            })
+        print("Claude: \(await cli.authStatus().label)")
+        if pair {
+            let host = ProcessInfo.processInfo.hostName
+            let code = store.newCode(bridgeName: name, hosts: host.isEmpty ? [] : [host], port: BridgeService.preferredPort)
+            print("Pairing code (paste it in the app, valid 15 minutes):\n\(code.text)")
+        } else if store.pairings.isEmpty {
+            fail("No phones paired yet. Run with --pair.")
+        }
+        server.start()
+        while true { try await Task.sleep(for: .seconds(3600)) }
 
     case "eval":
         let div = try makeDiv()

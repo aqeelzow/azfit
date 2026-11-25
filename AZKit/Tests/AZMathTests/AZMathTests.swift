@@ -98,3 +98,22 @@ func session(_ name: String) throws -> SessionReport { try fixture("session-revi
         #expect(WeightTrend.weeklyRateKg([82, 81], days: 14) == -0.5)
     }
 }
+
+@Suite struct TargetTests {
+    @Test func theFloorIsBMRRoundedUpAndNeverUnder1200() {
+        // Mifflin-St Jeor: 10 × 80 + 6.25 × 180 - 5 × 30 + 5 = 1,780.
+        #expect(Targets.bmr(sex: .male, weightKg: 80, heightCm: 180, age: 30) == 1_780)
+        #expect(Targets.calorieFloor(sex: .male, weightKg: 80, heightCm: 180, age: 30) == 1_800)
+        #expect(Targets.calorieFloor(sex: .female, weightKg: 45, heightCm: 150, age: 70) == 1_200)
+        #expect(Targets.calorieFloor(sex: nil, weightKg: nil, heightCm: nil, age: nil) == 1_200)
+        #expect(Targets.calorieFloor(sex: .male, weightKg: nil, heightCm: nil, age: nil) == 1_500)
+    }
+
+    @Test func startingCaloriesFollowTheGoal() {
+        let maintain = Targets.startingCalories(sex: .male, weightKg: 80, heightCm: 180, age: 30, goal: .recomp, ratePctPerWeek: 0)
+        let cut = Targets.startingCalories(sex: .male, weightKg: 80, heightCm: 180, age: 30, goal: .cut, ratePctPerWeek: -0.5)
+        #expect(maintain == 2_650)  // 1,780 × 1.5 = 2,670, to the nearest 50
+        #expect(cut == 2_250)  // 0.4 kg a week is 440 kcal a day less: 2,230, to the nearest 50
+        #expect(Targets.startingProtein(goal: .cut) == 2.1)
+    }
+}

@@ -26,11 +26,14 @@ let package = Package(
         ),
         .executableTarget(
             name: "DivCLI",
-            dependencies: ["BridgeKit", .product(name: "AZModel", package: "AZKit")]
+            dependencies: ["BridgeKit", .product(name: "AZModel", package: "AZKit"), .product(name: "AZSync", package: "AZKit")]
         ),
         .testTarget(
             name: "BridgeKitTests",
-            dependencies: ["BridgeKit", .product(name: "AZModel", package: "AZKit"), .product(name: "AZMath", package: "AZKit")]
+            dependencies: [
+                "BridgeKit", .product(name: "AZModel", package: "AZKit"), .product(name: "AZMath", package: "AZKit"),
+                .product(name: "AZStore", package: "AZKit"), .product(name: "AZSync", package: "AZKit"),
+            ]
         ),
     ]
 )

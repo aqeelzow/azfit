@@ -79,3 +79,15 @@ public enum ClaudeError: Error, CustomStringConvertible {
         }
     }
 }
+
+extension RunInfo {
+    /// One line for a log: "claude-opus-5-5, 24.3 s, 6 turns, about $0.214 at API prices".
+    /// The price is what the same run would cost on the API. On a Claude plan it counts toward the plan's
+    /// usage limits instead of being billed.
+    public var summary: String {
+        var parts = [model, String(format: "%.1f s", Double(durationMs) / 1000)]
+        if let turns { parts.append(turns == 1 ? "1 turn" : "\(turns) turns") }
+        if let cost = costUsdEquivalent { parts.append(String(format: "about $%.3f at API prices", cost)) }
+        return parts.joined(separator: ", ")
+    }
+}

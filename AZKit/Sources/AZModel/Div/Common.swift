@@ -37,24 +37,25 @@ public struct Checked<Item: Codable & Sendable & Equatable>: Codable, Sendable, 
 }
 
 /// What Div may do without asking: the switches on "What Div knows" (D-009, D-012).
-/// Structural changes (volume, deloads, protein) always ask, whatever these say.
+/// Calorie changes always ask, and structural changes (volume, deloads, protein) always ask, whatever these say.
 public struct Autonomy: Codable, Sendable, Equatable {
     /// "Reps, weight and rest": routine load changes after a workout or in the weekly review.
     public var workoutTweaks: Bool
-    /// "Swap exercises, move sessions".
-    public var swapsAndMoves: Bool
-    /// "Calorie target, up to 200 kcal". Off means every calorie change asks first.
-    public var calorieChanges: Bool
+    /// "Swap exercises".
+    public var swaps: Bool
+    /// "Move sessions".
+    public var moves: Bool
 
-    public init(workoutTweaks: Bool, swapsAndMoves: Bool, calorieChanges: Bool) {
+    public init(workoutTweaks: Bool, swaps: Bool, moves: Bool) {
         self.workoutTweaks = workoutTweaks
-        self.swapsAndMoves = swapsAndMoves
-        self.calorieChanges = calorieChanges
+        self.swaps = swaps
+        self.moves = moves
     }
 
-    /// The approved design's defaults: all three on. D-012 is still open; the brief would ask for swaps and
-    /// for calorie changes of 150 kcal or more.
-    public static let standard = Autonomy(workoutTweaks: true, swapsAndMoves: true, calorieChanges: true)
+    /// D-012: routine progression and moving a session apply on their own; swaps ask first.
+    public static let standard = Autonomy(workoutTweaks: true, swaps: false, moves: true)
+    /// Div changes everything it may change alone. Calories still ask.
+    public static let allOn = Autonomy(workoutTweaks: true, swaps: true, moves: true)
     /// Div suggests, the person decides, for everything.
-    public static let askFirst = Autonomy(workoutTweaks: false, swapsAndMoves: false, calorieChanges: false)
+    public static let askFirst = Autonomy(workoutTweaks: false, swaps: false, moves: false)
 }
