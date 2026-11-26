@@ -58,9 +58,10 @@ public struct SessionReport: Codable, Sendable, Equatable {
     public struct PerformedSet: Codable, Sendable, Equatable {
         public var loadKg: Double
         public var reps: Int
-        public var rir: Double
+        /// Nil when the person didn't record it.
+        public var rir: Double?
 
-        public init(loadKg: Double, reps: Int, rir: Double) {
+        public init(loadKg: Double, reps: Int, rir: Double?) {
             self.loadKg = loadKg
             self.reps = reps
             self.rir = rir
@@ -79,13 +80,14 @@ public struct SessionDerived: Codable, Sendable, Equatable {
         public var bestE1rm: Double
         public var e1rmChangePctVsLast: Double?
         public var allSetsAtTopOfRange: Bool
-        public var avgRir: Double
-        /// Average RIR minus the prescribed RIR. Negative means the sets were harder than planned.
-        public var rirVsPrescribed: Double
+        /// Over the sets that recorded RIR. Nil when none did.
+        public var avgRir: Double?
+        /// Average RIR minus the prescribed RIR. Negative means the sets were harder than planned. Nil without RIR.
+        public var rirVsPrescribed: Double?
 
         public init(
             exercise: String, setsDone: Int, setsPrescribed: Int, bestE1rm: Double, e1rmChangePctVsLast: Double?,
-            allSetsAtTopOfRange: Bool, avgRir: Double, rirVsPrescribed: Double
+            allSetsAtTopOfRange: Bool, avgRir: Double?, rirVsPrescribed: Double?
         ) {
             self.exercise = exercise
             self.setsDone = setsDone

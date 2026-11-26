@@ -180,3 +180,43 @@ import Testing
         #expect(Day.weekday("2026-11-29") == 7)
     }
 }
+
+@Suite struct FoodTests {
+    private let bar = Food(
+        id: "off:1", name: "Protein bar", barcode: "1", per100g: .init(kcal: 400, proteinG: 50, carbsG: 30, fatG: 10),
+        serving: .init(label: "1 bar", grams: 60), origin: .database)
+
+    @Test func amountsScaleFromGramsOrServings() throws {
+        #expect(bar.units == [.servings, .grams])
+        #expect(bar.nutrients(150, .grams) == .init(kcal: 600, proteinG: 75, carbsG: 45, fatG: 15))
+        #expect(bar.nutrients(2, .servings) == .init(kcal: 480, proteinG: 60, carbsG: 36, fatG: 12))
+        #expect(bar.nutrients(0, .grams) == nil)
+        #expect(bar.amountLabel(1, .servings) == "1 bar")
+        #expect(bar.amountLabel(1.5, .servings) == "1.5 servings")
+        #expect(bar.detail == "1 bar (60 g)")
+        var pot = bar
+        pot.serving = .init(label: "1 pot (170 g)", grams: 170)
+        #expect(pot.detail == "1 pot (170 g)")
+    }
+
+    @Test func aFoodLogsToTheMealPicked() throws {
+        let meal = try #require(bar.meal(1, .servings, day: "2026-11-26", slot: .snacks))
+        #expect(meal.kcal == 240 && meal.proteinG == 30 && meal.slot == .snacks && meal.source == .barcode)
+    }
+
+    @Test func customFoodsCountOnlyInServings() {
+        let wrap = CustomFood(name: "Wrap", servingLabel: "1 wrap", kcal: 450, proteinG: 30, carbsG: 40, fatG: 15).food
+        #expect(wrap.units == [.servings])
+        #expect(wrap.nutrients(100, .grams) == nil)
+        #expect(wrap.nutrients(2, .servings)?.kcal == 900)
+    }
+
+    @Test func oldMealsFallIntoTheMealOfTheirTime() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try #require(TimeZone(identifier: "UTC"))
+        let eight = Date(timeIntervalSince1970: 8 * 3600)
+        #expect(Meal.Slot.at(eight, calendar: calendar) == .breakfast)
+        #expect(Meal.Slot.at(eight.addingTimeInterval(11 * 3600), calendar: calendar) == .dinner)
+        #expect(Meal.Slot.at(eight.addingTimeInterval(8 * 3600), calendar: calendar) == .snacks)
+    }
+}

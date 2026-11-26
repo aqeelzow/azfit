@@ -124,9 +124,11 @@ public final class AZStore: Sendable {
     }
 
     /// Onboarding: saves the person, their starting targets and a plan from the template for their training days
-    /// (D-028). `weightKg` gives the first weigh-in when the person entered it.
-    public func start(_ profile: Profile, weightKg: Double?, today: String, library: Library = .standard) throws {
-        let template = PlanTemplate.forDays(profile.trainingDays)
+    /// (D-028), on the weekdays they picked when given. `weightKg` gives the first weigh-in when the person entered it.
+    public func start(
+        _ profile: Profile, weightKg: Double?, today: String, weekdays: Set<Int>? = nil, library: Library = .standard
+    ) throws {
+        let template = PlanTemplate.forDays(profile.trainingDays, on: weekdays)
         try writer.write { db in
             try profile.save(db)
             if let weightKg {

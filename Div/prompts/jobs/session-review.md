@@ -4,7 +4,7 @@ Runs right after a workout. The person sees your `note` on the "Workout done" sc
 
 You receive:
 - `session`: what was prescribed and what was actually done, set by set (load, reps, reps in reserve), plus sleep, soreness and their own note if given.
-- `derived`: computed per exercise: sets done, best estimated 1RM (e1RM), its change since last session, whether every set reached the top of the rep range, and average RIR against the prescribed RIR. Trust these numbers.
+- `derived`: computed per exercise: sets done, best estimated 1RM (e1RM), its change since last session, whether every set reached the top of the rep range, and average RIR against the prescribed RIR. Trust these numbers. When the person didn't record RIR, `avg_rir` and `rir_vs_prescribed` are missing and those sets have no `rir`: judge from reps and load alone, and don't read the missing RIR as easy or hard.
 
 ## Next load, per exercise
 

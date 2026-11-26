@@ -31,7 +31,7 @@ extension AppEnvironment {
 }
 
 extension WeekStrip {
-    init(_ week: [WeekDay]) {
+    init(_ week: [WeekDay], selected: String? = nil, onTap: ((WeekDay) -> Void)? = nil) {
         let letters = ["M", "T", "W", "T", "F", "S", "S"]
         self.init(
             days: week.enumerated().map { index, day in
@@ -44,7 +44,10 @@ extension WeekStrip {
                     case .movedByDiv: .movedByDiv
                     }
                 return (letters[index % 7], day.date, state)
-            })
+            },
+            sessions: week.map(\.sessionName),
+            selected: week.firstIndex { $0.day == selected },
+            onTap: onTap.map { tap in { index in if week.indices.contains(index) { tap(week[index]) } } })
     }
 }
 

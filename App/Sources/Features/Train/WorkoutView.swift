@@ -2,9 +2,11 @@ import AZModel
 import AZStore
 import SwiftUI
 
-/// The live session: today's planned exercises one at a time. Each set is logged as lifted, with last time's numbers
+/// The live session: a planned session's exercises one at a time. Each set is logged as lifted, with last time's numbers
 /// beside it, and a rest timer starts after every set. Design: design/source/src/Workout.html
 struct WorkoutView: View {
+    let sessionID: UUID
+
     @Environment(Router.self) private var router
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.dismiss) private var dismiss
@@ -16,6 +18,8 @@ struct WorkoutView: View {
     @State private var index = 0
     @State private var load = ""
     @State private var reps = ""
+    /// Reps in reserve for the set being logged; 4 stands for 4 or more.
+    @State private var rir = RIRPicker.startsAt
     @State private var restEnds: Date?
     @State private var restLength: TimeInterval = 150
 
@@ -34,7 +38,7 @@ struct WorkoutView: View {
                         Color.clear.frame(width: 44, height: 44)
                     }
                     Spacer()
-                    Text("No session planned today.").font(.az(17, .semibold)).foregroundStyle(AZColor.muted)
+                    Text("This session isn't in your plan.").font(.az(17, .semibold)).foregroundStyle(AZColor.muted)
                     Spacer()
                 }
             }
@@ -44,7 +48,8 @@ struct WorkoutView: View {
     }
 
     private func start() {
-        guard workout == nil, let today = try? store.todaySession(today: environment.today),
+        guard workout == nil,
+            let today = try? store.weekSessions(today: environment.today).first(where: { $0.session.id == sessionID }),
             let started = try? store.startWorkout(today.session, today: environment.today)
         else { return }
         session = today
@@ -163,6 +168,7 @@ struct WorkoutView: View {
                     set: "\(done.count + 1)", previous: previousText(last, done.count), target: line.reps,
                     load: $load, repsText: $reps, unit: unit, state: .current
                 ) { log(line, position: done.count) }
+                RIRPicker(value: $rir).padding(.horizontal, 10).padding(.bottom, 4)
                 ForEach(done.count + 1..<line.sets, id: \.self) { i in
                     SetRow(set: "\(i + 1)", previous: previousText(last, i), target: line.reps, state: .upcoming)
                 }
@@ -186,6 +192,8 @@ struct WorkoutView: View {
         let source = done.last ?? previous[line.exerciseID]?[safe: done.count] ?? previous[line.exerciseID]?.last
         load = source.map { Self.number(units.loadValue($0.loadKg)) } ?? ""
         reps = source.map { "\($0.reps)" } ?? "\(line.repMax)"
+        // Last set's effort this workout, else the usual 2.
+        rir = done.last?.rir.map { Int($0) } ?? RIRPicker.startsAt
     }
 
     private func log(_ line: SessionPreview.Line, position: Int) {
@@ -193,7 +201,7 @@ struct WorkoutView: View {
         else { return }
         let set = LoggedSet(
             workoutID: workout.id, exerciseID: line.exerciseID, position: logged.count, loadKg: units.loadKg(value), reps: count,
-            rir: nil)
+            rir: Double(rir))
         do {
             try store.logSet(set)
         } catch {
@@ -291,6 +299,40 @@ extension Array {
 }
 
 /// One row of the set table: set number, last time, the target, weight, reps and the check.
+/// How many more reps the set had in it: 0 (failure) to 4+. Rounded squares, never circles (D-013).
+private struct RIRPicker: View {
+    /// Picked before the first set, so a typical set is one tap. The person's answer is what's saved.
+    static let startsAt = 2
+
+    @Binding var value: Int
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Text("Reps left").font(.az(13, .semibold)).foregroundStyle(AZColor.muted)
+            Spacer(minLength: 4)
+            ForEach(0..<5) { n in
+                let on = value == n
+                Button {
+                    value = n
+                } label: {
+                    Text(n == 4 ? "4+" : "\(n)")
+                        .font(.az(14.5, .bold))
+                        .monospacedDigit()
+                        .foregroundStyle(on ? .white : AZColor.ink)
+                        .frame(width: 44, height: 34)
+                        .background(on ? AZColor.accent : AZColor.fill, in: .rect(cornerRadius: 11, style: .continuous))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(n == 4 ? "4 or more reps left" : n == 1 ? "1 rep left" : "\(n) reps left")
+                .accessibilityAddTraits(on ? .isSelected : [])
+            }
+        }
+        .frame(height: 40)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Reps in reserve")
+    }
+}
+
 private struct SetRow: View {
     enum State { case header, done, current, upcoming }
 
@@ -371,5 +413,5 @@ private struct SetRow: View {
 }
 
 #Preview {
-    NavigationStack { WorkoutView() }.environment(Router()).environment(AppEnvironment.preview())
+    NavigationStack { WorkoutView(sessionID: UUID()) }.environment(Router()).environment(AppEnvironment.preview())
 }

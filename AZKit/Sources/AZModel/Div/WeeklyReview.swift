@@ -95,9 +95,10 @@ public struct WeeklySnapshot: Codable, Sendable, Equatable {
         public var name: String
         public var e1rmNow: Double
         public var e1rmWindowStart: Double
-        public var avgRir: Double
+        /// Over this week's sets that recorded RIR. Nil when none did.
+        public var avgRir: Double?
 
-        public init(name: String, e1rmNow: Double, e1rmWindowStart: Double, avgRir: Double) {
+        public init(name: String, e1rmNow: Double, e1rmWindowStart: Double, avgRir: Double?) {
             self.name = name
             self.e1rmNow = e1rmNow
             self.e1rmWindowStart = e1rmWindowStart

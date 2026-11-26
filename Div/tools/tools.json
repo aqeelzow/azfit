@@ -1,7 +1,7 @@
 [
   {
     "name": "get_profile",
-    "description": "The person's goal, age, height, calorie and protein targets, calorie floor, whether protein is set by their doctor, and what Div remembers about them.",
+    "description": "The person's goal, age, height, calorie, protein, fat and water targets, who set them (onboarding, div or person) and the calories before, calorie floor, whether protein is set by their doctor, and what Div remembers about them.",
     "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false }
   },
   {

@@ -47,10 +47,10 @@ struct QuickAddOverlay: View {
             }
             LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
                 option("Snap a meal", "camera", isDiv: true) { router.present(.snap) }
-                option("Describe food", "text.alignleft") { router.push(.describeMeal) }
+                option("Add food", "magnifyingglass") { router.push(.addFood(nil)) }
                 option("Say it", "mic") { router.present(.voice) }
                 if let session {
-                    option("Start \(session.session.name)", "dumbbell") { router.push(.workout) }
+                    option("Start \(session.session.name)", "dumbbell") { router.push(.workout(session.session.id)) }
                 } else {
                     option("Exercises", "dumbbell") { router.push(.swapExercise(nil)) }
                 }

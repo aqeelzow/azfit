@@ -28,6 +28,8 @@ extension PlannedExercise: StoredRecord, PlanOrMemory { public static let databa
 extension Workout: StoredRecord { public static let databaseTableName = "workout" }
 extension LoggedSet: StoredRecord { public static let databaseTableName = "logged_set" }
 extension Meal: StoredRecord { public static let databaseTableName = "meal" }
+extension CustomFood: StoredRecord { public static let databaseTableName = "custom_food" }
+extension WaterLog: StoredRecord { public static let databaseTableName = "water_log" }
 extension FoodDay: StoredRecord { public static let databaseTableName = "food_day" }
 extension WeighIn: StoredRecord { public static let databaseTableName = "weigh_in" }
 extension BodyMeasurement: StoredRecord { public static let databaseTableName = "body_measurement" }

@@ -25,12 +25,9 @@ struct HomeView: View {
                     .buttonStyle(.plain)
                     .accessibilityLabel("Profile")
                 }
-                Button {
-                    router.show(.train)
-                } label: {
-                    WeekStrip((try? store.week(today: today)) ?? [])
+                WeekStrip((try? store.week(today: today)) ?? []) { day in
+                    router.showTrain(on: day.day)
                 }
-                .buttonStyle(.plain)
                 .padding(.top, 16)
                 if let session = try? store.todaySession(today: today) {
                     todayCard(session).padding(.top, 20)
@@ -74,7 +71,7 @@ struct HomeView: View {
 
     private func todayCard(_ session: SessionPreview) -> some View {
         Button {
-            router.push(.workout)
+            router.push(.workout(session.session.id))
         } label: {
             VStack(alignment: .leading, spacing: 0) {
                 Text("Today · \(session.minutes) min").font(.az(14, .semibold)).foregroundStyle(AZColor.divInk)
@@ -144,20 +141,34 @@ struct HomeView: View {
         let changes = (try? store.recentChanges(today: today)) ?? []
         let made = changes.filter { $0.status == .applied || $0.status == .approved }.count
         let questions = changes.filter { $0.status == .proposed }.count + (environment.recentWeekReview?.questions.count ?? 0)
+        // Div runs on the Mac: without it, "no changes" would read as Div looking and finding nothing.
+        let state = environment.bridge.state
+        let title: String
+        let subtitle: String
+        var goesTo = Router.Route.divLog
+        switch state {
+        case .unpaired where made == 0:
+            title = "Div isn't connected"
+            subtitle = "Pair your Mac so Div can coach you"
+            goesTo = .connectMac
+        case .offline where made == 0:
+            title = "Div is offline"
+            subtitle = "Open AZfit Bridge on your Mac to reconnect"
+            goesTo = .connectMac
+        default:
+            title = made == 0 ? "No changes from Div this week" : "Div made \(made) \(made == 1 ? "change" : "changes") this week"
+            subtitle =
+                questions > 0
+                ? "And has \(questions) \(questions == 1 ? "question" : "questions") for you" : "Ask Div anything about your plan"
+        }
         return Button {
-            router.push(.divLog)
+            router.push(goesTo)
         } label: {
             HStack(spacing: 12) {
                 DivAvatar(size: 44)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(made == 0 ? "No changes from Div this week" : "Div made \(made) \(made == 1 ? "change" : "changes") this week")
-                        .font(.az(15, .bold))
-                    Text(
-                        questions > 0
-                            ? "And has \(questions) \(questions == 1 ? "question" : "questions") for you"
-                            : "Ask Div anything about your plan"
-                    )
-                    .font(.az(13.5)).foregroundStyle(AZColor.muted)
+                    Text(title).font(.az(15, .bold))
+                    Text(subtitle).font(.az(13.5)).foregroundStyle(AZColor.muted)
                 }
                 Spacer(minLength: 0)
                 Image(systemName: "chevron.right").font(.system(size: 15, weight: .semibold)).foregroundStyle(AZColor.faint)

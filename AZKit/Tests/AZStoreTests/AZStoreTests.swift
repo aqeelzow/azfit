@@ -17,6 +17,16 @@ func person(days: Int = 4) -> Profile {
         #expect(ColumnName.snake("proteinGPerKg") == "protein_g_per_kg")
     }
 
+    @Test func onboardingUsesThePickedWeekdays() throws {
+        let store = try AZStore.inMemory()
+        try store.start(person(), weightKg: 82, today: "2026-11-25", weekdays: [2, 3, 5, 7])
+        #expect(try store.plan().map(\.session.weekday) == [2, 3, 5, 7])
+        #expect(try store.plan().map(\.session.name) == ["Push", "Pull", "Legs", "Upper"])
+        // Picks that don't match the number of days fall back to the usual days.
+        #expect(PlanTemplate.forDays(4, on: [1, 2]).sessions.map(\.weekday) == [1, 2, 4, 6])
+        #expect(PlanTemplate.forDays(2, on: [6, 7]).sessions.map(\.weekday) == [6, 7])
+    }
+
     @Test func onboardingSavesThePersonTargetsAndATemplatePlan() throws {
         let store = try AZStore.inMemory()
         try store.start(person(), weightKg: 82, today: "2026-11-25")

@@ -1,3 +1,5 @@
+import AZModel
+import AZSync
 import Foundation
 import Observation
 import SwiftUI
@@ -10,16 +12,30 @@ final class Router {
 
     /// Screens pushed on top of the tabs.
     enum Route: Hashable {
-        case workout, workoutDone
+        /// A planned session's exercises, and starting it on any day.
+        case session(UUID)
+        /// The live workout for a planned session.
+        case workout(UUID)
+        case workoutDone
         /// The exercise library, or swapping the given exercise in the plan for another.
         case swapExercise(String?)
         /// One exercise, by its `Library` ID.
         case exercise(String)
         case chat, divLog, memory, connectMac
-        /// Typing a meal in, and Div's estimate of a meal photo.
-        case describeMeal
+        /// Searching, scanning or making a food to log to a meal (nil: the meal of the time of day).
+        case addFood(Meal.Slot?)
+        /// An amount of one food, logged to a meal.
+        case food(Food, Meal.Slot)
+        /// A search match, whose label is read when it opens.
+        case foodHit(FoodDatabase.Hit, Meal.Slot)
+        /// Making a food, with the barcode that wasn't found when there was one.
+        case createFood(Meal.Slot, barcode: String?)
+        /// Typing calories and macros straight in. And Div's estimate of a meal photo.
+        case quickAdd(Meal.Slot)
         case mealEstimate(MealPhoto)
         case calorieTarget
+        /// Changing your own calorie, macro and water targets (Div then weighs in).
+        case editTargets
         case weighIn, measurements, progress
     }
 
@@ -33,6 +49,8 @@ final class Router {
     var path: [Route] = []
     var cover: Cover?
     var isQuickAddOpen = false
+    /// A day for Train to pick when it shows, from tapping it in Home's week strip.
+    var trainDay: String?
 
     func push(_ route: Route) {
         isQuickAddOpen = false
@@ -56,6 +74,18 @@ final class Router {
         isQuickAddOpen = false
         path = []
         self.tab = tab
+    }
+
+    /// The Train tab with `day` picked in its week strip.
+    func showTrain(on day: String) {
+        trainDay = day
+        show(.train)
+    }
+
+    /// Swaps the top screen for another, so back skips the one replaced.
+    func replaceTop(with route: Route) {
+        if !path.isEmpty { path.removeLast() }
+        path.append(route)
     }
 
     /// Back one screen.

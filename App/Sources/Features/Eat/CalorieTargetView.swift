@@ -3,8 +3,9 @@ import AZModel
 import AZStore
 import SwiftUI
 
-/// Why the daily target is what it is: who set it and when, the change Div made (with a way back), five weeks of the
-/// scale against the goal, and the numbers the Sunday review reads. The math is AZMath's; Div only explains it (D-010).
+/// The daily targets and why they are what they are: calories with who set them and when, the macros and water,
+/// the change Div made (with a way back), five weeks of the scale against the goal, the numbers the Sunday review
+/// reads, and the micronutrient daily values. The person can change the targets themselves (`EditTargetsView`). The math is AZMath's; Div only explains it (D-010).
 /// Design: design/source/src/Calibrate.html
 struct CalorieTargetView: View {
     @Environment(Router.self) private var router
@@ -18,8 +19,9 @@ struct CalorieTargetView: View {
         let weeks = (try? store.weeklyChanges(today: today, weeks: 5)) ?? []
         let snapshot = try? store.weeklySnapshot(weekEnding: today)
         let undoable = history?.change.flatMap { $0.canUndo(at: .now) ? $0 : nil }
+        let targets = try? store.dailyTargets(on: today)
         VStack(spacing: 0) {
-            TopBar(title: "Daily target") {
+            TopBar(title: "Daily targets") {
                 BackButton()
             } trailing: {
                 Button {
@@ -36,6 +38,7 @@ struct CalorieTargetView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     if let history {
                         header(history).padding(.top, 16)
+                        if let targets { macros(targets).padding(.top, 18) }
                         if let change = history.change, !change.proposal.reason.isEmpty {
                             DivNote(title: Self.noteTitle(history), message: change.proposal.reason).padding(.top, 20)
                         }
@@ -66,6 +69,8 @@ struct CalorieTargetView: View {
                         .font(.az(14.5)).foregroundStyle(AZColor.muted).fixedSize(horizontal: false, vertical: true)
                         .padding(.top, 26)
                     }
+
+                    if history != nil { micronutrientGoals.padding(.top, 30) }
                 }
                 .padding(.horizontal, AZSpacing.gutter)
                 .padding(.bottom, 24)
@@ -80,7 +85,7 @@ struct CalorieTargetView: View {
                     }
                 }
                 HStack(spacing: 4) {
-                    Text("Div asks before changing calories.").foregroundStyle(AZColor.faint)
+                    Text("Div asks before changing calories. You can change them anytime.").foregroundStyle(AZColor.faint)
                     Button("Settings") { router.push(.memory) }.fontWeight(.semibold).foregroundStyle(AZColor.muted).buttonStyle(.plain)
                 }
                 .font(.az(12.5))
@@ -96,6 +101,8 @@ struct CalorieTargetView: View {
             HStack(spacing: 8) {
                 if history.current.source == .div { DivMark() }
                 SectionLabel(text: Self.caption(history))
+                Spacer()
+                PillButton(title: "Change", systemImage: "slider.horizontal.3", style: .fill) { router.push(.editTargets) }
             }
             HStack(alignment: .bottom, spacing: 14) {
                 Text(history.current.kcal.grouped)
@@ -109,6 +116,67 @@ struct CalorieTargetView: View {
                 }
                 .padding(.bottom, 6)
             }
+        }
+    }
+
+    /// Protein, carbs and fat in grams, and water.
+    private func macros(_ t: DailyTargets) -> some View {
+        VStack(spacing: 8) {
+            HStack(spacing: 8) {
+                tile("Protein", t.proteinG.map { "\($0) g" }, color: AZColor.accent)
+                tile("Carbs", t.carbsG.map { "\($0) g" }, color: AZColor.carbs)
+                tile("Fat", t.fatG.map { "\($0) g" }, color: AZColor.fat)
+            }
+            HStack {
+                Rectangle().fill(AZColor.water).frame(width: 4, height: 22).clipShape(.capsule)
+                Text("Water").font(.az(15.5, .bold))
+                Spacer()
+                Text("\(EditTargetsView.litres(t.waterMl)) L").font(.az(17, .heavy)).monospacedDigit()
+                Text("\(t.waterMl / Int(WaterLog.glassMl)) glasses").font(.az(13.5)).foregroundStyle(AZColor.muted)
+            }
+            .padding(.horizontal, 14)
+            .frame(height: 52)
+            .background(AZColor.fill, in: .rect(cornerRadius: 16, style: .continuous))
+            if t.proteinG == nil {
+                Text("Weigh in once to see protein, carbs and fat in grams: protein is set per kg.")
+                    .font(.az(13.5)).foregroundStyle(AZColor.muted).frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+    }
+
+    private func tile(_ name: String, _ value: String?, color: Color) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Rectangle().fill(color).frame(width: 18, height: 4).clipShape(.capsule)
+            Text(name).font(.az(13, .semibold)).foregroundStyle(AZColor.muted)
+            Text(value ?? "-").font(.az(19, .heavy)).monospacedDigit()
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .background(AZColor.fill, in: .rect(cornerRadius: 16, style: .continuous))
+        .accessibilityElement(children: .combine)
+    }
+
+    /// The daily values Eat measures micronutrients against.
+    private var micronutrientGoals: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            SectionHeader(title: "Micronutrients", note: "Daily values")
+            HairlineStack {
+                ForEach(Micronutrient.allCases) { micro in
+                    HStack {
+                        Text(micro.title).font(.az(15, .semibold))
+                        if micro.isLimit { Text("limit").font(.az(12.5, .semibold)).foregroundStyle(AZColor.faint) }
+                        Spacer()
+                        Text("\(micro.isLimit ? "under " : "")\(Int(micro.dailyValue).grouped) \(micro.unit)")
+                            .font(.az(15)).foregroundStyle(AZColor.muted).monospacedDigit()
+                    }
+                    .frame(minHeight: 44)
+                    .accessibilityElement(children: .combine)
+                }
+            }
+            .padding(.top, 4)
+            Text("US daily values for adults. They're the same for everyone and don't change with your plan.")
+                .font(.az(13)).foregroundStyle(AZColor.faint).padding(.top, 8)
         }
     }
 

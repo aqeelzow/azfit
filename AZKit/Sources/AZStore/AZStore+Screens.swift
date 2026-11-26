@@ -24,6 +24,7 @@ public struct WeekDay: Sendable, Equatable {
     public var date: Int
     public var state: State
     public var sessionName: String?
+    public var sessionID: UUID?
 }
 
 /// A planned session as a card shows it.
@@ -48,9 +49,27 @@ public struct SessionPreview: Sendable, Equatable {
     public var lines: [Line]
     /// Moved here by Div for this week.
     public var moved: Bool
+    /// Finished this week, on any day.
+    public var done = false
 
     /// A rough length: 2.5 minutes a set, rounded to 5.
     public var minutes: Int { Int((Double(lines.reduce(0) { $0 + $1.sets }) * 2.5 / 5).rounded()) * 5 }
+}
+
+/// The day's targets as the targets screen shows them. Macros are nil without a weigh-in (protein is per kg).
+public struct DailyTargets: Sendable, Equatable {
+    public var kcal: Int
+    public var proteinG: Int?
+    public var carbsG: Int?
+    public var fatG: Int?
+    public var waterMl: Int
+    public var source: NutritionTarget.Source
+    public var weightKg: Double?
+}
+
+/// Targets that can't be saved, and why.
+public struct TargetProblem: Error, Equatable {
+    public var problems: [String]
 }
 
 /// Today's food against the target.
@@ -62,6 +81,14 @@ public struct FoodSummary: Sendable, Equatable {
     public var eaten: (protein: Int, carbs: Int, fat: Int)
     public var targets: (protein: Int, carbs: Int, fat: Int)?
     public var meals: [Meal]
+    /// Micronutrient totals from the meals that came with them, keyed by `Micronutrient.rawValue`.
+    public var micros: [String: Double] = [:]
+    /// How many of the day's meals had micronutrients, so a low total can be read for what it is.
+    public var mealsWithMicros = 0
+    /// The person said this is everything they ate (`FoodDay.complete`).
+    public var dayComplete: Bool?
+    public var waterMl = 0.0
+    public var waterGoalMl = 0.0
 
     public var leftKcal: Int? { targetKcal.map { $0 - eatenKcal } }
     public var fraction: Double {
@@ -72,7 +99,8 @@ public struct FoodSummary: Sendable, Equatable {
     public static func == (a: Self, b: Self) -> Bool {
         a.targetKcal == b.targetKcal && a.targetByDiv == b.targetByDiv && a.eatenKcal == b.eatenKcal && a.eaten == b.eaten
             && a.targets?.protein == b.targets?.protein && a.targets?.carbs == b.targets?.carbs && a.targets?.fat == b.targets?.fat
-            && a.meals == b.meals
+            && a.meals == b.meals && a.micros == b.micros && a.dayComplete == b.dayComplete && a.waterMl == b.waterMl
+            && a.waterGoalMl == b.waterGoalMl
     }
 }
 
@@ -111,39 +139,52 @@ extension AZStore {
         Day.adding(1 - (Day.weekday(day) ?? 1), to: day)
     }
 
-    /// The seven days Monday to Sunday of the week `today` is in.
-    public func week(today: String) throws -> [WeekDay] {
-        let monday = Self.monday(of: today)
+    /// The seven days Monday to Sunday of the week `weekOf` is in (this week when nil), with each day's state as of
+    /// `today`.
+    public func week(today: String, weekOf: String? = nil) throws -> [WeekDay] {
+        let monday = Self.monday(of: weekOf ?? today)
         let sessions = try writer.read { db in try PlannedSession.fetchAll(db) }
         let workouts = try writer.read { db in
-            try Workout.filter(Column("day") >= monday && Column("skipped") == false).fetchAll(db)
+            try Workout.filter(
+                Column("day") >= monday && Column("day") <= Day.adding(6, to: monday) && Column("skipped") == false
+            )
+            .fetchAll(db)
         }
         let worked = Set(workouts.map(\.day))
+        let finished = Set(workouts.filter { $0.endedAt != nil }.compactMap(\.plannedSessionID))
         // Days before the plan existed can't be missed.
         let joined = try profile().map { Day.string($0.createdAt) } ?? monday
         return (0..<7).map { offset in
             let day = Day.adding(offset, to: monday)
             let weekday = offset + 1
-            // Before the plan existed there was nothing to do.
-            let session = day < joined ? nil : sessions.first { $0.weekday(on: day) == weekday }
+            let session = sessions.first { $0.weekday(on: day) == weekday }
             let moved = session.map { $0.weekday(on: day) != $0.weekday } ?? false
+            // A planned day is done when its session is, on whatever day it was done.
+            let done = session.map { finished.contains($0.id) } ?? worked.contains(day)
             let state: WeekDay.State =
-                if worked.contains(day) { .done } else if day == today { .today } else if session != nil && day < today {
+                if done { .done } else if day == today { .today } else if session != nil && day < today && day >= joined {
                     .missed
                 } else if moved { .movedByDiv } else { .open }
             let date = Int(day.suffix(2)) ?? 0
-            return WeekDay(day: day, date: date, state: state, sessionName: session?.name)
+            return WeekDay(day: day, date: date, state: state, sessionName: session?.name, sessionID: session?.id)
         }
     }
 
-    /// Planned sessions from `today` to Sunday, in order.
-    public func sessionsAhead(today: String, library: Library = .standard) throws -> [SessionPreview] {
+    /// Every planned session in the week `weekOf` is in (this week when nil), Monday to Sunday, on the day it falls
+    /// and marked done once finished that week.
+    public func weekSessions(today: String, weekOf: String? = nil, library: Library = .standard) throws -> [SessionPreview] {
         let plan = try plan()
-        let todayWeekday = Day.weekday(today) ?? 1
-        let monday = Self.monday(of: today)
-        return plan.compactMap { session, exercises -> SessionPreview? in
-            let weekday = session.weekday(on: today)
-            guard weekday >= todayWeekday else { return nil }
+        let monday = Self.monday(of: weekOf ?? today)
+        let finished = try writer.read { db in
+            try Workout.filter(
+                Column("day") >= monday && Column("day") <= Day.adding(6, to: monday) && Column("skipped") == false
+                    && Column("ended_at") != nil
+            )
+            .fetchAll(db)
+        }
+        let done = Set(finished.compactMap(\.plannedSessionID))
+        return plan.map { session, exercises in
+            let weekday = session.weekday(on: weekOf.map { _ in monday } ?? today)
             let lines = exercises.map { row in
                 SessionPreview.Line(
                     exerciseID: row.exerciseID, name: library.exercise(row.exerciseID)?.name ?? row.exerciseID, sets: row.sets,
@@ -151,21 +192,54 @@ extension AZStore {
                     swappedFrom: row.swappedFromID.map { library.exercise($0)?.name ?? $0 })
             }
             return SessionPreview(
-                session: session, day: Day.adding(weekday - 1, to: monday), lines: lines, moved: weekday != session.weekday)
+                session: session, day: Day.adding(weekday - 1, to: monday), lines: lines, moved: weekday != session.weekday,
+                done: done.contains(session.id))
         }
         .sorted { $0.day < $1.day }
     }
 
+    /// Planned sessions from `today` to Sunday, in order.
+    public func sessionsAhead(today: String, library: Library = .standard) throws -> [SessionPreview] {
+        try weekSessions(today: today, library: library).filter { $0.day >= today }
+    }
+
     /// Today's session, if one is planned and not yet finished. A started workout keeps it here so it can be resumed.
     public func todaySession(today: String, library: Library = .standard) throws -> SessionPreview? {
-        let done = try writer.read { db in
-            try Workout.filter(Column("day") == today && Column("skipped") == false && Column("ended_at") != nil).fetchCount(db)
-        }
-        guard done == 0 else { return nil }
-        return try sessionsAhead(today: today, library: library).first { $0.day == today }
+        try weekSessions(today: today, library: library).first { $0.day == today && !$0.done }
     }
 
     /// The target in force on `day`: the latest one starting on or before it.
+    /// Everything the targets screen shows for `day`: calories, the macros in grams, and water.
+    public func dailyTargets(on day: String) throws -> DailyTargets? {
+        guard let target = try target(on: day) else { return nil }
+        let weight = try latestWeighIn()?.kg
+        let macros = weight.map {
+            Targets.macroGrams(kcal: target.kcal, proteinGPerKg: target.proteinGPerKg, weightKg: $0, fatG: target.fatG)
+        }
+        return DailyTargets(
+            kcal: target.kcal, proteinG: macros?.protein, carbsG: macros?.carbs, fatG: macros?.fat,
+            waterMl: target.waterMl ?? Int(Targets.waterMl(weightKg: weight)), source: target.source, weightKg: weight)
+    }
+
+    /// The person's own targets, from today. Protein is typed in grams and kept per kg of body weight, so it follows
+    /// the scale. Throws `TargetProblem` for impossible numbers; unusual ones are saved (Div talks them through).
+    @discardableResult
+    public func setOwnTargets(today: String, kcal: Int, proteinG: Int, fatG: Int, waterMl: Int) throws -> NutritionTarget {
+        let problems = Targets.problems(kcal: kcal, proteinG: proteinG, fatG: fatG, waterMl: waterMl)
+        guard problems.isEmpty else { throw TargetProblem(problems: problems) }
+        guard let weight = try latestWeighIn()?.kg, weight > 0 else {
+            throw TargetProblem(problems: ["Weigh in first: protein is set per kg."])
+        }
+        return try writer.write { db in
+            let existing = try NutritionTarget.filter(Column("start_day") == today).fetchOne(db)
+            let target = NutritionTarget(
+                id: existing?.id ?? UUID(), startDay: today, kcal: kcal, proteinGPerKg: (Double(proteinG) / weight * 100).rounded() / 100,
+                source: .person, fatG: fatG, waterMl: waterMl)
+            try target.save(db)
+            return target
+        }
+    }
+
     public func target(on day: String) throws -> NutritionTarget? {
         try writer.read { db in
             try NutritionTarget.filter(Column("start_day") <= day).order(Column("start_day").desc).fetchOne(db)
@@ -185,11 +259,14 @@ extension AZStore {
             fat: Int(meals.reduce(0) { $0 + $1.fatG }.rounded())
         )
         let targets = target.flatMap { target in
-            weight.map { Targets.macroGrams(kcal: target.kcal, proteinGPerKg: target.proteinGPerKg, weightKg: $0) }
+            weight.map { Targets.macroGrams(kcal: target.kcal, proteinGPerKg: target.proteinGPerKg, weightKg: $0, fatG: target.fatG) }
         }
         return FoodSummary(
             targetKcal: target?.kcal, targetByDiv: target?.source == .div, eatenKcal: Int(meals.reduce(0) { $0 + $1.kcal }.rounded()),
-            eaten: eaten, targets: targets, meals: meals)
+            eaten: eaten, targets: targets, meals: meals, micros: Micronutrient.total(meals.map(\.micros)),
+            mealsWithMicros: meals.count { $0.micros != nil },
+            dayComplete: try writer.read { db in try FoodDay.fetchOne(db, key: day)?.complete }, waterMl: try water(on: day),
+            waterGoalMl: target?.waterMl.map(Double.init) ?? Targets.waterMl(weightKg: weight))
     }
 
     /// The trend weight over the last `days` days (every weigh-in when nil).
@@ -231,12 +308,13 @@ extension AZStore {
 
     // MARK: Logging a workout
 
-    /// Today's open workout for a session, or a new one. Logged data is never deleted, so a second start reuses it.
+    /// Today's unfinished workout for a session, or a new one: a second start resumes it, and starting a finished one again
+    /// begins a new workout. Logged data is never deleted.
     public func startWorkout(_ session: PlannedSession, today: String, now: Date = .now) throws -> Workout {
         try writer.write { db in
             if let open = try Workout.filter(
                 Column("planned_session_id") == session.id.uuidString.lowercased() && Column("day") == today
-                    && Column("skipped") == false
+                    && Column("skipped") == false && Column("ended_at") == nil
             ).fetchOne(db) {
                 return open
             }

@@ -65,6 +65,13 @@ public struct DivData: Codable, Sendable, Equatable {
         public var proteinGPerKg: Double
         public var calorieFloorKcal: Int
         public var kidneyDisease: Bool
+        /// Who set the current targets: "onboarding", "div" or "person".
+        public var targetsSetBy: String?
+        /// Fat and water the person chose. Missing: fat is a quarter of calories, water about 35 ml per kg.
+        public var fatG: Int?
+        public var waterMl: Int?
+        /// The calories before the current target, when there was one.
+        public var previousCaloriesKcal: Int?
     }
 
     public struct Memory: Codable, Sendable, Equatable {
@@ -126,7 +133,8 @@ public struct DivData: Codable, Sendable, Equatable {
         public var exercise: String
         public var loadKg: Double
         public var reps: Int
-        public var rir: Double
+        /// Nil when the person didn't record it.
+        public var rir: Double?
     }
 
     public struct LogEntry: Codable, Sendable, Equatable {

@@ -19,10 +19,12 @@ public struct PlanTemplate: Sendable, Equatable {
     public var name: String
     public var sessions: [Session]
 
-    /// The template for `days` a week, 2 to 6 (clamped).
-    public static func forDays(_ days: Int) -> PlanTemplate {
+    /// The template for `days` a week, 2 to 6 (clamped), on the weekdays the person picked (1 is Monday) when they
+    /// picked that many, else the usual days for that many.
+    public static func forDays(_ days: Int, on picked: Set<Int>? = nil) -> PlanTemplate {
         let days = min(max(days, 2), 6)
-        let weekdays = trainingWeekdays[days] ?? [1, 4]
+        let valid = picked.map { $0.filter { (1...7).contains($0) } }
+        let weekdays = valid.flatMap { $0.count == days ? $0.sorted() : nil } ?? trainingWeekdays[days] ?? [1, 4]
         let blocks: [(String, [Item])] =
             switch days {
             case 2: [("Full body A", fullA), ("Full body B", fullB)]

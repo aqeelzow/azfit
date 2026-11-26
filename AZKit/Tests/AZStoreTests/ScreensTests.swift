@@ -55,7 +55,8 @@ private func started() throws -> AZStore {
         try store.start(profile, weightKg: 82, today: wednesday)
         let week = try store.week(today: wednesday)
         #expect(week.prefix(3).map(\.state) == [.open, .open, .today])
-        #expect(week.compactMap(\.sessionName) == ["Legs", "Upper"])
+        // Sessions before joining still show, so they can be done, but they aren't missed.
+        #expect(week.compactMap(\.sessionName) == ["Push", "Pull", "Legs", "Upper"])
     }
 
     @Test func movedSessionShowsOnItsNewDay() throws {
@@ -87,12 +88,58 @@ private func started() throws -> AZStore {
         #expect(try store.todaySession(today: thursday) == nil)
     }
 
+    @Test func anySessionCanBeDoneOnAnotherDay() throws {
+        let store = try started()
+        let thursday = "2026-11-26"
+        let sessions = try store.weekSessions(today: thursday)
+        #expect(sessions.map(\.day) == sessions.map(\.day).sorted())
+        let legs = try #require(sessions.first { $0.day == thursday })
+        // Friday's session done a day early: Friday shows done, today still has Legs to do.
+        let friday = try #require(sessions.first { $0.day > thursday && $0.session.id != legs.session.id })
+        let workout = try store.startWorkout(friday.session, today: thursday)
+        try store.finishWorkout(workout.id)
+        #expect(try store.weekSessions(today: thursday).first { $0.session.id == friday.session.id }?.done == true)
+        #expect(try store.todaySession(today: thursday)?.session.id == legs.session.id)
+        let week = try store.week(today: thursday)
+        #expect(week.first { $0.day == friday.day }?.state == .done)
+        #expect(week.first { $0.day == thursday }?.state == .today)
+        #expect(week.first { $0.day == thursday }?.sessionID == legs.session.id)
+    }
+
+    @Test func otherWeeksShowTheirOwnSessions() throws {
+        let store = try started()
+        let push = try #require(try store.plan().first { $0.session.name == "Push" }?.session)
+        // Push done last week, and Upper moved to Sunday for this week only.
+        let last = try store.startWorkout(push, today: "2026-11-16")
+        try store.finishWorkout(last.id)
+        var upper = try #require(try store.plan().first { $0.session.name == "Upper" }?.session)
+        upper.movedToWeekday = 7
+        upper.movedUntilDay = "2026-11-29"
+        try store.save(upper)
+
+        let lastWeek = try store.week(today: wednesday, weekOf: "2026-11-18")
+        #expect(lastWeek.first?.day == "2026-11-16")
+        #expect(lastWeek.first?.state == .done)
+        #expect(try store.weekSessions(today: wednesday, weekOf: "2026-11-18").first { $0.session.name == "Push" }?.done == true)
+        // Last week's Push doesn't count for this week.
+        #expect(try store.week(today: wednesday).first?.state != .done)
+
+        let next = try store.weekSessions(today: wednesday, weekOf: "2026-12-02")
+        #expect(next.first?.day == "2026-11-30")
+        #expect(next.allSatisfy { !$0.done && !$0.moved })
+        #expect(try store.week(today: wednesday, weekOf: "2026-12-02").allSatisfy { $0.state == .open })
+        #expect(try store.weekSessions(today: wednesday).first { $0.session.name == "Upper" }?.day == "2026-11-29")
+    }
+
     @Test func startingTwiceReusesTheWorkout() throws {
         let store = try started()
         let push = try #require(try store.plan().first?.session)
         let a = try store.startWorkout(push, today: "2026-11-23")
         let b = try store.startWorkout(push, today: "2026-11-23")
         #expect(a.id == b.id)
+        // Once finished, starting it again is a new workout.
+        try store.finishWorkout(a.id)
+        #expect(try store.startWorkout(push, today: "2026-11-23").id != a.id)
     }
 
     @Test func foodAddsUpMealsAgainstTheTarget() throws {

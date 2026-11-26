@@ -2,11 +2,11 @@ import AZMath
 import AZModel
 import SwiftUI
 
-/// First run: Welcome, then four steps (goal, training days, about you, connect the Mac bridge). Finishing saves
+/// First run: Welcome, then five steps (goal, training days, about you, the starting target, connect the Mac bridge). Finishing saves
 /// the person, their starting targets and a plan from the template for their days (D-028).
 /// Design: design/source/src/Welcome.html, Goal.html, Days.html, Connect.html. About you has no design yet.
 struct OnboardingFlow: View {
-    enum Step: Hashable { case goal, days, about, connect }
+    enum Step: Hashable { case goal, days, about, target, connect }
 
     var onFinish: () -> Void
     @Environment(AppEnvironment.self) private var environment
@@ -19,11 +19,12 @@ struct OnboardingFlow: View {
                 .navigationDestination(for: Step.self) { step in
                     switch step {
                     case .goal: GoalView(pick: $answers.goalPick) { path.append(.days) }
-                    case .days: DaysView(days: $answers.days) { path.append(.about) }
-                    case .about: AboutYouView(answers: $answers) { path.append(.connect) }
+                    case .days: DaysView(weekdays: $answers.weekdays) { path.append(.about) }
+                    case .about: AboutYouView(answers: $answers) { path.append(.target) }
+                    case .target: TargetStepView(answers: $answers) { path.append(.connect) }
                     case .connect:
                         ConnectView {
-                            environment.finishOnboarding(answers.profile, weightKg: answers.weightKg)
+                            environment.finishOnboarding(answers.profile, weightKg: answers.weightKg, weekdays: answers.weekdays)
                             onFinish()
                         }
                     }
@@ -35,7 +36,9 @@ struct OnboardingFlow: View {
 /// What onboarding has asked so far. Stored metric, shown in the person's units.
 struct OnboardingAnswers {
     var goalPick = 0
-    var days = 4
+    /// The weekdays picked to train on (1 is Monday), starting from the usual 4.
+    var weekdays = Set(PlanTemplate.trainingWeekdays[4] ?? [])
+    var days: Int { weekdays.count }
     var units = UnitSystem.canadian
     var sex: Sex?
     var age = 30
@@ -144,8 +147,8 @@ struct WelcomeView: View {
 
 // MARK: - Shared step chrome
 
-/// Back button, progress bar and a trailing link, then the "Step n of 4" title block.
-private struct StepHeader: View {
+/// Back button, progress bar and a trailing link, then the "Step n of 5" title block.
+struct StepHeader: View {
     var progress: Double
     var trailing: String
     var trailingIsLink = true
@@ -173,12 +176,13 @@ private struct StepHeader: View {
     }
 }
 
-private struct StepTitle: View {
+struct StepTitle: View {
+    static let count = 5
     var step: Int
     var title: String
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Step \(step) of 4").font(.az(14, .semibold)).foregroundStyle(AZColor.accent)
+            Text("Step \(step) of \(Self.count)").font(.az(14, .semibold)).foregroundStyle(AZColor.accent)
             Text(title).font(.az(34, .heavy)).tracking(-0.85)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -201,7 +205,7 @@ struct GoalView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            StepHeader(progress: 0.25, trailing: "Skip", onTrailing: onContinue)
+            StepHeader(progress: 0.2, trailing: "Skip", onTrailing: onContinue)
             StepTitle(step: 1, title: "What's your\nmain goal?").padding(.top, 22)
             VStack(spacing: 10) {
                 ForEach(options.indices, id: \.self) { i in option(i) }
@@ -274,17 +278,32 @@ struct CheckBox: View {
 
 // MARK: - Days
 
+/// How many days, then which: a number picks the usual days for it, and tapping a day adds or drops it (2 to 6).
 struct DaysView: View {
-    @Binding var days: Int
+    @Binding var weekdays: Set<Int>
     var onContinue: () -> Void = {}
 
     /// From the templates, so the screen shows the plan the person will get.
     private static let splits = PlanTemplate.splitNames
-    private static let pattern = PlanTemplate.trainingWeekdays.mapValues { Set($0.map { $0 - 1 }) }
+    private static let range = 2...6
+
+    private var days: Int { weekdays.count }
+
+    private func pick(count n: Int) {
+        withAnimation(.snappy(duration: 0.2)) { weekdays = Set(PlanTemplate.trainingWeekdays[n] ?? []) }
+    }
+
+    /// Adds or drops a day, keeping between 2 and 6.
+    private func toggle(_ weekday: Int) {
+        var next = weekdays
+        if next.contains(weekday) { next.remove(weekday) } else { next.insert(weekday) }
+        guard Self.range.contains(next.count) else { return }
+        withAnimation(.snappy(duration: 0.2)) { weekdays = next }
+    }
 
     var body: some View {
         VStack(spacing: 0) {
-            StepHeader(progress: 0.5, trailing: "Skip", onTrailing: onContinue)
+            StepHeader(progress: 0.4, trailing: "Skip", onTrailing: onContinue)
             StepTitle(step: 2, title: "How often can\nyou train?").padding(.top, 22)
             Text("\(days)")
                 .font(.az(150, .heavy)).tracking(-9).monospacedDigit()
@@ -295,7 +314,7 @@ struct DaysView: View {
             HStack(spacing: 8) {
                 ForEach(2...6, id: \.self) { n in
                     Button {
-                        withAnimation(.snappy(duration: 0.2)) { days = n }
+                        pick(count: n)
                     } label: {
                         Text("\(n)")
                             .font(.az(20, .heavy))
@@ -324,19 +343,31 @@ struct DaysView: View {
                 DivAvatar(size: 36)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(Self.splits[days] ?? "").font(.az(15, .bold))
-                    Text("About 50 min each. Miss a day and I'll move it for you.")
+                    Text("About 50 min each. Tap the days that suit you, and if you miss one I'll move it.")
                         .font(.az(14)).foregroundStyle(AZColor.divMuted).fixedSize(horizontal: false, vertical: true)
                 }
             }
             HStack(spacing: 6) {
+                let names = Calendar.current.weekdaySymbols
                 ForEach(Array(["M", "T", "W", "T", "F", "S", "S"].enumerated()), id: \.offset) { i, letter in
-                    let isOn = Self.pattern[days]?.contains(i) ?? false
-                    Text(letter)
-                        .font(.az(12, .bold))
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 34)
-                        .foregroundStyle(isOn ? Color.white : AZColor.faint)
-                        .background(isOn ? AZColor.accent : AZColor.card, in: .rect(cornerRadius: 10, style: .continuous))
+                    let weekday = i + 1
+                    let isOn = weekdays.contains(weekday)
+                    Button {
+                        toggle(weekday)
+                    } label: {
+                        Text(letter)
+                            .font(.az(13, .bold))
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 44)
+                            .foregroundStyle(isOn ? Color.white : AZColor.muted)
+                            .background(isOn ? AZColor.accent : AZColor.card, in: .rect(cornerRadius: 12, style: .continuous))
+                            .contentShape(.rect)
+                    }
+                    .buttonStyle(.plain)
+                    // Monday is index 1 in weekdaySymbols (Sunday first).
+                    .accessibilityLabel(names[(i + 1) % 7])
+                    .accessibilityValue(isOn ? "Training" : "Rest")
+                    .accessibilityAddTraits(isOn ? .isSelected : [])
                 }
             }
         }
@@ -351,10 +382,11 @@ struct DaysView: View {
 struct AboutYouView: View {
     @Binding var answers: OnboardingAnswers
     var onContinue: () -> Void = {}
+    @State private var isPickingHeight = false
 
     var body: some View {
         VStack(spacing: 0) {
-            StepHeader(progress: 0.75, trailing: "Skip", onTrailing: onContinue)
+            StepHeader(progress: 0.6, trailing: "Skip", onTrailing: onContinue)
             StepTitle(step: 3, title: "About you").padding(.top, 22)
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
@@ -367,13 +399,26 @@ struct AboutYouView: View {
                             "Age", "\(answers.age)", minus: { answers.age = max(14, answers.age - 1) },
                             plus: { answers.age = min(99, answers.age + 1) })
                         stepper(
-                            "Height", answers.units.height(answers.heightCm),
-                            minus: { answers.heightCm = max(120, answers.heightCm - UnitSystem.cmPerInch) },
-                            plus: { answers.heightCm = min(230, answers.heightCm + UnitSystem.cmPerInch) })
+                            "Height", minus: { answers.heightCm = max(120, answers.heightCm - UnitSystem.cmPerInch) },
+                            plus: { answers.heightCm = min(230, answers.heightCm + UnitSystem.cmPerInch) }
+                        ) {
+                            Button {
+                                isPickingHeight = true
+                            } label: {
+                                Text(answers.units.height(answers.heightCm)).font(.az(16, .bold)).monospacedDigit()
+                                    .frame(minWidth: 92, minHeight: 40)
+                                    .background(AZColor.fill, in: .rect(cornerRadius: 12, style: .continuous))
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("Height, \(answers.units.height(answers.heightCm))")
+                            .accessibilityHint("Opens a picker")
+                        }
                         stepper(
-                            "Weight", answers.units.bodyWeight(answers.weightKg),
-                            minus: { answers.weightKg = max(35, answers.weightKg - weightStep) },
-                            plus: { answers.weightKg = min(250, answers.weightKg + weightStep) })
+                            "Weight", minus: { answers.weightKg = max(35, answers.weightKg - weightStep) },
+                            plus: { answers.weightKg = min(250, answers.weightKg + weightStep) }
+                        ) {
+                            BodyWeightField(kg: $answers.weightKg, units: answers.units)
+                        }
                     }
                     HStack(spacing: 12) {
                         DivAvatar(size: 36)
@@ -389,6 +434,10 @@ struct AboutYouView: View {
         }
         .padding(.horizontal, 20)
         .azScreen()
+        .sheet(isPresented: $isPickingHeight) {
+            HeightPicker(cm: $answers.heightCm)
+                .presentationDetents([.height(320)])
+        }
     }
 
     /// One pound, or half a kilogram.
@@ -422,12 +471,20 @@ struct AboutYouView: View {
     }
 
     private func stepper(_ title: String, _ value: String, minus: @escaping () -> Void, plus: @escaping () -> Void) -> some View {
+        stepper(title, minus: minus, plus: plus) {
+            Text(value).font(.az(16, .bold)).monospacedDigit().frame(minWidth: 92)
+                .contentTransition(.numericText())
+        }
+    }
+
+    private func stepper<Value: View>(
+        _ title: String, minus: @escaping () -> Void, plus: @escaping () -> Void, @ViewBuilder value: () -> Value
+    ) -> some View {
         HStack(spacing: 10) {
             Text(title).font(.az(15.5, .semibold))
             Spacer(minLength: 8)
             IconButton(systemImage: "minus", label: "Less \(title.lowercased())", size: 40, action: minus)
-            Text(value).font(.az(16, .bold)).monospacedDigit().frame(minWidth: 92)
-                .contentTransition(.numericText())
+            value()
             IconButton(systemImage: "plus", label: "More \(title.lowercased())", size: 40, action: plus)
         }
         .frame(height: 60)
@@ -442,9 +499,9 @@ struct ConnectView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            StepHeader(progress: 1, trailing: "4 / 4", trailingIsLink: false)
+            StepHeader(progress: 1, trailing: "5 / 5", trailingIsLink: false)
             VStack(alignment: .leading, spacing: 8) {
-                StepTitle(step: 4, title: "Connect Div")
+                StepTitle(step: 5, title: "Connect Div")
                 Text("Div runs on your Claude plan through AZfit Bridge, a free app on your Mac. No extra AI bill.")
                     .font(.az(15.5)).foregroundStyle(AZColor.muted).fixedSize(horizontal: false, vertical: true).padding(.horizontal, 4)
             }
@@ -516,6 +573,7 @@ struct ConnectView: View {
 
 #Preview("Welcome") { WelcomeView() }
 #Preview("Goal") { NavigationStack { GoalView(pick: .constant(0)) } }
-#Preview("Days") { NavigationStack { DaysView(days: .constant(4)) } }
+#Preview("Days") { NavigationStack { DaysView(weekdays: .constant([1, 2, 4, 6])) } }
 #Preview("About you") { NavigationStack { AboutYouView(answers: .constant(OnboardingAnswers())) } }
+#Preview("Target") { NavigationStack { TargetStepView(answers: .constant(OnboardingAnswers())) } }
 #Preview("Connect") { NavigationStack { ConnectView() }.environment(AppEnvironment.preview()) }

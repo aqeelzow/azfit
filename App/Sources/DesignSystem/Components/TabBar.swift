@@ -96,7 +96,8 @@ nonisolated struct TabBarShape: Shape {
 }
 
 /// The Monday-to-Sunday strip on Home and Train: done days are lavender with a check, a missed day is struck
-/// through, today is near-black, and a day Div moved a session to carries the Div mark.
+/// through, today is near-black, and a day Div moved a session to carries the Div mark. A day with a session planned
+/// has a short purple bar under it, and the selected day is outlined.
 struct WeekStrip: View {
     enum Day {
         case done, open, missed, today, movedByDiv
@@ -106,6 +107,12 @@ struct WeekStrip: View {
         ("M", 16, .done), ("T", 17, .done), ("W", 18, .open), ("T", 19, .done), ("F", 20, .missed), ("S", 21, .today),
         ("S", 22, .movedByDiv),
     ]
+    /// The session planned on each day, Monday to Sunday. Nil is a rest day.
+    var sessions: [String?] = ["Push", "Pull", nil, "Legs", "Upper", nil, "Full body"]
+    /// The day picked, by its index Monday to Sunday.
+    var selected: Int?
+    /// Tapping a day, by its index Monday to Sunday. Nil leaves the strip for show.
+    var onTap: ((Int) -> Void)?
 
     var body: some View {
         HStack(spacing: 0) {
@@ -115,14 +122,36 @@ struct WeekStrip: View {
                     Text(day.letter)
                         .font(.az(12, .semibold))
                         .foregroundStyle(day.state == .today ? AZColor.ink : AZColor.muted)
-                    cell(day.date, day.state)
+                    let session = sessions.indices.contains(index) ? sessions[index] : nil
+                    Group {
+                        if let onTap {
+                            Button {
+                                onTap(index)
+                            } label: {
+                                cell(day.date, day.state, session: session)
+                            }
+                            .buttonStyle(.plain)
+                        } else {
+                            cell(day.date, day.state, session: session)
+                        }
+                    }
+                    .overlay {
+                        if selected == index {
+                            RoundedRectangle(cornerRadius: 17, style: .continuous).strokeBorder(AZColor.accent, lineWidth: 2)
+                                .padding(-4)
+                        }
+                    }
+                    .accessibilityAddTraits(selected == index ? .isSelected : [])
+                    Capsule().fill(session == nil ? Color.clear : AZColor.accent).frame(width: 16, height: 4)
+                        .padding(.top, 2)
+                        .accessibilityHidden(true)
                 }
             }
         }
     }
 
     @ViewBuilder
-    private func cell(_ date: Int, _ state: Day) -> some View {
+    private func cell(_ date: Int, _ state: Day, session: String?) -> some View {
         let shape = RoundedRectangle(cornerRadius: 14, style: .continuous)
         Group {
             switch state {
@@ -144,13 +173,15 @@ struct WeekStrip: View {
             if state == .movedByDiv { DivMark(size: 16).offset(x: 5, y: 5) }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(accessibility(date, state))
+        .accessibilityLabel(
+            [accessibility(date, state, session: session), session.map { "\($0) planned" }]
+                .compactMap { $0 }.joined(separator: ", "))
     }
 
-    private func accessibility(_ date: Int, _ state: Day) -> String {
+    private func accessibility(_ date: Int, _ state: Day, session: String?) -> String {
         switch state {
         case .done: "\(date), done"
-        case .open: "\(date), rest day"
+        case .open: session == nil ? "\(date), rest day" : "\(date)"
         case .missed: "\(date), missed"
         case .today: "\(date), today"
         case .movedByDiv: "\(date), session moved here by Div"

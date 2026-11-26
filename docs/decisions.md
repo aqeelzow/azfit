@@ -40,7 +40,7 @@ Grouped the way the app is. "v1" is what the first TestFlight build needs; "late
 | Context ladder | Photo only is wide; words narrow it; depth volume narrower; plate weight narrowest | v1 photo + words, later depth |
 | Favorites | Same meal logs the same number every time (consistency over accuracy) | v1 |
 | Protein as the daily target, shown as a bar | g/kg by goal, goal weight if body fat is high. See D-013 | v1 |
-| Day completeness | "Done for today" tap, or asked next morning. Suspected partial under 60% of usual | v1 |
+| Day completeness | "That's everything" tap on Eat. Unmarked days never count (D-036) | v1 |
 | Calorie calibration loop | Weekly, deterministic. See D-010 | v1 |
 | "Why 2,350?" | The math behind any calorie change, with undo | v1 |
 | Food depth scan (LiDAR, or ARKit sweep on base iPhones) | Volume helps, density still comes from the description | later |
@@ -192,13 +192,13 @@ Tried by hand on 2026-11-22; the answer is in `structured_output` of the JSON en
 **Accepted** (Aqeel, 2026-11-25). Packaged food is logged by scanning its barcode, alongside photos and favourites. Which food database answers the barcode is still to choose (Open Food Facts is free and covers Canada, the US and the UK).
 
 ### D-028 Plans start from a template
-**Accepted** (Aqeel, 2026-11-25). Onboarding picks a template from the goal and training days (for example Upper/Lower for 4 days). Div can change it afterwards through the usual changes and policy.
+**Accepted** (Aqeel, 2026-11-25). Onboarding picks a template from the goal and training days (for example Upper/Lower for 4 days). Div can change it afterwards through the usual changes and policy. The person picks which weekdays to train on (2 to 6 of them); choosing a number first fills in the usual days for it (`PlanTemplate.trainingWeekdays`), and the sessions go on the picked days in order.
 
 ### D-029 A starting target without sex
 **Accepted** (Aqeel, 2026-11-25). Onboarding doesn't require sex. When it's missing, the starting calorie target uses Mifflin-St Jeor with the midpoint of the male and female constants (-78), so everyone who gives height, age and weight gets a target. The floor stays at 1,200 (D-017). The Sunday review corrects the start from the scale either way (D-010).
 
 ### D-030 Div reviews every finished workout
-**Accepted** (Aqeel, 2026-11-25). Finish asks the bridge for a session review once the workout has synced. The bridge builds the `SessionReport` from its copy of the data (prescription from the plan, sets as logged, best e1RM from earlier sessions), Div writes a note and next time's loads, and `SessionPolicy` decides each load as usual. The note is saved on the workout (`div_note`) and shows on Home. A workout's first review sets any missing planned load to what was lifted, so loads start from reality. Sets logged without RIR count as RIR 2 until the workout screen asks for it. If the Mac is away, the review runs when it's back; each workout is tried once per app launch so a failing review can't keep spending the person's Claude usage.
+**Accepted** (Aqeel, 2026-11-25). Finish asks the bridge for a session review once the workout has synced. The bridge builds the `SessionReport` from its copy of the data (prescription from the plan, sets as logged, best e1RM from earlier sessions), Div writes a note and next time's loads, and `SessionPolicy` decides each load as usual. The note is saved on the workout (`div_note`) and shows on Home. A workout's first review sets any missing planned load to what was lifted, so loads start from reality. The workout screen asks for RIR on every set (0 to 4+, starting at 2 or the last set's answer). Sets logged before that have no RIR, and nothing is assumed for them: their e1RM counts the reps done alone, average RIR covers only sets that recorded one, and Div is told when it's missing. If the Mac is away, the review runs when it's back; each workout is tried once per app launch so a failing review can't keep spending the person's Claude usage.
 
 ### D-031 The bridge runs the Sunday review on its own
 **Accepted** (Aqeel, 2026-11-25). From 6 pm Sunday until the end of Tuesday the bridge reviews every person whose week has no review yet, checking at launch and hourly, so a Mac asleep on Sunday catches up. People who joined less than 7 days before that Sunday are skipped. The summary and questions are saved as a `week_review` row and show in Div's log; changes go through `ChangePolicy` as `DivChange`s. Until the phone can mark a day as everything eaten, a food day counts as complete at 60% of the target or more. Recovery (sleep, HRV, steps) is left out until Health is read, so Div won't deload on recovery grounds. `div weekly` runs it on demand.
@@ -212,6 +212,36 @@ Tried by hand on 2026-11-22; the answer is in `structured_output` of the JSON en
 - **Autonomy switches.** Div's memory screen saves these to `Profile.autonomy` (D-009, D-012). Calories always ask, and filling in unlogged food is never allowed. A memory the person forgets is deleted, because memories are Div's notes and not the person's logs.
 - **Body scan.** The scan screen stays a still frame until LiDAR is built (open question 3). Measurements come from the tape.
 
+### D-033 Any session this week can be started on any day
+**Accepted** (Aqeel, 2026-11-26). Every planned session this week opens from the Train tab (its day in the week strip, or its row) and has a Start button, not only today's. A session done on another day is logged for the day it was done, and its planned day shows as done in the week strip, because the plan is a week of sessions more than a fixed calendar. Today's card stays until today's own session is finished, so doing Saturday's session early doesn't hide Thursday's. The week strip marks each day with a session, and swiping it moves week to week, from the week the person joined to 8 weeks ahead. Other weeks are for looking: they show the current plan and what was done, and only this week's sessions can be started. A move by Div lasts only the week it was made for.
+
+### D-034 Onboarding shows the starting target, and weight comes from Apple Health
+**Accepted** (Aqeel, 2026-11-26). Onboarding has five steps: goal, days, about you, the starting target, connect. The target step shows the working from `Targets.startingBreakdown` (resting burn, × 1.5, the goal's daily adjustment, rounding and the floor) and the macros, the same numbers saved when onboarding finishes. Height is picked on feet and inches wheels and weight is typed. Apple Health is read only, for body weight: once connected from the weigh-in screen, the last 90 days come in as weigh-ins (source `health`) each time the app opens, keyed by the Health sample's ID so nothing comes in twice. AZfit doesn't write weigh-ins to Health, so its own entries can't come back as duplicates. A typed weigh-in has a date and time, now by default.
+
+### D-035 Food is logged to meals, from a food database, a barcode or your own foods
+**Accepted** (Aqeel, 2026-11-26). Settles D-027's database: Open Food Facts.
+
+- Eat groups the day into Breakfast, Lunch, Dinner and Snacks, each with its own Add. A meal row keeps its `slot`; rows logged before slots existed fall into the meal of their time. A logged food can be moved to another meal.
+- Add food searches the person's own foods and Open Food Facts (free, open, no account). Only the search words or barcode leave the phone. Search is one request, limited to English names and to foods sold in Canada, the US, the UK, Australia, Ireland and New Zealand (the whole world when fewer than 5 match). A food's full label is read only when it's opened, and kept for the session, because the database limits requests per phone.
+- Barcodes scan with VisionKit's live scanner, or can be typed. A barcode the database doesn't know offers Create food with it attached, so the next scan finds that food.
+- Custom foods are per serving and stay on the phone (`custom_food`, not synced). Quick add (the old "Describe food") still types calories and macros in.
+- Micronutrients come from label data only (12 of them, US daily values, sugar, saturated fat, sodium and cholesterol as limits). Quick add and photo meals carry none, and Eat says how many of the day's foods did.
+- Water is counted in 250 ml glasses against 35 ml per kg (1.5 to 4.5 L, 2 L without a weight). `water_log` syncs; a removed glass stays, marked removed.
+- Apple Health: connecting or tapping Sync reads every weight Health has; opening the app reads the last 90 days for new ones. Weigh-ins in AZfit are never dropped.
+
+### D-036 Complete days are marked, and a set without RIR assumes nothing
+**Accepted** (Aqeel, 2026-11-26).
+- Only days the person marks "That's everything" (Eat) count as complete in the weekly calorie review. The earlier stand-in (a day with 60% of the target logged counted) is gone: a partly logged day reads as eating less and would push calories the wrong way. Undo clears the mark.
+- A set logged without RIR keeps none. Its e1RM counts the reps done alone, average RIR covers only sets that recorded one, and Div gets no `rir` / `avg_rir` for it, with prompts saying so. The plan's target RIR of 2 stays: it's a target, not a guess about a set. The RIR picker still starts on 2.
+- Div's settings ("What Div knows") show the Mac's status, with Pair when unpaired and Re-pair when the link is broken. Re-pair forgets the phone's pairing and opens the pairing steps; the Mac keeps data by person, so logs and memories carry on.
+
+### D-037 The person can set their own targets, and Div weighs in
+**Accepted** (Aqeel, 2026-11-26).
+- The targets screen shows calories, protein, carbs and fat in grams, water, and the micronutrient daily values (fixed US values, read only).
+- "Change" sets calories, protein (typed in grams, kept per kg so it follows the scale), fat and water. Carbs are what's left. Only impossible numbers are refused (`Targets.problems`); low or unusual ones are saved, because it's the person's call. A second change on the same day replaces that day's target.
+- Saving sends Div the change in chat as the person's message (with their reason, if they gave one). Div's chat prompt says to ask why when no reason was given, give its honest read with the numbers (implied rate, protein per kg, calorie floor, water) and one piece of advice, and never argue it back. Chat still can't change calories or protein (D-021). Without the Mac, the targets save and Div isn't asked.
+- Div's own calorie changes keep the person's fat and water. `get_profile` now says who set the targets and the calories before.
+
 ## Open questions
 
 1. Bridge distribution: notarized download, or Mac App Store (sandboxing conflicts with running `claude`, so probably download).
@@ -219,4 +249,4 @@ Tried by hand on 2026-11-22; the answer is in `structured_output` of the JSON en
 3. LiDAR scan and food depth: build in v1 or after the first TestFlight.
 4. Bundle identifiers and the Apple team: `com.azfit.*` is a placeholder.
 5. Moving a session: apply or ask (D-012).
-6. The per-person calorie floor formula (D-017) and the barcode food database (D-027).
+6. The per-person calorie floor formula (D-017). (The barcode food database is Open Food Facts, D-035.)

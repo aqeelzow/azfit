@@ -43,6 +43,86 @@ private func time(_ seconds: TimeInterval) -> Date { Date(timeIntervalSince1970:
         #expect(recent[0].similar.loggedTimes == 2)
     }
 
+    @Test func customFoodsAreFoundByNameAndBarcode() throws {
+        let store = try started()
+        try store.saveCustomFood(
+            CustomFood(name: "Mom's chicken wrap", servingLabel: "1 wrap", kcal: 450, proteinG: 30, carbsG: 40, fatG: 15, barcode: "123"))
+        #expect(try store.customFoods(matching: "chicken WRAP").count == 1)
+        #expect(try store.customFoods(matching: "rice").isEmpty)
+        #expect(try store.customFood(barcode: "123")?.name == "Mom's chicken wrap")
+        #expect(try store.customFood(barcode: "999") == nil)
+    }
+
+    @Test func aMealKeepsItsSlot() throws {
+        let store = try started()
+        try store.logMeal(Meal(day: wednesday, name: "Eggs", kcal: 200, proteinG: 14, carbsG: 1, fatG: 15, source: .typed, slot: .dinner))
+        #expect(try store.meals(on: wednesday).map(\.mealSlot) == [.dinner])
+        let eggs = try #require(try store.meals(on: wednesday).first)
+        try store.moveMeal(eggs.id, to: .breakfast)
+        #expect(try store.meals(on: wednesday).map(\.mealSlot) == [.breakfast])
+    }
+
+    @Test func waterAddsUpAndTakesBackTheLastGlass() throws {
+        let store = try started()
+        try store.logWater(day: wednesday, at: time(100))
+        try store.logWater(ml: 500, day: wednesday, at: time(200))
+        #expect(try store.food(on: wednesday).waterMl == 750)
+        try store.removeLastWater(on: wednesday)
+        #expect(try store.water(on: wednesday) == 250)
+        #expect(try store.all(WaterLog.self).count == 2)
+        #expect(try store.food(on: wednesday).waterGoalMl == 2750)
+    }
+
+    @Test func micronutrientsTotalFromTheMealsThatHaveThem() throws {
+        let store = try started()
+        try store.logMeal(
+            Meal(
+                day: wednesday, name: "Yogurt", kcal: 150, proteinG: 15, carbsG: 6, fatG: 7, source: .barcode,
+                micros: ["sodium": 54, "calcium": 170]))
+        try store.logMeal(
+            Meal(day: wednesday, name: "Bar", kcal: 200, proteinG: 20, carbsG: 20, fatG: 7, source: .barcode, micros: ["sodium": 200]))
+        try store.logMeal(Meal(day: wednesday, name: "Wrap", kcal: 450, proteinG: 30, carbsG: 40, fatG: 15, source: .typed))
+        let food = try store.food(on: wednesday)
+        #expect(food.micros == ["sodium": 254, "calcium": 170])
+        #expect(food.mealsWithMicros == 2)
+    }
+
+    @Test func ownTargetsSetMacrosAndWater() throws {
+        let store = try started()
+        let before = try #require(try store.dailyTargets(on: wednesday))
+        #expect(before.source == .onboarding && before.waterMl == 2750)
+        try store.setOwnTargets(today: wednesday, kcal: 2200, proteinG: 180, fatG: 70, waterMl: 3000)
+        let after = try #require(try store.dailyTargets(on: wednesday))
+        #expect(after.kcal == 2200 && after.proteinG == 180 && after.fatG == 70 && after.waterMl == 3000 && after.source == .person)
+        // Carbs are what's left: 2,200 - 180 x 4 - 70 x 9 = 850 kcal, 213 g (rounded from 212.5).
+        #expect(after.carbsG == 212 || after.carbsG == 213)
+        #expect(try store.food(on: wednesday).waterGoalMl == 3000)
+        // Changing again the same day replaces that day's target instead of stacking.
+        try store.setOwnTargets(today: wednesday, kcal: 2100, proteinG: 180, fatG: 70, waterMl: 3000)
+        #expect(try store.all(NutritionTarget.self).count == 2)
+    }
+
+    @Test func impossibleTargetsAreRefused() throws {
+        let store = try started()
+        #expect(throws: TargetProblem.self) {
+            try store.setOwnTargets(today: wednesday, kcal: 1000, proteinG: 200, fatG: 60, waterMl: 2000)
+        }
+        #expect(Targets.problems(kcal: 500, proteinG: 100, fatG: 50, waterMl: 100).count == 3)
+        // Low but possible is allowed: Div talks it through.
+        #expect(Targets.problems(kcal: 1200, proteinG: 120, fatG: 40, waterMl: 2000).isEmpty)
+    }
+
+    @Test func healthWeighInsImportOnce() throws {
+        let store = try AZStore.inMemory()
+        let a = WeighIn(day: "2026-11-24", at: time(1), kg: 81.2, source: .health)
+        let b = WeighIn(day: wednesday, at: time(2), kg: 80.9, source: .health)
+        let typo = WeighIn(day: wednesday, at: time(3), kg: 8.09, source: .health)
+        #expect(try store.importWeighIns([a, b, typo]) == 2)
+        #expect(try store.importWeighIns([a, b]) == 0)
+        #expect(try store.all(WeighIn.self).count == 2)
+        #expect(try store.latestWeighIn()?.source == .health)
+    }
+
     @Test func weighInsShowInTheTrendAndTheWeeks() throws {
         let store = try started()
         // Onboarding weighed 82 on Oct 1. Then two weeks ago, last week and this week.
