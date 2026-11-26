@@ -70,15 +70,6 @@ struct BodyView: View {
     }
 
     /// The figures' regions, in BodyFigure's order, each as the library muscles it shows.
-    private static let front = [
-        ["traps"], ["front_delts", "side_delts"], ["upper_chest", "lower_chest"], ["biceps"], ["forearms"], ["abs"], ["obliques"],
-        ["quads"], ["calves"],
-    ]
-    private static let back = [
-        ["traps", "upper_back"], ["rear_delts", "side_delts"], ["lats"], ["triceps"], ["forearms"], ["lower_back"], ["glutes"],
-        ["hamstrings"], ["calves"],
-    ]
-
     /// One digit per region, 0 (no sets) to 5 (14 or more), or "a" for the lagging muscle.
     private static func levels(_ regions: [[String]], sets: [String: Double], lagging: String?) -> String {
         String(
@@ -93,11 +84,15 @@ struct BodyView: View {
     private func muscleMap(sets: [String: Double], lagging: String?) -> some View {
         VStack(spacing: 0) {
             HStack {
-                BodyFigure(side: .front, levels: Self.levels(Self.front, sets: sets, lagging: lagging)).frame(width: 92, height: 238)
-                    .accessibilityLabel("Front muscles by sets this week")
+                BodyFigure(side: .front, levels: Self.levels(BodyFigure.frontMuscles, sets: sets, lagging: lagging)).frame(
+                    width: 92, height: 238
+                )
+                .accessibilityLabel("Front muscles by sets this week")
                 Spacer()
-                BodyFigure(side: .back, levels: Self.levels(Self.back, sets: sets, lagging: lagging)).frame(width: 92, height: 238)
-                    .accessibilityLabel("Back muscles by sets this week")
+                BodyFigure(side: .back, levels: Self.levels(BodyFigure.backMuscles, sets: sets, lagging: lagging)).frame(
+                    width: 92, height: 238
+                )
+                .accessibilityLabel("Back muscles by sets this week")
             }
             .padding(.horizontal, 40)
             .padding(.top, 16)

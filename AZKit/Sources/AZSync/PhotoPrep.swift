@@ -26,4 +26,19 @@ public enum PhotoPrep {
         ]
         return CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)
     }
+
+    /// When the photo was taken, from its EXIF data, read as the phone's local time. Nil when the photo doesn't say
+    /// (screenshots, edited copies), so the caller uses now.
+    public static func takenAt(_ data: Data, timeZone: TimeZone = .current) -> Date? {
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil),
+            let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+            let exif = properties[kCGImagePropertyExifDictionary] as? [CFString: Any],
+            let text = exif[kCGImagePropertyExifDateTimeOriginal] as? String
+        else { return nil }
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = timeZone
+        formatter.dateFormat = "yyyy:MM:dd HH:mm:ss"
+        return formatter.date(from: text)
+    }
 }

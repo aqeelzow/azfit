@@ -299,6 +299,14 @@ extension Meal {
         default: "Snack"
         }
     }
+
+    /// The same food logged again now, as a new row: one-tap repeat logging. The estimate's range comes along; the
+    /// barcode, favorite flag and removal don't.
+    public func again(day: String, at: Date = .now) -> Meal {
+        Meal(
+            day: day, at: at, name: name, kcal: kcal, kcalLow: kcalLow, kcalHigh: kcalHigh, proteinG: proteinG, carbsG: carbsG,
+            fatG: fatG, source: .favorite)
+    }
 }
 
 public struct WeighIn: Codable, Sendable, Equatable, Identifiable {

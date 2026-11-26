@@ -99,7 +99,9 @@ extension AZStore {
         let recent = order.compactMap { byName[$0] }
         return Array(
             recent.enumerated().sorted { a, b in
-                (a.element.times, a.element.meal.isFavorite ? 1 : 0, -a.offset) > (b.element.times, b.element.meal.isFavorite ? 1 : 0, -b.offset)
+                (a.element.times, a.element.meal.isFavorite ? 1 : 0, -a.offset) > (
+                    b.element.times, b.element.meal.isFavorite ? 1 : 0, -b.offset
+                )
             }
             .map(\.element)
             .prefix(limit))

@@ -90,7 +90,8 @@ private func time(_ seconds: TimeInterval) -> Date { Date(timeIntervalSince1970:
         let push = try #require(try store.plan().first { $0.session.name == "Push" }?.session)
         for (day, load) in [("2026-11-16", 80.0), ("2026-11-23", 85.0)] {
             let workout = try store.startWorkout(push, today: day)
-            try store.logSet(LoggedSet(workoutID: workout.id, exerciseID: "barbell_bench_press", position: 0, loadKg: load, reps: 8, rir: 2))
+            try store.logSet(
+                LoggedSet(workoutID: workout.id, exerciseID: "barbell_bench_press", position: 0, loadKg: load, reps: 8, rir: 2))
             try store.logSet(
                 LoggedSet(workoutID: workout.id, exerciseID: "barbell_bench_press", position: 1, loadKg: load - 10, reps: 8, rir: 2))
         }

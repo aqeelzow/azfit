@@ -103,7 +103,20 @@ struct EatView: View {
             Text(Int(meal.kcal.rounded()).grouped).font(.az(16, .bold)).monospacedDigit()
         }
         .frame(minHeight: 64)
+        .contentShape(.rect)
+        .contextMenu {
+            Button("Log again", systemImage: "arrow.clockwise") { change { try $0.logMeal(meal.again(day: environment.today)) } }
+            Button("Remove", systemImage: "trash", role: .destructive) { change { try $0.removeMeal(meal.id) } }
+        }
         .accessibilityElement(children: .combine)
+        .accessibilityAction(named: "Log again") { change { try $0.logMeal(meal.again(day: environment.today)) } }
+        .accessibilityAction(named: "Remove") { change { try $0.removeMeal(meal.id) } }
+    }
+
+    /// A write to today's log. Removing keeps the row (never delete what the person logged).
+    private func change(_ write: (AZStore) throws -> Void) {
+        guard (try? write(environment.store)) != nil else { return }
+        withAnimation(.snappy(duration: 0.2)) { environment.changed() }
     }
 
     private func icon(_ source: Meal.Source) -> String {

@@ -60,6 +60,27 @@ import Testing
 }
 
 @Suite struct LibraryTests {
+    @Test func groupsAnExerciseByItsMainMuscle() throws {
+        let library = Library.standard
+        #expect(library.group(of: try #require(library.exercise("overhead_press")))?.name == "Shoulders")
+        #expect(library.group(of: try #require(library.exercise("barbell_bench_press")))?.name == "Chest")
+        #expect(try #require(library.exercise("barbell_bench_press")).equipmentName == "Barbell")
+        #expect(try #require(library.exercises.first { $0.equipment == "ez_bar" }).equipmentName == "EZ bar")
+    }
+
+    @Test func alternativesShareTheMainMusclesClosestFirst() throws {
+        let library = Library.standard
+        let bench = try #require(library.exercise("barbell_bench_press"))
+        let alternatives = library.alternatives(to: bench)
+        #expect(!alternatives.contains { $0.id == bench.id })
+        #expect(alternatives.allSatisfy { $0.muscles["lower_chest"] == 1 })
+        // Same muscles, same shares: the dumbbell and Smith versions come before the machine press, which skips upper chest.
+        let ids = alternatives.map(\.id)
+        let dumbbell = try #require(ids.firstIndex(of: "dumbbell_bench_press"))
+        let machine = try #require(ids.firstIndex(of: "machine_chest_press"))
+        #expect(dumbbell < machine)
+    }
+
     @Test func everyExerciseNamesRealMusclesAndEveryMuscleHasAGroup() {
         let library = Library.standard
         let muscles = Set(library.muscles.map(\.id))
@@ -135,6 +156,19 @@ import Testing
         #expect(Meal.mealTime(at: at(16), calendar: calendar) == "Snack")
         #expect(Meal.mealTime(at: at(19), calendar: calendar) == "Dinner")
         #expect(Meal.mealTime(at: at(23), calendar: calendar) == "Snack")
+    }
+
+    @Test func loggingAMealAgainMakesANewRow() {
+        let first = Meal(
+            day: "2026-11-24", name: "Chicken bowl", kcal: 640, kcalLow: 560, kcalHigh: 720, proteinG: 48, carbsG: 62, fatG: 18,
+            source: .photo, barcode: "123", isFavorite: true, removed: true)
+        let again = first.again(day: "2026-11-25", at: Date(timeIntervalSince1970: 0))
+        #expect(again.id != first.id)
+        #expect(again.day == "2026-11-25")
+        #expect(again.at == Date(timeIntervalSince1970: 0))
+        #expect(again.name == first.name && again.kcal == 640 && again.kcalLow == 560 && again.kcalHigh == 720)
+        #expect(again.proteinG == 48 && again.carbsG == 62 && again.fatG == 18)
+        #expect(again.source == .favorite && again.barcode == nil && !again.isFavorite && !again.removed)
     }
 }
 

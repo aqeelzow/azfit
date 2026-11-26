@@ -32,6 +32,28 @@ public struct Library: Codable, Sendable, Equatable {
         exercises.filter { $0.muscles[muscle] == 1 }
     }
 
+    /// The group an exercise is listed under: its main muscle's.
+    public func group(of exercise: Exercise) -> MuscleGroup? {
+        let order = Dictionary(muscles.enumerated().map { ($1.id, $0) }, uniquingKeysWith: { first, _ in first })
+        let main = exercise.muscles.min { a, b in (-a.value, order[a.key] ?? .max) < (-b.value, order[b.key] ?? .max) }
+        return main.flatMap { muscle($0.key) }.flatMap { group($0.group) }
+    }
+
+    /// Exercises to swap `exercise` for: ones whose main muscles it also trains, the closest match first (the most
+    /// set credit in common, then the most similar fatigue).
+    public func alternatives(to exercise: Exercise) -> [Exercise] {
+        func overlap(_ other: Exercise) -> Double {
+            exercise.muscles.reduce(0) { total, muscle in total + min(muscle.value, other.muscles[muscle.key] ?? 0) }
+        }
+        let main = Set(exercise.primaryMuscles)
+        return exercises.filter { $0.id != exercise.id && !main.isDisjoint(with: $0.primaryMuscles) }
+            .sorted { a, b in
+                (-overlap(a), abs(a.fatigueCost - exercise.fatigueCost), a.name) < (
+                    -overlap(b), abs(b.fatigueCost - exercise.fatigueCost), b.name
+                )
+            }
+    }
+
     private var exercisesByID: [String: Exercise] {
         Dictionary(exercises.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
     }
@@ -72,4 +94,14 @@ public struct Exercise: Codable, Sendable, Equatable, Identifiable {
 
     /// The muscles that get a full set.
     public var primaryMuscles: [String] { muscles.filter { $0.value >= 1 }.keys.sorted() }
+
+    /// "Barbell", "EZ bar", "Bodyweight".
+    public var equipmentName: String {
+        switch equipment {
+        case "ez_bar": "EZ bar"
+        case "trap_bar": "Trap bar"
+        case "smith": "Smith machine"
+        default: equipment.prefix(1).uppercased() + equipment.dropFirst().replacingOccurrences(of: "_", with: " ")
+        }
+    }
 }

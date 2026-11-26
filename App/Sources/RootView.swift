@@ -66,15 +66,17 @@ struct MainView: View {
         switch route {
         case .workout: WorkoutView()
         case .workoutDone: WorkoutDoneView()
-        case .swapExercise: SwapExerciseView()
-        case .exercise: ExerciseView()
+        case .swapExercise(let exerciseID): SwapExerciseView(replacing: exerciseID)
+        case .exercise(let exerciseID): ExerciseView(exerciseID: exerciseID)
         case .chat: DivChatView()
         case .divLog: DivLogView()
         case .memory: MemoryView()
         case .connectMac: ConnectMacView()
-        case .meal: MealView()
+        case .describeMeal: DescribeMealView()
+        case .mealEstimate(let photo): MealView(photo: photo)
         case .calorieTarget: CalorieTargetView()
-        case .scanResult: ScanResultView()
+        case .weighIn: WeighInView()
+        case .measurements: ScanResultView()
         case .progress: BodyProgressView()
         }
     }

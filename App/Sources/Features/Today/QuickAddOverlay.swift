@@ -1,9 +1,12 @@
+import AZModel
+import AZStore
 import SwiftUI
 
-/// The panel behind the purple plus: Div's suggested log on top, then six ways to log.
+/// The panel behind the purple plus: the meal you log most, one tap away, then six ways to log.
 /// Design: design/source/src/QuickAdd.html
 struct QuickAddOverlay: View {
     @Bindable var router: Router
+    @Environment(AppEnvironment.self) private var environment
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -18,26 +21,40 @@ struct QuickAddOverlay: View {
     }
 
     private var panel: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        let usual = try? environment.store.recentMeals(limit: 1).first
+        let session = try? environment.store.todaySession(today: environment.today)
+        return VStack(alignment: .leading, spacing: 0) {
             Capsule().fill(AZColor.track).frame(width: 40, height: 5).frame(maxWidth: .infinity).padding(.top, 8)
             Text("What are we logging?")
                 .font(.az(24, .heavy)).tracking(-0.48)
                 .padding(.top, 19).padding(.horizontal, 4)
-            Button {
-                router.present(.snap)
-            } label: {
-                DivNote(title: "Log Thursday's dinner?", message: "You logged about half your usual.", actionsOnRight: true) {
-                    Image(systemName: "chevron.right").font(.system(size: 15, weight: .semibold)).foregroundStyle(AZColor.divMuted)
+            if let usual {
+                Button {
+                    logAgain(usual.meal)
+                } label: {
+                    DivNote(
+                        title: "Log \(usual.meal.name) again?",
+                        message:
+                            "\(Int(usual.meal.kcal.rounded()).grouped) kcal, the way you logged it \(usual.times == 1 ? "last time" : "\(usual.times) times").",
+                        actionsOnRight: true
+                    ) {
+                        Image(systemName: "plus").font(.system(size: 15, weight: .semibold)).foregroundStyle(AZColor.divMuted)
+                    }
                 }
+                .buttonStyle(.plain)
+                .accessibilityHint("Adds it to today")
+                .padding(.top, 22)
             }
-            .buttonStyle(.plain)
-            .padding(.top, 22)
             LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
                 option("Snap a meal", "camera", isDiv: true) { router.present(.snap) }
-                option("Describe food", "text.alignleft") { router.push(.meal) }
+                option("Describe food", "text.alignleft") { router.push(.describeMeal) }
                 option("Say it", "mic") { router.present(.voice) }
-                option("Start Push A", "dumbbell") { router.push(.workout) }
-                option("Weigh in", "scalemass") { router.push(.progress) }
+                if let session {
+                    option("Start \(session.session.name)", "dumbbell") { router.push(.workout) }
+                } else {
+                    option("Exercises", "dumbbell") { router.push(.swapExercise(nil)) }
+                }
+                option("Weigh in", "scalemass") { router.push(.weighIn) }
                 Button {
                     router.push(.chat)
                 } label: {
@@ -46,13 +63,23 @@ struct QuickAddOverlay: View {
                 .buttonStyle(.plain)
             }
             .padding(.top, 14)
-            Spacer(minLength: 0)
         }
         .padding(.horizontal, 20)
+        // Clear of the tab bar, which sits on top of this panel.
+        .padding(.bottom, TabBar.height - 34 + 14)
         .frame(maxWidth: .infinity)
-        .frame(height: 544, alignment: .top)
-        .background(AZColor.background, in: UnevenRoundedRectangle(topLeadingRadius: 36, topTrailingRadius: 36, style: .continuous))
-        .ignoresSafeArea(edges: .bottom)
+        .background {
+            UnevenRoundedRectangle(topLeadingRadius: 36, topTrailingRadius: 36, style: .continuous)
+                .fill(AZColor.background)
+                .ignoresSafeArea(edges: .bottom)
+        }
+    }
+
+    /// One tap: the same meal, now, on today.
+    private func logAgain(_ meal: Meal) {
+        guard (try? environment.store.logMeal(meal.again(day: environment.today))) != nil else { return }
+        environment.changed()
+        router.show(.eat)
     }
 
     private func option(_ title: String, _ systemImage: String, isDiv: Bool = false, action: @escaping () -> Void) -> some View {

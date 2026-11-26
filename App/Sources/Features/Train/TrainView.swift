@@ -20,7 +20,7 @@ struct TrainView: View {
                 HStack {
                     LargeTitle(caption: caption(week), title: "This week")
                     Spacer()
-                    IconButton(systemImage: "magnifyingglass", label: "Exercise library") { router.push(.swapExercise) }
+                    IconButton(systemImage: "magnifyingglass", label: "Exercise library") { router.push(.swapExercise(nil)) }
                 }
                 WeekStrip(week).padding(.top, 16)
                 if let todaySession {
@@ -76,27 +76,37 @@ struct TrainView: View {
         .frame(minHeight: 64)
     }
 
+    /// The header starts the workout; each line opens its exercise.
     private func todayCard(_ session: SessionPreview) -> some View {
-        Button {
-            router.push(.workout)
-        } label: {
-            VStack(alignment: .leading, spacing: 0) {
-                HStack {
-                    Text("Today · \(session.minutes) min").font(.az(14, .semibold)).foregroundStyle(AZColor.divInk)
-                    Spacer()
-                    HStack(spacing: 6) {
-                        Image(systemName: "play.fill").font(.system(size: 11))
-                        Text("Start")
+        VStack(alignment: .leading, spacing: 0) {
+            Button {
+                router.push(.workout)
+            } label: {
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack {
+                        Text("Today · \(session.minutes) min").font(.az(14, .semibold)).foregroundStyle(AZColor.divInk)
+                        Spacer()
+                        HStack(spacing: 6) {
+                            Image(systemName: "play.fill").font(.system(size: 11))
+                            Text("Start")
+                        }
+                        .font(.az(14, .bold))
+                        .foregroundStyle(AZColor.buttonInk)
+                        .padding(.horizontal, 14)
+                        .frame(height: 36)
+                        .background(AZColor.button, in: .capsule)
                     }
-                    .font(.az(14, .bold))
-                    .foregroundStyle(AZColor.buttonInk)
-                    .padding(.horizontal, 14)
-                    .frame(height: 36)
-                    .background(AZColor.button, in: .capsule)
+                    Text(session.session.name).font(.az(30, .heavy)).tracking(-0.9)
                 }
-                Text(session.session.name).font(.az(30, .heavy)).tracking(-0.9).padding(.top, 2)
-                VStack(spacing: 0) {
-                    ForEach(session.lines, id: \.exerciseID) { line in
+                .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Start \(session.session.name)")
+            VStack(spacing: 0) {
+                ForEach(session.lines, id: \.exerciseID) { line in
+                    Button {
+                        router.push(.exercise(line.exerciseID))
+                    } label: {
                         self.line(sets: line.prescription) {
                             HStack(spacing: 5) {
                                 Text(line.name).lineLimit(1)
@@ -106,17 +116,17 @@ struct TrainView: View {
                                 }
                             }
                         }
+                        .contentShape(.rect)
                     }
+                    .buttonStyle(.plain)
                 }
-                .font(.az(14.5))
-                .padding(.top, 10)
             }
-            .padding(EdgeInsets(top: 20, leading: 22, bottom: 20, trailing: 22))
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(AZColor.divTint, in: .rect(cornerRadius: 28, style: .continuous))
-            .contentShape(.rect)
+            .font(.az(14.5))
+            .padding(.top, 10)
         }
-        .buttonStyle(.plain)
+        .padding(EdgeInsets(top: 20, leading: 22, bottom: 20, trailing: 22))
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(AZColor.divTint, in: .rect(cornerRadius: 28, style: .continuous))
     }
 
     private func line<Name: View>(sets: String, @ViewBuilder _ name: () -> Name) -> some View {

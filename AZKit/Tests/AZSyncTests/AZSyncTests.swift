@@ -61,7 +61,8 @@ import UniformTypeIdentifiers
         let photo = try DivJSON.string(Job.estimateMeal(MealPhotoRequest(photo: Data(), mediaType: .jpeg)), pretty: false)
         #expect(photo.contains(#""kind":"estimate_meal""#) && photo.contains(#""estimate_meal":{"#))
         let estimated = try DivJSON.string(
-            Outcome.mealEstimated(MealEstimateReply(estimate: Self.estimate, totals: MealTotals(kcal: 1, proteinG: 0, carbsG: 0, fatG: 0, grams: 0))),
+            Outcome.mealEstimated(
+                MealEstimateReply(estimate: Self.estimate, totals: MealTotals(kcal: 1, proteinG: 0, carbsG: 0, fatG: 0, grams: 0))),
             pretty: false)
         #expect(estimated.contains(#""kind":"meal_estimated""#) && estimated.contains(#""meal_estimated":{"#))
     }
@@ -192,7 +193,7 @@ import UniformTypeIdentifiers
 
 @Suite struct PhotoPrepTests {
     /// A 3000 by 2000 PNG, like a big photo from the library.
-    private func bigPNG() throws -> Data {
+    private func bigPNG(exif: [CFString: Any]? = nil, type: UTType = .png) throws -> Data {
         let context = try #require(
             CGContext(
                 data: nil, width: 3000, height: 2000, bitsPerComponent: 8, bytesPerRow: 0, space: CGColorSpaceCreateDeviceRGB(),
@@ -201,8 +202,9 @@ import UniformTypeIdentifiers
         context.fill(CGRect(x: 0, y: 0, width: 3000, height: 2000))
         let image = try #require(context.makeImage())
         let out = NSMutableData()
-        let destination = try #require(CGImageDestinationCreateWithData(out, UTType.png.identifier as CFString, 1, nil))
-        CGImageDestinationAddImage(destination, image, nil)
+        let destination = try #require(CGImageDestinationCreateWithData(out, type.identifier as CFString, 1, nil))
+        let properties = exif.map { [kCGImagePropertyExifDictionary: $0] as CFDictionary }
+        CGImageDestinationAddImage(destination, image, properties)
         #expect(CGImageDestinationFinalize(destination))
         return out as Data
     }
@@ -217,5 +219,13 @@ import UniformTypeIdentifiers
 
     @Test func refusesWhatIsntAnImage() {
         #expect(PhotoPrep.jpeg(from: Data("not a photo".utf8)) == nil)
+        #expect(PhotoPrep.takenAt(Data("not a photo".utf8)) == nil)
+    }
+
+    @Test func readsWhenALibraryPhotoWasTaken() throws {
+        let utc = try #require(TimeZone(identifier: "UTC"))
+        let photo = try bigPNG(exif: [kCGImagePropertyExifDateTimeOriginal: "2026:11:19 19:42:05"], type: .jpeg)
+        #expect(PhotoPrep.takenAt(photo, timeZone: utc) == Date(timeIntervalSince1970: 1_795_117_325))
+        #expect(PhotoPrep.takenAt(try bigPNG()) == nil)
     }
 }
