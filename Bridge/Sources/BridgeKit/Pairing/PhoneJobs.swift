@@ -44,6 +44,33 @@ public struct PhoneJobs: Sendable {
                 return .synced(
                     SyncPull(batch: try store.changes(after: push.since), received: try store.receivedSeq(from: Self.phonePeer)))
 
+            case .sessionReview(let review):
+                guard let person = request.person else { return .failed("Finish setting up AZfit first.") }
+                let store = try people.store(for: person)
+                guard let report = try store.sessionReport(review.workoutID) else {
+                    return .failed("There's nothing logged in that workout to review.")
+                }
+                var div = try div()
+                div.autonomy = try store.profile()?.autonomy ?? .standard
+                let result = try await div.sessionReview(report)
+                onRun("session_review", result.run)
+                let saved = try store.saveSessionReview(
+                    review.workoutID, note: result.output.note, nextTime: result.checked, report: report, today: today())
+                return .sessionReviewed(
+                    SessionReviewReply(
+                        note: result.output.note, applied: saved.filter { $0.status == .applied }.count,
+                        proposed: saved.filter { $0.status == .proposed }.count))
+
+            case .estimateMeal(let photo):
+                let result = try await div().estimateMeal(photo)
+                onRun("estimate_meal", result.run)
+                return .mealEstimated(MealEstimateReply(estimate: result.estimate, totals: result.totals, warnings: result.warnings))
+
+            case .reviseMeal(let revision):
+                let result = try await div().reviseMeal(revision)
+                onRun("revise_meal", result.run)
+                return .mealEstimated(MealEstimateReply(estimate: result.estimate, totals: result.totals, warnings: result.warnings))
+
             case .chat(let chat):
                 var div = try div()
                 let today = today()

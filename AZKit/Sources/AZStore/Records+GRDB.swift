@@ -33,6 +33,7 @@ extension WeighIn: StoredRecord { public static let databaseTableName = "weigh_i
 extension BodyMeasurement: StoredRecord { public static let databaseTableName = "body_measurement" }
 extension DivChange: StoredRecord { public static let databaseTableName = "div_change" }
 extension Memory: StoredRecord, PlanOrMemory { public static let databaseTableName = "memory" }
+extension WeekReview: StoredRecord { public static let databaseTableName = "week_review" }
 
 /// Swift property names to column names and back. "ID" is one word: `plannedSessionID` is `planned_session_id`.
 enum ColumnName {

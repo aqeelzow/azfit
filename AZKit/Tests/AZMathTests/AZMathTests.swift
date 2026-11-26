@@ -87,6 +87,16 @@ func session(_ name: String) throws -> SessionReport { try fixture("session-revi
         #expect(t.proteinG == 51)
         #expect(t.grams == 350)
     }
+
+    @Test func aTypedMealUsesItsCaloriesOrItsMacros() {
+        #expect(MealMath.typed(kcal: 450, proteinG: 30, carbsG: nil, fatG: nil)?.kcal == 450)
+        let fromMacros = MealMath.typed(kcal: nil, proteinG: 30, carbsG: 50, fatG: 10)
+        #expect(fromMacros?.kcal == 410)
+        #expect(fromMacros?.carbsG == 50)
+        #expect(MealMath.typed(kcal: nil, proteinG: nil, carbsG: nil, fatG: nil) == nil)
+        #expect(MealMath.typed(kcal: -5, proteinG: nil, carbsG: nil, fatG: nil) == nil)
+        #expect(MealMath.typed(kcal: 40_000, proteinG: nil, carbsG: nil, fatG: nil) == nil)
+    }
 }
 
 @Suite struct WeightTrendTests {

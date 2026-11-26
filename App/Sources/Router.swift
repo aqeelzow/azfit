@@ -1,3 +1,4 @@
+import Foundation
 import Observation
 import SwiftUI
 
@@ -9,10 +10,17 @@ final class Router {
 
     /// Screens pushed on top of the tabs.
     enum Route: Hashable {
-        case workout, workoutDone, swapExercise, exercise
+        case workout, workoutDone
+        /// The exercise library, or swapping the given exercise in the plan for another.
+        case swapExercise(String?)
+        /// One exercise, by its `Library` ID.
+        case exercise(String)
         case chat, divLog, memory, connectMac
-        case meal, calorieTarget
-        case scanResult, progress
+        /// Typing a meal in, and Div's estimate of a meal photo.
+        case describeMeal
+        case mealEstimate(MealPhoto)
+        case calorieTarget
+        case weighIn, measurements, progress
     }
 
     /// Full-screen, always-dark screens that slide up over everything.
@@ -36,7 +44,7 @@ final class Router {
         self.cover = cover
     }
 
-    /// Close the camera or voice screen, then go on to a pushed screen ("Use it" opens the estimate).
+    /// Close the camera or voice screen, then go on to a pushed screen (a photo opens its estimate).
     func dismissCover(thenPush route: Route? = nil) {
         cover = nil
         guard let route else { return }
@@ -49,4 +57,19 @@ final class Router {
         path = []
         self.tab = tab
     }
+
+    /// Back one screen.
+    func pop() {
+        if !path.isEmpty { path.removeLast() }
+    }
+}
+
+/// A meal photo on its way to Div: a JPEG ready to send (`PhotoPrep`). Compared by `id`, so routes stay cheap.
+struct MealPhoto: Hashable {
+    let id = UUID()
+    let jpeg: Data
+    let takenAt: Date
+
+    static func == (a: Self, b: Self) -> Bool { a.id == b.id }
+    func hash(into hasher: inout Hasher) { hasher.combine(id) }
 }

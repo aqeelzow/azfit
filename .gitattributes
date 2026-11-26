@@ -1,0 +1,3 @@
+# Keep generated design pages and HTML docs out of GitHub's language stats.
+design/** linguist-generated
+docs/*.html linguist-documentation

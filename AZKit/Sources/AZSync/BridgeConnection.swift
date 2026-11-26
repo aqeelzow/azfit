@@ -112,9 +112,14 @@ public final class BridgeConnection {
         if code != nil { state = .offline("Not connected.") }
     }
 
-    /// Asks Div something through the bridge. Syncs first, so Div reads the latest.
+    /// Asks Div something through the bridge. Syncs first, so Div reads the latest. A session review needs the workout
+    /// on the bridge, so it fails if that sync does.
     public func ask(_ job: Job) async throws -> Outcome {
-        if case .chat = job { try? await sync() }
+        switch job {
+        case .sync, .estimateMeal, .reviseMeal: break
+        case .sessionReview: try await sync()
+        case .chat: try? await sync()
+        }
         return try await send(job)
     }
 

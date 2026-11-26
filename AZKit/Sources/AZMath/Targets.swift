@@ -4,9 +4,16 @@ import AZModel
 /// After the first weeks the Sunday review recalibrates calories from the scale (D-010), so the start only has to be
 /// close.
 public enum Targets {
-    /// Resting energy, Mifflin-St Jeor: 10 × kg + 6.25 × cm - 5 × age, +5 for men, -161 for women.
-    public static func bmr(sex: Sex, weightKg: Double, heightCm: Double, age: Int) -> Double {
-        10 * weightKg + 6.25 * heightCm - 5 * Double(age) + (sex == .male ? 5 : -161)
+    /// Resting energy, Mifflin-St Jeor: 10 × kg + 6.25 × cm - 5 × age, +5 for men, -161 for women, and the
+    /// midpoint (-78) when sex isn't given.
+    public static func bmr(sex: Sex?, weightKg: Double, heightCm: Double, age: Int) -> Double {
+        let constant: Double =
+            switch sex {
+            case .male: 5
+            case .female: -161
+            case nil: -78
+            }
+        return 10 * weightKg + 6.25 * heightCm - 5 * Double(age) + constant
     }
 
     /// The person's floor: their BMR rounded up to 50, and never under 1,200. Proposed formula, D-017.
@@ -21,7 +28,7 @@ public enum Targets {
     /// A first calorie target: BMR × 1.5 (lightly active plus training), then the goal's pace
     /// (7,700 kcal per kg of weight change), rounded to 50 and kept above the floor.
     public static func startingCalories(
-        sex: Sex, weightKg: Double, heightCm: Double, age: Int, goal: Goal, ratePctPerWeek: Double
+        sex: Sex?, weightKg: Double, heightCm: Double, age: Int, goal: Goal, ratePctPerWeek: Double
     )
         -> Int
     {
@@ -29,6 +36,20 @@ public enum Targets {
         let dailyChange = weightKg * ratePctPerWeek / 100 * 7_700 / 7
         let target = Int(((maintenance + dailyChange) / 50).rounded()) * 50
         return max(target, calorieFloor(sex: sex, weightKg: weightKg, heightCm: heightCm, age: age))
+    }
+
+    /// Daily grams for the three macros: protein from g per kg, fat at 25% of calories, carbs the rest.
+    public static func macroGrams(
+        kcal: Int, proteinGPerKg: Double, weightKg: Double
+    )
+        -> (protein: Int, carbs: Int, fat: Int)
+    {
+        let protein = proteinGPerKg * weightKg
+        let fat = Double(kcal) * 0.25 / MealMath.kcalPerGram.fat
+        let carbs =
+            max(0, Double(kcal) - protein * MealMath.kcalPerGram.protein - fat * MealMath.kcalPerGram.fat)
+            / MealMath.kcalPerGram.carbs
+        return (Int(protein.rounded()), Int(carbs.rounded()), Int(fat.rounded()))
     }
 
     /// The middle of the goal's protein range, in g per kg.

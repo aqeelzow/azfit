@@ -60,6 +60,27 @@ import Testing
 }
 
 @Suite struct LibraryTests {
+    @Test func groupsAnExerciseByItsMainMuscle() throws {
+        let library = Library.standard
+        #expect(library.group(of: try #require(library.exercise("overhead_press")))?.name == "Shoulders")
+        #expect(library.group(of: try #require(library.exercise("barbell_bench_press")))?.name == "Chest")
+        #expect(try #require(library.exercise("barbell_bench_press")).equipmentName == "Barbell")
+        #expect(try #require(library.exercises.first { $0.equipment == "ez_bar" }).equipmentName == "EZ bar")
+    }
+
+    @Test func alternativesShareTheMainMusclesClosestFirst() throws {
+        let library = Library.standard
+        let bench = try #require(library.exercise("barbell_bench_press"))
+        let alternatives = library.alternatives(to: bench)
+        #expect(!alternatives.contains { $0.id == bench.id })
+        #expect(alternatives.allSatisfy { $0.muscles["lower_chest"] == 1 })
+        // Same muscles, same shares: the dumbbell and Smith versions come before the machine press, which skips upper chest.
+        let ids = alternatives.map(\.id)
+        let dumbbell = try #require(ids.firstIndex(of: "dumbbell_bench_press"))
+        let machine = try #require(ids.firstIndex(of: "machine_chest_press"))
+        #expect(dumbbell < machine)
+    }
+
     @Test func everyExerciseNamesRealMusclesAndEveryMuscleHasAGroup() {
         let library = Library.standard
         let muscles = Set(library.muscles.map(\.id))
@@ -106,6 +127,48 @@ import Testing
         #expect(UnitSystem.british.loadKg(100) == 100)
         #expect(abs(UnitSystem.bodyWeightKg(stone: 12, pounds: 8) - 79.83) < 0.01)
         #expect(abs(UnitSystem.heightCm(feet: 5, inches: 11) - 180.34) < 0.01)
+    }
+
+    @Test func weighInFieldsRoundTrip() throws {
+        #expect(UnitSystem.canadian.bodyWeightFields(80).main == "176.4")
+        #expect(UnitSystem.british.bodyWeightFields(80) == ("12", "8.4"))
+        #expect(abs(try #require(UnitSystem.american.bodyWeightKg(typed: "176,4")) - 80.01) < 0.01)
+        #expect(abs(try #require(UnitSystem.british.bodyWeightKg(typed: "12", pounds: "8.4")) - 80) < 0.05)
+        #expect(abs(try #require(UnitSystem.british.bodyWeightKg(typed: "12")) - 76.2) < 0.01)
+    }
+
+    @Test func weighInFieldsRefuseTypos() {
+        #expect(UnitSystem.canadian.bodyWeightKg(typed: "") == nil)
+        #expect(UnitSystem.canadian.bodyWeightKg(typed: "abc") == nil)
+        #expect(UnitSystem.canadian.bodyWeightKg(typed: "1760") == nil)
+        #expect(UnitSystem.british.bodyWeightKg(typed: "12.5", pounds: "2") == nil)
+        #expect(UnitSystem.british.bodyWeightKg(typed: "12", pounds: "15") == nil)
+    }
+}
+
+@Suite struct MealTimeTests {
+    @Test func namesTheMealByTheHour() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try #require(TimeZone(identifier: "UTC"))
+        func at(_ hour: Int) -> Date { Date(timeIntervalSince1970: TimeInterval(hour * 3600)) }
+        #expect(Meal.mealTime(at: at(8), calendar: calendar) == "Breakfast")
+        #expect(Meal.mealTime(at: at(13), calendar: calendar) == "Lunch")
+        #expect(Meal.mealTime(at: at(16), calendar: calendar) == "Snack")
+        #expect(Meal.mealTime(at: at(19), calendar: calendar) == "Dinner")
+        #expect(Meal.mealTime(at: at(23), calendar: calendar) == "Snack")
+    }
+
+    @Test func loggingAMealAgainMakesANewRow() {
+        let first = Meal(
+            day: "2026-11-24", name: "Chicken bowl", kcal: 640, kcalLow: 560, kcalHigh: 720, proteinG: 48, carbsG: 62, fatG: 18,
+            source: .photo, barcode: "123", isFavorite: true, removed: true)
+        let again = first.again(day: "2026-11-25", at: Date(timeIntervalSince1970: 0))
+        #expect(again.id != first.id)
+        #expect(again.day == "2026-11-25")
+        #expect(again.at == Date(timeIntervalSince1970: 0))
+        #expect(again.name == first.name && again.kcal == 640 && again.kcalLow == 560 && again.kcalHigh == 720)
+        #expect(again.proteinG == 48 && again.carbsG == 62 && again.fatG == 18)
+        #expect(again.source == .favorite && again.barcode == nil && !again.isFavorite && !again.removed)
     }
 }
 

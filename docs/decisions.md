@@ -194,6 +194,24 @@ Tried by hand on 2026-11-22; the answer is in `structured_output` of the JSON en
 ### D-028 Plans start from a template
 **Accepted** (Aqeel, 2026-11-25). Onboarding picks a template from the goal and training days (for example Upper/Lower for 4 days). Div can change it afterwards through the usual changes and policy.
 
+### D-029 A starting target without sex
+**Accepted** (Aqeel, 2026-11-25). Onboarding doesn't require sex. When it's missing, the starting calorie target uses Mifflin-St Jeor with the midpoint of the male and female constants (-78), so everyone who gives height, age and weight gets a target. The floor stays at 1,200 (D-017). The Sunday review corrects the start from the scale either way (D-010).
+
+### D-030 Div reviews every finished workout
+**Accepted** (Aqeel, 2026-11-25). Finish asks the bridge for a session review once the workout has synced. The bridge builds the `SessionReport` from its copy of the data (prescription from the plan, sets as logged, best e1RM from earlier sessions), Div writes a note and next time's loads, and `SessionPolicy` decides each load as usual. The note is saved on the workout (`div_note`) and shows on Home. A workout's first review sets any missing planned load to what was lifted, so loads start from reality. Sets logged without RIR count as RIR 2 until the workout screen asks for it. If the Mac is away, the review runs when it's back; each workout is tried once per app launch so a failing review can't keep spending the person's Claude usage.
+
+### D-031 The bridge runs the Sunday review on its own
+**Accepted** (Aqeel, 2026-11-25). From 6 pm Sunday until the end of Tuesday the bridge reviews every person whose week has no review yet, checking at launch and hourly, so a Mac asleep on Sunday catches up. People who joined less than 7 days before that Sunday are skipped. The summary and questions are saved as a `week_review` row and show in Div's log; changes go through `ChangePolicy` as `DivChange`s. Until the phone can mark a day as everything eaten, a food day counts as complete at 60% of the target or more. Recovery (sleep, HRV, steps) is left out until Health is read, so Div won't deload on recovery grounds. `div weekly` runs it on demand.
+
+### D-032 Meals, weigh-ins and the person's own changes are logged on the phone
+**Proposed** (bridge PR, 2026-11-25).
+- **Photo estimates.** A meal photo is shrunk on the phone (`PhotoPrep`) and sent to the bridge as `estimateMeal`, along with the meal's time and the person's recent meals so Div can match a usual. A follow-up answer goes as `reviseMeal`, and a weight on the scale as a second `estimateMeal` with `foodWeightG`. The bridge saves nothing. The phone logs the meal only when the person taps Log, with code-computed totals and the estimate's range. A library photo keeps the time it was taken (EXIF), so a late log lands on the right day.
+- **Typed meals and repeats.** A typed meal is checked by `MealMath.typed`. "Log again" (Quick add and Eat) makes a new row from an earlier meal (`Meal.again`), source `favorite`. Removing a meal sets `removed`; the row stays.
+- **Weigh-ins and measurements.** These are saved as entered, metric, from the person's units. Implausible values are refused, not clamped.
+- **The person's own swaps.** These change the plan for good with no `DivChange`, because the person made them. Swapping back clears `swapped_from`. Div's swaps keep their reason and Undo on the exercise screen.
+- **Autonomy switches.** Div's memory screen saves these to `Profile.autonomy` (D-009, D-012). Calories always ask, and filling in unlogged food is never allowed. A memory the person forgets is deleted, because memories are Div's notes and not the person's logs.
+- **Body scan.** The scan screen stays a still frame until LiDAR is built (open question 3). Measurements come from the tape.
+
 ## Open questions
 
 1. Bridge distribution: notarized download, or Mac App Store (sandboxing conflicts with running `claude`, so probably download).

@@ -1,33 +1,32 @@
+import AZModel
+import AZStore
 import SwiftUI
 
-/// Eat: calories left against Div's target, macros as bars, Div's question about a missing meal, and today's meals.
+/// Eat: calories left against the target, macros as bars, and today's meals.
 /// Design: design/source/src/Eat.html
 struct EatView: View {
     @Environment(Router.self) private var router
+    @Environment(AppEnvironment.self) private var environment
 
     var body: some View {
+        let food = try? environment.store.food(on: environment.today)
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 HStack(alignment: .bottom) {
-                    LargeTitle(caption: "Saturday, Nov 21", title: "Eat")
+                    LargeTitle(caption: AppEnvironment.caption(environment.today), title: "Eat")
                     Spacer()
                     IconButton(systemImage: "target", label: "Calorie target") { router.push(.calorieTarget) }
                 }
-                summary.padding(.top, 16)
-                DivNote(
-                    title: "Did Thursday's dinner slip through?",
-                    message: "You logged 1,180 kcal, about half your usual, and your weight didn't move Friday.", tone: .settled
-                ) {
-                    PillButton(title: "Add it", style: .dark) { router.present(.snap) }
-                    PillButton(title: "No, that's right") {}
+                summary(food).padding(.top, 16)
+                if let meals = food?.meals, !meals.isEmpty {
+                    HairlineStack {
+                        ForEach(meals) { meal($0) }
+                    }
+                    .padding(.top, 8)
+                } else {
+                    Text("Nothing logged yet today. Tap + to add a meal.")
+                        .font(.az(15)).foregroundStyle(AZColor.muted).padding(.top, 20)
                 }
-                .padding(.top, 16)
-                HairlineStack {
-                    meal("yogurt", "Greek yogurt", "Breakfast · 8:05", 380)
-                    meal("salmon", "Salmon power bowl", "Lunch · 1:12 · estimate ±18%", 640)
-                    meal("fruit", "Fruit bowl", "Snack · 4:30", 220)
-                }
-                .padding(.top, 8)
             }
             .padding(.horizontal, AZSpacing.gutter)
             .padding(.top, 12)
@@ -36,23 +35,27 @@ struct EatView: View {
         .scrollIndicators(.hidden)
     }
 
-    private var summary: some View {
+    private func summary(_ food: FoodSummary?) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("1,110").font(.az(52, .heavy)).tracking(-2).monospacedDigit()
+            Text(food?.leftKcal?.grouped ?? "-").font(.az(52, .heavy)).tracking(-2).monospacedDigit()
             Button {
                 router.push(.calorieTarget)
             } label: {
                 HStack(spacing: 4) {
-                    Text("kcal left of").foregroundStyle(AZColor.divMuted)
-                    Text("2,350").fontWeight(.bold).monospacedDigit()
-                    DivMark().padding(.leading, 1)
+                    if let target = food?.targetKcal {
+                        Text("kcal left of").foregroundStyle(AZColor.divMuted)
+                        Text(target.grouped).fontWeight(.bold).monospacedDigit()
+                        if food?.targetByDiv == true { DivMark().padding(.leading, 1) }
+                    } else {
+                        Text("No calorie target yet").foregroundStyle(AZColor.divMuted)
+                    }
                 }
                 .font(.az(15))
             }
             .buttonStyle(.plain)
             GeometryReader { geo in
                 HStack(spacing: 3) {
-                    Capsule().fill(AZColor.accent).frame(width: (geo.size.width - 3) * 0.53)
+                    Capsule().fill(AZColor.accent).frame(width: (geo.size.width - 3) * (food?.fraction ?? 0))
                     Capsule().fill(AZColor.card)
                 }
             }
@@ -60,9 +63,9 @@ struct EatView: View {
             .padding(.top, 16)
             Spacer(minLength: 16)
             HStack(spacing: 18) {
-                macro("Protein", 112, of: 165, color: AZColor.accent)
-                macro("Carbs", 128, of: 250, color: AZColor.carbs)
-                macro("Fat", 41, of: 75, color: AZColor.fat)
+                macro("Protein", food?.eaten.protein ?? 0, of: food?.targets?.protein, color: AZColor.accent)
+                macro("Carbs", food?.eaten.carbs ?? 0, of: food?.targets?.carbs, color: AZColor.carbs)
+                macro("Fat", food?.eaten.fat ?? 0, of: food?.targets?.fat, color: AZColor.fat)
             }
         }
         .padding(EdgeInsets(top: 22, leading: 22, bottom: 20, trailing: 22))
@@ -71,40 +74,61 @@ struct EatView: View {
         .background(AZColor.divTint, in: .rect(cornerRadius: 32, style: .continuous))
     }
 
-    private func macro(_ name: String, _ value: Int, of target: Int, color: Color) -> some View {
+    private func macro(_ name: String, _ value: Int, of target: Int?, color: Color) -> some View {
         VStack(alignment: .leading, spacing: 5) {
             Text(name).font(.az(13, .semibold)).foregroundStyle(AZColor.divMuted)
             HStack(spacing: 0) {
                 Text("\(value)").fontWeight(.heavy)
-                Text("/\(target)g").fontWeight(.medium).foregroundStyle(AZColor.divMuted)
+                Text(target.map { "/\($0)g" } ?? "g").fontWeight(.medium).foregroundStyle(AZColor.divMuted)
             }
             .font(.az(16))
             .monospacedDigit()
-            MeterBar(value: Double(value) / Double(target), color: color, track: AZColor.card, height: 5)
+            MeterBar(value: target.map { Double(value) / Double(max($0, 1)) } ?? 0, color: color, track: AZColor.card, height: 5)
         }
         .frame(maxWidth: .infinity)
     }
 
-    private func meal(_ photo: String, _ name: String, _ detail: String, _ kcal: Int) -> some View {
-        Button {
-            router.push(.meal)
-        } label: {
-            HStack(spacing: 14) {
-                PhotoTile(name: photo)
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(name).font(.az(16, .bold))
-                    Text(detail).font(.az(14)).foregroundStyle(AZColor.muted)
-                }
-                Spacer(minLength: 0)
-                Text("\(kcal)").font(.az(16, .bold)).monospacedDigit()
-            }
-            .frame(minHeight: 64)
-            .contentShape(.rect)
+    private func meal(_ meal: Meal) -> some View {
+        var detail = meal.at.formatted(date: .omitted, time: .shortened)
+        if let low = meal.kcalLow, let high = meal.kcalHigh, meal.kcal > 0 {
+            detail += " · estimate ±\(Int(((high - low) / 2 / meal.kcal * 100).rounded()))%"
         }
-        .buttonStyle(.plain)
+        return HStack(spacing: 14) {
+            IconTile(systemImage: icon(meal.source), size: 48, foreground: AZColor.muted, background: AZColor.fill)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(meal.name).font(.az(16, .bold)).lineLimit(1)
+                Text(detail).font(.az(14)).foregroundStyle(AZColor.muted)
+            }
+            Spacer(minLength: 0)
+            Text(Int(meal.kcal.rounded()).grouped).font(.az(16, .bold)).monospacedDigit()
+        }
+        .frame(minHeight: 64)
+        .contentShape(.rect)
+        .contextMenu {
+            Button("Log again", systemImage: "arrow.clockwise") { change { try $0.logMeal(meal.again(day: environment.today)) } }
+            Button("Remove", systemImage: "trash", role: .destructive) { change { try $0.removeMeal(meal.id) } }
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityAction(named: "Log again") { change { try $0.logMeal(meal.again(day: environment.today)) } }
+        .accessibilityAction(named: "Remove") { change { try $0.removeMeal(meal.id) } }
+    }
+
+    /// A write to today's log. Removing keeps the row (never delete what the person logged).
+    private func change(_ write: (AZStore) throws -> Void) {
+        guard (try? write(environment.store)) != nil else { return }
+        withAnimation(.snappy(duration: 0.2)) { environment.changed() }
+    }
+
+    private func icon(_ source: Meal.Source) -> String {
+        switch source {
+        case .photo: "camera.fill"
+        case .barcode: "barcode"
+        case .typed: "text.cursor"
+        case .favorite: "star.fill"
+        }
     }
 }
 
 #Preview {
-    NavigationStack { EatView() }.environment(Router())
+    NavigationStack { EatView() }.environment(Router()).environment(AppEnvironment.preview())
 }

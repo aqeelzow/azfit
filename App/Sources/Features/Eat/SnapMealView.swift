@@ -1,42 +1,58 @@
+import AZModel
+import AZSync
+import PhotosUI
 import SwiftUI
 
-/// The meal camera: detected foods tagged on the photo, and Div's suggestion of a matching photo from your library
-/// for the meal you forgot to log. The prototype shows a still photo instead of the live camera.
-/// Design: design/source/src/Snap.html
+/// The meal camera: take a photo or pick one from the library, and Div estimates it on the Mac. Every photo is shrunk
+/// to a JPEG Claude reads whole (`PhotoPrep`) before it leaves the phone. Design: design/source/src/Snap.html
 struct SnapMealView: View {
     @Environment(Router.self) private var router
-    @State private var mode = "Photo"
+    @State private var camera = MealCamera()
+    @State private var problem: MealCamera.Problem?
+    @State private var isStarting = true
+    @State private var flash = false
+    @State private var isCapturing = false
+    @State private var isPicking = false
+    @State private var picked: PhotosPickerItem?
+    @State private var unreadable = false
 
     var body: some View {
-        GeometryReader { geo in
-            ZStack(alignment: .topLeading) {
-                Image("chicken")
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: geo.size.width, height: geo.size.height + geo.safeAreaInsets.top + geo.safeAreaInsets.bottom)
-                    .clipped()
-                    .accessibilityLabel("Grilled chicken breast with roasted zucchini, peppers and lemon")
+        ZStack {
+            AZColor.Camera.shade.ignoresSafeArea()
+            if problem == nil {
+                CameraPreview(session: camera.session).ignoresSafeArea()
+            }
+            VStack(spacing: 0) {
                 LinearGradient(
                     colors: [AZColor.Camera.shade.opacity(0.55), AZColor.Camera.shade.opacity(0)], startPoint: .top, endPoint: .bottom
                 )
                 .frame(height: 170)
-                VStack {
-                    Spacer()
-                    LinearGradient(
-                        stops: [
-                            .init(color: AZColor.Camera.shade.opacity(0), location: 0),
-                            .init(color: AZColor.Camera.shade.opacity(0.9), location: 0.5),
-                        ],
-                        startPoint: .top, endPoint: .bottom
-                    )
-                    .frame(height: 330)
-                }
+                Spacer()
+                LinearGradient(
+                    stops: [
+                        .init(color: AZColor.Camera.shade.opacity(0), location: 0),
+                        .init(color: AZColor.Camera.shade.opacity(0.9), location: 0.5),
+                    ],
+                    startPoint: .top, endPoint: .bottom
+                )
+                .frame(height: 330)
             }
             .ignoresSafeArea()
+            .allowsHitTesting(false)
         }
         .overlay { content }
         .environment(\.colorScheme, .dark)
-        .background(AZColor.Camera.shade)
+        .photosPicker(isPresented: $isPicking, selection: $picked, matching: .images, preferredItemEncoding: .compatible)
+        .onChange(of: picked) { _, item in
+            guard let item else { return }
+            picked = nil
+            Task { await usePicked(item) }
+        }
+        .task {
+            problem = await camera.start()
+            isStarting = false
+        }
+        .onDisappear { camera.stop() }
     }
 
     private var content: some View {
@@ -46,7 +62,7 @@ struct SnapMealView: View {
             } center: {
                 HStack(spacing: 7) {
                     Image(systemName: "calendar").font(.system(size: 13, weight: .semibold))
-                    Text("Adding to Thu, Nov 19 · dinner").font(.az(14, .semibold))
+                    Text("Adding to \(Self.dayLabel(.now)) · \(Meal.mealTime(at: .now).lowercased())").font(.az(14, .semibold))
                 }
                 .foregroundStyle(.white)
                 .padding(.leading, 12).padding(.trailing, 14)
@@ -54,57 +70,54 @@ struct SnapMealView: View {
                 .background(AZColor.Camera.scrim, in: .capsule)
                 .fixedSize()
             } trailing: {
-                glassButton("bolt", "Flash") {}
+                glassButton(flash ? "bolt.fill" : "bolt.slash", flash ? "Flash on" : "Flash off") { flash.toggle() }
+                    .opacity(problem == nil ? 1 : 0)
             }
 
-            viewfinder.padding(.top, 34)
+            Group {
+                if let problem {
+                    blocked(problem)
+                } else {
+                    Brackets().stroke(.white.opacity(0.9), style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                }
+            }
+            .frame(height: 364)
+            .padding(.horizontal, 28)
+            .padding(.top, 34)
 
             Spacer(minLength: 12)
 
-            HStack(spacing: 12) {
-                PhotoTile(name: "wrap", size: 44, radius: 12)
-                VStack(alignment: .leading, spacing: 0) {
-                    Text("Photo from Thu, 7:42 PM").font(.az(14.5, .bold)).foregroundStyle(.white)
-                    Text("Found in your library. Use this?").font(.az(13)).foregroundStyle(AZColor.Camera.muted)
-                }
-                Spacer(minLength: 0)
-                Button("Use it") { router.dismissCover(thenPush: .meal) }
-                    .font(.az(14, .bold))
-                    .foregroundStyle(AZColor.Camera.tagInk)
-                    .padding(.horizontal, 14).frame(height: 34)
-                    .background(.white, in: .capsule)
-                    .buttonStyle(.plain)
+            if unreadable {
+                Text("Couldn't read that photo. Try another one.")
+                    .font(.az(14, .semibold)).foregroundStyle(.white)
+                    .padding(.horizontal, 14).frame(height: 36)
+                    .background(AZColor.Camera.card, in: .capsule)
             }
-            .padding(10)
-            .background(AZColor.Camera.card, in: .rect(cornerRadius: 22, style: .continuous))
-            .padding(.horizontal, 16)
 
             HStack(spacing: 4) {
-                ForEach(["Barcode", "Photo", "Describe"], id: \.self) { name in
-                    Button(name) { mode = name }
-                        .font(.az(14, .semibold))
-                        .foregroundStyle(mode == name ? AZColor.Camera.tagInk : .white.opacity(0.62))
-                        .padding(.horizontal, 14).frame(height: 34)
-                        .background(mode == name ? Color.white : .clear, in: .capsule)
-                        .buttonStyle(.plain)
-                }
+                mode("Photo", isOn: true) {}
+                mode("Describe", isOn: false) { router.dismissCover(thenPush: .describeMeal) }
             }
             .padding(.top, 16)
 
             HStack {
-                glassButton("photo", "Choose from photos", size: 52) { router.dismissCover(thenPush: .meal) }
+                glassButton("photo", "Choose from photos", size: 52) { isPicking = true }
                 Spacer()
                 Button {
-                    router.dismissCover(thenPush: .meal)
+                    Task { await takePhoto() }
                 } label: {
                     RoundedRectangle(cornerRadius: 21, style: .continuous).fill(.white).frame(width: 62, height: 62)
+                        .scaleEffect(isCapturing ? 0.86 : 1)
                         .frame(width: 80, height: 80)
                         .overlay(RoundedRectangle(cornerRadius: 28, style: .continuous).strokeBorder(.white, lineWidth: 4))
+                        .animation(.snappy(duration: 0.15), value: isCapturing)
                 }
                 .buttonStyle(.plain)
+                .disabled(problem != nil || isStarting || isCapturing)
+                .opacity(problem == nil ? 1 : 0.35)
                 .accessibilityLabel("Take photo")
                 Spacer()
-                glassButton("text.alignleft", "Describe instead", size: 52) { router.dismissCover(thenPush: .meal) }
+                glassButton("text.alignleft", "Describe instead", size: 52) { router.dismissCover(thenPush: .describeMeal) }
             }
             .padding(.horizontal, 36)
             .padding(.top, 34)
@@ -112,34 +125,77 @@ struct SnapMealView: View {
         }
     }
 
-    /// The four corner brackets and the food tags the camera found.
-    private var viewfinder: some View {
-        ZStack(alignment: .topLeading) {
-            Brackets().stroke(.white.opacity(0.9), style: StrokeStyle(lineWidth: 3, lineCap: .round))
-            tag("Peppers, carrots").offset(x: 68, y: 40)
-            tag("Grilled chicken").offset(x: 148, y: 90)
-            tag("Zucchini").offset(x: 18, y: 154)
+    /// No camera: why, and what still works.
+    private func blocked(_ problem: MealCamera.Problem) -> some View {
+        VStack(spacing: 8) {
+            Image(systemName: "camera").font(.system(size: 28, weight: .semibold)).foregroundStyle(AZColor.Camera.muted)
+            Text(problem == .denied ? "Camera access is off" : "No camera here").font(.az(17, .bold)).foregroundStyle(.white)
+            Text(
+                problem == .denied
+                    ? "Turn it on in Settings, or choose a photo from your library."
+                    : "Choose a photo from your library instead."
+            )
+            .font(.az(14)).foregroundStyle(AZColor.Camera.muted).multilineTextAlignment(.center)
+            if problem == .denied, let url = URL(string: UIApplication.openSettingsURLString) {
+                Link("Open Settings", destination: url)
+                    .font(.az(14, .bold)).foregroundStyle(AZColor.Camera.tagInk)
+                    .padding(.horizontal, 14).frame(height: 34)
+                    .background(.white, in: .capsule)
+                    .padding(.top, 8)
+            }
         }
-        .frame(height: 364)
-        .padding(.horizontal, 28)
+        .padding(.horizontal, 24)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(AZColor.Camera.card, in: .rect(cornerRadius: 28, style: .continuous))
     }
 
-    private func tag(_ text: String) -> some View {
-        HStack(spacing: 7) {
-            RoundedRectangle(cornerRadius: 1.5).fill(AZColor.accent).frame(width: 3, height: 14)
-            Text(text).font(.az(13, .bold))
+    private func mode(_ title: String, isOn: Bool, action: @escaping () -> Void) -> some View {
+        Button(title, action: action)
+            .font(.az(14, .semibold))
+            .foregroundStyle(isOn ? AZColor.Camera.tagInk : .white.opacity(0.62))
+            .padding(.horizontal, 14).frame(height: 34)
+            .background(isOn ? Color.white : .clear, in: .capsule)
+            .buttonStyle(.plain)
+    }
+
+    private func takePhoto() async {
+        isCapturing = true
+        defer { isCapturing = false }
+        guard let data = await camera.capture(flash: flash) else { return }
+        await use(data, takenAt: .now)
+    }
+
+    private func usePicked(_ item: PhotosPickerItem) async {
+        guard let data = try? await item.loadTransferable(type: Data.self) else {
+            unreadable = true
+            return
         }
-        .foregroundStyle(AZColor.Camera.tagInk)
-        .padding(.leading, 9).padding(.trailing, 11)
-        .frame(height: 30)
-        .background(AZColor.Camera.tag, in: .rect(cornerRadius: 10, style: .continuous))
-        .fixedSize()
+        await use(data, takenAt: nil)
+    }
+
+    /// Shrinks the photo off the main thread, then opens Div's estimate. A library photo keeps the time it was taken.
+    private func use(_ data: Data, takenAt: Date?) async {
+        let prepared = await Task.detached(priority: .userInitiated) {
+            (jpeg: PhotoPrep.jpeg(from: data), takenAt: PhotoPrep.takenAt(data))
+        }.value
+        guard let jpeg = prepared.jpeg else {
+            unreadable = true
+            return
+        }
+        unreadable = false
+        let when = min(takenAt ?? prepared.takenAt ?? .now, .now)
+        router.dismissCover(thenPush: .mealEstimate(MealPhoto(jpeg: jpeg, takenAt: when)))
     }
 
     private func glassButton(_ systemImage: String, _ label: String, size: CGFloat = 44, action: @escaping () -> Void) -> some View {
         IconButton(
             systemImage: systemImage, label: label, size: size,
             background: size > 44 ? AZColor.Camera.glass : AZColor.Camera.scrim, foreground: .white, action: action)
+    }
+
+    /// "Today", or "Thu, Nov 19".
+    static func dayLabel(_ date: Date) -> String {
+        Calendar.current.isDateInToday(date) ? "today" : date.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day())
     }
 
     private nonisolated struct Brackets: Shape {

@@ -69,11 +69,53 @@ public struct Request: Codable, Sendable, Equatable {
     }
 }
 
-/// What the phone asks for. More jobs (meal photos, session reviews) join as the screens need them.
+/// What the phone asks for. More jobs join as the screens need them.
 public enum Job: Sendable, Equatable {
     case chat(ChatRequest)
     /// Send the phone's new rows and get the bridge's back (D-006).
     case sync(SyncPush)
+    /// Review a finished workout (already synced): Div's note and next time's loads, saved on the bridge.
+    case sessionReview(SessionReviewRequest)
+    /// Estimate a meal from its photo. Nothing is saved: the phone logs the meal once the person says so (D-032).
+    case estimateMeal(MealPhotoRequest)
+    /// Revise an estimate with the person's answer to Div's question, without the photo.
+    case reviseMeal(MealRevisionRequest)
+}
+
+/// Div's meal estimate with the totals added up in code (D-010). Log `totals`, never the model's own sums.
+public struct MealEstimateReply: Codable, Sendable, Equatable {
+    public var estimate: MealEstimate
+    public var totals: MealTotals
+    /// What the bridge's checks noticed: items that don't add up, a total outside Div's range.
+    public var warnings: [String]
+
+    public init(estimate: MealEstimate, totals: MealTotals, warnings: [String] = []) {
+        self.estimate = estimate
+        self.totals = totals
+        self.warnings = warnings
+    }
+}
+
+public struct SessionReviewRequest: Codable, Sendable, Equatable {
+    public var workoutID: UUID
+
+    public init(workoutID: UUID) {
+        self.workoutID = workoutID
+    }
+}
+
+/// What the session review decided. Its note and changes also arrive with the next sync.
+public struct SessionReviewReply: Codable, Sendable, Equatable {
+    public var note: String
+    /// Load changes applied now, and ones waiting for the person.
+    public var applied: Int
+    public var proposed: Int
+
+    public init(note: String, applied: Int, proposed: Int) {
+        self.note = note
+        self.applied = applied
+        self.proposed = proposed
+    }
 }
 
 /// The phone's rows since the bridge last confirmed, and how far the phone has the bridge's rows.
@@ -112,6 +154,9 @@ public struct Response: Codable, Sendable, Equatable {
 public enum Outcome: Sendable, Equatable {
     case chat(ChatReply)
     case synced(SyncPull)
+    case sessionReviewed(SessionReviewReply)
+    /// The answer to `estimateMeal` and `reviseMeal`.
+    case mealEstimated(MealEstimateReply)
     /// The job couldn't run: Claude is signed out, timed out, or answered something invalid.
     case failed(String)
 }
@@ -187,7 +232,8 @@ extension Message: Codable {
 
 extension Job: Codable {
     private enum Keys: String, CodingKey {
-        case kind, chat, sync
+        // Swift names: the wire coder (DivJSON) makes them snake_case, and a snake_case raw value wouldn't read back.
+        case kind, chat, sync, sessionReview, estimateMeal, reviseMeal
     }
 
     public init(from decoder: any Decoder) throws {
@@ -195,6 +241,9 @@ extension Job: Codable {
         switch try container.decode(String.self, forKey: .kind) {
         case "chat": self = .chat(try container.decode(ChatRequest.self, forKey: .chat))
         case "sync": self = .sync(try container.decode(SyncPush.self, forKey: .sync))
+        case "session_review": self = .sessionReview(try container.decode(SessionReviewRequest.self, forKey: .sessionReview))
+        case "estimate_meal": self = .estimateMeal(try container.decode(MealPhotoRequest.self, forKey: .estimateMeal))
+        case "revise_meal": self = .reviseMeal(try container.decode(MealRevisionRequest.self, forKey: .reviseMeal))
         case let other:
             throw DecodingError.dataCorruptedError(forKey: .kind, in: container, debugDescription: "unknown job \(other)")
         }
@@ -209,13 +258,22 @@ extension Job: Codable {
         case .sync(let push):
             try container.encode("sync", forKey: .kind)
             try container.encode(push, forKey: .sync)
+        case .sessionReview(let request):
+            try container.encode("session_review", forKey: .kind)
+            try container.encode(request, forKey: .sessionReview)
+        case .estimateMeal(let request):
+            try container.encode("estimate_meal", forKey: .kind)
+            try container.encode(request, forKey: .estimateMeal)
+        case .reviseMeal(let request):
+            try container.encode("revise_meal", forKey: .kind)
+            try container.encode(request, forKey: .reviseMeal)
         }
     }
 }
 
 extension Outcome: Codable {
     private enum Keys: String, CodingKey {
-        case kind, chat, synced, error
+        case kind, chat, synced, error, sessionReviewed, mealEstimated
     }
 
     public init(from decoder: any Decoder) throws {
@@ -223,6 +281,8 @@ extension Outcome: Codable {
         switch try container.decode(String.self, forKey: .kind) {
         case "chat": self = .chat(try container.decode(ChatReply.self, forKey: .chat))
         case "synced": self = .synced(try container.decode(SyncPull.self, forKey: .synced))
+        case "session_reviewed": self = .sessionReviewed(try container.decode(SessionReviewReply.self, forKey: .sessionReviewed))
+        case "meal_estimated": self = .mealEstimated(try container.decode(MealEstimateReply.self, forKey: .mealEstimated))
         case "failed": self = .failed(try container.decode(String.self, forKey: .error))
         case let other:
             throw DecodingError.dataCorruptedError(forKey: .kind, in: container, debugDescription: "unknown outcome \(other)")
@@ -238,6 +298,12 @@ extension Outcome: Codable {
         case .synced(let pull):
             try container.encode("synced", forKey: .kind)
             try container.encode(pull, forKey: .synced)
+        case .sessionReviewed(let reply):
+            try container.encode("session_reviewed", forKey: .kind)
+            try container.encode(reply, forKey: .sessionReviewed)
+        case .mealEstimated(let reply):
+            try container.encode("meal_estimated", forKey: .kind)
+            try container.encode(reply, forKey: .mealEstimated)
         case .failed(let message):
             try container.encode("failed", forKey: .kind)
             try container.encode(message, forKey: .error)

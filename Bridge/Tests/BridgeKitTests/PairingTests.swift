@@ -2,6 +2,7 @@ import AZModel
 import AZStore
 import AZSync
 import Foundation
+import Synchronization
 import Testing
 
 @testable import BridgeKit
@@ -160,6 +161,76 @@ func tempStore() -> PairingStore {
         try await sync()
         #expect(try bridge.plan().flatMap(\.exercises).contains { $0.exerciseID == "landmine_press" })
         #expect(try bridge.all(DivChange.self).first?.status == .approved)
+    }
+
+    @Test func sessionReviewSavesTheNoteAndLoadsAndTheySyncBack() async throws {
+        let phone = try AZStore.inMemory()
+        try phone.start(
+            Profile(name: "Sam", sex: .male, birthYear: 1996, heightCm: 180, goal: .cut, trainingDays: 4), weightKg: 82,
+            today: "2026-11-23")
+        let person = try #require(try phone.profile()?.id)
+        let push = try #require(try phone.plan().first?.session)
+        let workout = try phone.startWorkout(push, today: "2026-11-23")
+        for i in 0..<3 {
+            try phone.logSet(LoggedSet(workoutID: workout.id, exerciseID: "barbell_bench_press", position: i, loadKg: 80, reps: 8, rir: 2))
+        }
+        try phone.finishWorkout(workout.id)
+        let answer = """
+            {"note":"Every set at 8. Up next time.","next_time":[{"exercise":"Barbell bench press","call":"progress",
+             "next_load_kg":82.5,"reason":"All sets at the top of the range."}]}
+            """
+        let people = PeopleStores(folder: FileManager.default.temporaryDirectory.appending(path: "azfit-people-\(UUID().uuidString)"))
+        let jobs = PhoneJobs(
+            div: { Div(files: divFiles, claude: FakeClaude(answer: answer)) }, people: people, today: { "2026-11-23" })
+
+        func sync() async throws {
+            let push = SyncPush(
+                batch: try phone.changes(after: try phone.acknowledgedSeq(by: "bridge")), since: try phone.receivedSeq(from: "bridge"))
+            guard case .synced(let pull) = await jobs.handle(Request(job: .sync(push), person: person)) else { throw CancellationError() }
+            try phone.apply(pull.batch, from: "bridge")
+            try phone.setAcknowledged(pull.received, by: "bridge")
+        }
+
+        try await sync()
+        let outcome = await jobs.handle(Request(job: .sessionReview(SessionReviewRequest(workoutID: workout.id)), person: person))
+        #expect(outcome == .sessionReviewed(SessionReviewReply(note: "Every set at 8. Up next time.", applied: 1, proposed: 0)))
+        try await sync()
+        #expect(try phone.all(Workout.self).first?.divNote == "Every set at 8. Up next time.")
+        #expect(try phone.plan().first?.exercises.first?.loadKg == 82.5)
+        #expect(try phone.all(DivChange.self).first?.job == "session_review")
+    }
+
+    @Test func mealPhotoAndAnswerComeBackWithTotalsFromCode() async throws {
+        // The model's items add up to 260, whatever it says elsewhere: the phone logs the code's total (D-010).
+        let answer = """
+            {"meal_name":"Rice","items":[{"name":"Rice","portion":"1 cup","grams":200,"kcal":260,"protein_g":5,"carbs_g":57,"fat_g":0.6}],
+             "kcal_low":230,"kcal_high":300,"confidence":"medium","matched_similar_meal":"","assumptions":[],
+             "follow_up_question":"Was there butter?"}
+            """
+        let ran = Mutex<[String]>([])
+        let jobs = PhoneJobs(
+            div: { Div(files: divFiles, claude: FakeClaude(answer: answer)) },
+            people: PeopleStores(folder: FileManager.default.temporaryDirectory), onRun: { name, _ in ran.withLock { $0.append(name) } })
+        let photo = MealPhotoRequest(photo: Data(repeating: 7, count: 100), mediaType: .jpeg)
+        guard case .mealEstimated(let first) = await jobs.handle(Request(job: .estimateMeal(photo))) else {
+            Issue.record("No estimate")
+            return
+        }
+        #expect(first.totals.kcal == 260)
+        #expect(first.estimate.followUpQuestion == "Was there butter?")
+        let revision = MealRevisionRequest(previous: first.estimate, question: "Was there butter?", answer: "No")
+        guard case .mealEstimated(let second) = await jobs.handle(Request(job: .reviseMeal(revision))) else {
+            Issue.record("No revision")
+            return
+        }
+        #expect(second.totals == first.totals)
+        #expect(ran.withLock { $0 } == ["estimate_meal", "revise_meal"])
+    }
+
+    @Test func mealPhotoSaysWhyItCouldntRun() async {
+        let jobs = PhoneJobs(div: { throw ClaudeError.notInstalled }, people: PeopleStores(folder: FileManager.default.temporaryDirectory))
+        let photo = MealPhotoRequest(photo: Data([1]), mediaType: .jpeg)
+        #expect(await jobs.handle(Request(job: .estimateMeal(photo))) == .failed("Claude Code isn't installed on your Mac."))
     }
 
     @Test func syncNeedsAPerson() async {

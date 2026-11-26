@@ -1,15 +1,21 @@
+import AZModel
+import AZStore
 import SwiftUI
 
 /// Home: the week, today's session, what Div changed, and food and weight at a glance.
 /// Design: design/source/src/Home.html
 struct HomeView: View {
     @Environment(Router.self) private var router
+    @Environment(AppEnvironment.self) private var environment
+
+    private var store: AZStore { environment.store }
+    private var today: String { environment.today }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
-                    LargeTitle(caption: "Saturday, Nov 21", title: "Morning, Alex")
+                    LargeTitle(caption: AppEnvironment.caption(today), title: environment.greeting)
                     Spacer()
                     Button {
                         router.push(.memory)
@@ -22,11 +28,16 @@ struct HomeView: View {
                 Button {
                     router.show(.train)
                 } label: {
-                    WeekStrip()
+                    WeekStrip((try? store.week(today: today)) ?? [])
                 }
                 .buttonStyle(.plain)
                 .padding(.top, 16)
-                todayCard.padding(.top, 20)
+                if let session = try? store.todaySession(today: today) {
+                    todayCard(session).padding(.top, 20)
+                } else {
+                    restCard.padding(.top, 20)
+                }
+                sessionNote.padding(.top, 16)
                 divChanges.padding(.top, 16)
                 HStack(spacing: 12) {
                     foodTile
@@ -41,22 +52,44 @@ struct HomeView: View {
         .scrollIndicators(.hidden)
     }
 
-    private var todayCard: some View {
+    /// No session today: say what's next.
+    private var restCard: some View {
+        let next = (try? store.sessionsAhead(today: today))?.first { $0.day > today }
+        return Button {
+            router.show(.train)
+        } label: {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Today").font(.az(14, .semibold)).foregroundStyle(AZColor.divInk)
+                Text("Rest day").font(.az(40, .heavy)).tracking(-1.4)
+                Text(next.map { "Next: \($0.session.name), \(AppEnvironment.caption($0.day))" } ?? "Nothing else planned this week")
+                    .font(.az(14.5)).foregroundStyle(AZColor.divMuted)
+            }
+            .padding(24)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(AZColor.divTint, in: .rect(cornerRadius: 32, style: .continuous))
+            .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func todayCard(_ session: SessionPreview) -> some View {
         Button {
             router.push(.workout)
         } label: {
             VStack(alignment: .leading, spacing: 0) {
-                Text("Today · 52 min").font(.az(14, .semibold)).foregroundStyle(AZColor.divInk)
-                Text("Push A").font(.az(40, .heavy)).tracking(-1.4)
+                Text("Today · \(session.minutes) min").font(.az(14, .semibold)).foregroundStyle(AZColor.divInk)
+                Text(session.session.name).font(.az(40, .heavy)).tracking(-1.4)
                 VStack(spacing: 0) {
-                    exerciseLine("Bench press", "4 × 8")
-                    exerciseLine("Incline dumbbell press", "3 × 10")
-                    exerciseLine("Landmine press", "3 × 10", changedByDiv: true)
-                    HStack {
-                        Text("+3 more").foregroundStyle(AZColor.divMuted)
-                        Spacer()
+                    ForEach(session.lines.prefix(3), id: \.exerciseID) { line in
+                        exerciseLine(line.name, line.prescription, changedByDiv: line.swappedFrom != nil)
                     }
-                    .frame(height: 26)
+                    if session.lines.count > 3 {
+                        HStack {
+                            Text("+\(session.lines.count - 3) more").foregroundStyle(AZColor.divMuted)
+                            Spacer()
+                        }
+                        .frame(height: 26)
+                    }
                 }
                 .font(.az(14.5))
                 .padding(.top, 14)
@@ -91,15 +124,40 @@ struct HomeView: View {
         .frame(height: 26)
     }
 
+    /// Div's note on today's finished workout, or that it's still reviewing.
+    @ViewBuilder
+    private var sessionNote: some View {
+        if !environment.reviewing.isEmpty {
+            DivNote(title: "Reviewing your workout", message: "Div is looking at every set to plan next time.", tone: .settled) {
+                EmptyView()
+            }
+        } else if let workout = try? store.reviewedWorkout(on: today), let note = workout.divNote {
+            DivNote(title: "After \(workout.name)", message: note) {
+                PillButton(title: "See changes") { router.push(.divLog) }
+            }
+        } else if let problem = environment.reviewProblem {
+            DivNote(title: "Div couldn't review your workout", message: problem, tone: .settled) { EmptyView() }
+        }
+    }
+
     private var divChanges: some View {
-        Button {
+        let changes = (try? store.recentChanges(today: today)) ?? []
+        let made = changes.filter { $0.status == .applied || $0.status == .approved }.count
+        let questions = changes.filter { $0.status == .proposed }.count + (environment.recentWeekReview?.questions.count ?? 0)
+        return Button {
             router.push(.divLog)
         } label: {
             HStack(spacing: 12) {
                 DivAvatar(size: 44)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text("Div made 3 changes this week").font(.az(15, .bold))
-                    Text("And has 1 question for you").font(.az(13.5)).foregroundStyle(AZColor.muted)
+                    Text(made == 0 ? "No changes from Div this week" : "Div made \(made) \(made == 1 ? "change" : "changes") this week")
+                        .font(.az(15, .bold))
+                    Text(
+                        questions > 0
+                            ? "And has \(questions) \(questions == 1 ? "question" : "questions") for you"
+                            : "Ask Div anything about your plan"
+                    )
+                    .font(.az(13.5)).foregroundStyle(AZColor.muted)
                 }
                 Spacer(minLength: 0)
                 Image(systemName: "chevron.right").font(.system(size: 15, weight: .semibold)).foregroundStyle(AZColor.faint)
@@ -114,42 +172,49 @@ struct HomeView: View {
     }
 
     private var foodTile: some View {
-        Button {
+        let food = (try? store.food(on: today))
+        return Button {
             router.show(.eat)
         } label: {
             tile {
                 SectionLabel(text: "Food")
                 Spacer(minLength: 0)
-                Text("1,110").font(.az(26, .heavy)).tracking(-0.5).monospacedDigit()
-                Text("kcal left").font(.az(13.5)).foregroundStyle(AZColor.muted).padding(.bottom, 8)
-                MeterBar(value: 0.53, height: 6)
+                Text(food?.leftKcal?.grouped ?? "-").font(.az(26, .heavy)).tracking(-0.5).monospacedDigit()
+                Text(food?.targetKcal == nil ? "No target yet" : "kcal left").font(.az(13.5)).foregroundStyle(AZColor.muted).padding(
+                    .bottom, 8)
+                MeterBar(value: food?.fraction ?? 0, height: 6)
             }
         }
         .buttonStyle(.plain)
     }
 
     private var weightTile: some View {
-        Button {
+        let weight = (try? store.weight(today: today)) ?? WeightSummary()
+        return Button {
             router.push(.progress)
         } label: {
             tile {
                 HStack {
                     SectionLabel(text: "Weight")
                     Spacer()
-                    SVGShape(data: "M2 4C10 4 14 9 20 10S30 9 36 14S48 18 56 21", viewBox: CGRect(x: 0, y: 0, width: 58, height: 24))
-                        .stroke(AZColor.accent, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                    Sparkline(values: weight.trend)
+                        .stroke(AZColor.accent, style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
                         .frame(width: 58, height: 24)
                 }
                 Spacer(minLength: 0)
-                HStack(alignment: .firstTextBaseline, spacing: 0) {
-                    Text("82.2").font(.az(26, .heavy)).tracking(-0.5)
-                    Text(" kg").font(.az(15, .semibold)).foregroundStyle(AZColor.muted)
-                }
-                .monospacedDigit()
-                Text("-2.1 kg in 3 weeks").font(.az(13.5)).foregroundStyle(AZColor.muted)
+                Text(weight.latestKg.map { environment.units.bodyWeight($0) } ?? "-")
+                    .font(.az(24, .heavy)).tracking(-0.5).monospacedDigit().lineLimit(1).minimumScaleFactor(0.7)
+                Text(weightChange(weight)).font(.az(13.5)).foregroundStyle(AZColor.muted).lineLimit(1)
             }
         }
         .buttonStyle(.plain)
+    }
+
+    private func weightChange(_ weight: WeightSummary) -> String {
+        guard let change = weight.changeKg, weight.days > 0 else { return "Weigh in to see a trend" }
+        let sign = change > 0 ? "+" : change < 0 ? "-" : ""
+        let amount = environment.units.bodyWeight(abs(change))
+        return weight.days < 7 ? "\(sign)\(amount) in \(weight.days) days" : "\(sign)\(amount) in \(weight.days / 7) weeks"
     }
 
     private func tile<Content: View>(@ViewBuilder content: () -> Content) -> some View {
@@ -164,5 +229,5 @@ struct HomeView: View {
 }
 
 #Preview {
-    MainView()
+    MainView().environment(AppEnvironment.preview())
 }

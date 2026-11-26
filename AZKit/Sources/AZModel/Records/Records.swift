@@ -177,10 +177,12 @@ public struct Workout: Codable, Sendable, Equatable, Identifiable {
     public var startedAt: Date
     public var endedAt: Date?
     public var skipped: Bool
+    /// Div's note after the session review, once it has run.
+    public var divNote: String?
 
     public init(
         id: UUID = UUID(), plannedSessionID: UUID? = nil, name: String, day: String, startedAt: Date = .now,
-        endedAt: Date? = nil, skipped: Bool = false
+        endedAt: Date? = nil, skipped: Bool = false, divNote: String? = nil
     ) {
         self.id = id
         self.plannedSessionID = plannedSessionID
@@ -189,6 +191,7 @@ public struct Workout: Codable, Sendable, Equatable, Identifiable {
         self.startedAt = startedAt
         self.endedAt = endedAt
         self.skipped = skipped
+        self.divNote = divNote
     }
 }
 
@@ -286,6 +289,26 @@ public struct FoodDay: Codable, Sendable, Equatable, Identifiable {
 
 // MARK: - Body
 
+extension Meal {
+    /// "Breakfast", "Lunch", "Dinner" or "Snack", from the hour it was eaten.
+    public static func mealTime(at date: Date, calendar: Calendar = .current) -> String {
+        switch calendar.component(.hour, from: date) {
+        case 4..<11: "Breakfast"
+        case 11..<15: "Lunch"
+        case 17..<22: "Dinner"
+        default: "Snack"
+        }
+    }
+
+    /// The same food logged again now, as a new row: one-tap repeat logging. The estimate's range comes along; the
+    /// barcode, favorite flag and removal don't.
+    public func again(day: String, at: Date = .now) -> Meal {
+        Meal(
+            day: day, at: at, name: name, kcal: kcal, kcalLow: kcalLow, kcalHigh: kcalHigh, proteinG: proteinG, carbsG: carbsG,
+            fatG: fatG, source: .favorite)
+    }
+}
+
 public struct WeighIn: Codable, Sendable, Equatable, Identifiable {
     public enum Source: String, Codable, Sendable {
         case manual
@@ -378,6 +401,30 @@ public struct DivChange: Codable, Sendable, Equatable, Identifiable {
     /// Applied changes can be undone for 7 days.
     public func canUndo(at now: Date) -> Bool {
         (status == .applied || status == .approved) && now.timeIntervalSince(resolvedAt ?? createdAt) < 7 * 86_400
+    }
+}
+
+/// Div's Sunday review of a week: what it read and its questions. Its changes are `DivChange`s with job
+/// "weekly_review".
+public struct WeekReview: Codable, Sendable, Equatable, Identifiable {
+    public var id: UUID
+    /// The Sunday the review covers.
+    public var weekEnding: String
+    public var summary: String
+    public var calorieReasoning: String
+    public var questions: [String]
+    public var createdAt: Date
+
+    public init(
+        id: UUID = UUID(), weekEnding: String, summary: String, calorieReasoning: String = "", questions: [String] = [],
+        createdAt: Date = .now
+    ) {
+        self.id = id
+        self.weekEnding = weekEnding
+        self.summary = summary
+        self.calorieReasoning = calorieReasoning
+        self.questions = questions
+        self.createdAt = createdAt
     }
 }
 

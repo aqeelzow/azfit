@@ -16,6 +16,16 @@ struct BodyFigure: View {
     /// The color of muscles with no sets, and of the head, hands and feet.
     var base: Color = AZColor.ramp[0]
 
+    /// The library muscles each region stands for, in `levels` order.
+    static let frontMuscles = [
+        ["traps"], ["front_delts", "side_delts"], ["upper_chest", "lower_chest"], ["biceps"], ["forearms"], ["abs"], ["obliques"],
+        ["quads"], ["calves"],
+    ]
+    static let backMuscles = [
+        ["traps", "upper_back"], ["rear_delts", "side_delts"], ["lats"], ["triceps"], ["forearms"], ["lower_back"], ["glutes"],
+        ["hamstrings"], ["calves"],
+    ]
+
     /// Parses the design's level string: "234211131", "3a4312321" ("a" is lagging).
     init(side: Side, levels: String, base: Color? = nil) {
         self.side = side

@@ -11,7 +11,8 @@ public struct WeeklySnapshot: Codable, Sendable, Equatable {
     public var waistCm: Waist?
     public var lifts: [Lift]
     public var volume: [MuscleVolume]
-    public var recovery: Recovery
+    /// Sleep, HRV and steps, once the phone reads them from Health. Without it Div never deloads for recovery.
+    public var recovery: Recovery?
     public var waterEvents: [WaterEvent]
     public var recentChanges: [RecentChange]
     public var daysSinceLastCalorieChange: Int
@@ -28,11 +29,25 @@ public struct WeeklySnapshot: Codable, Sendable, Equatable {
         public var calorieFloorKcal: Int
         /// If true, protein is set by the person's doctor and Div never changes it.
         public var kidneyDisease: Bool
+
+        public init(age: Int, heightCm: Double, goal: Goal, targetRatePctPerWeek: Double, calorieFloorKcal: Int, kidneyDisease: Bool) {
+            self.age = age
+            self.heightCm = heightCm
+            self.goal = goal
+            self.targetRatePctPerWeek = targetRatePctPerWeek
+            self.calorieFloorKcal = calorieFloorKcal
+            self.kidneyDisease = kidneyDisease
+        }
     }
 
     public struct Targets: Codable, Sendable, Equatable {
         public var caloriesKcal: Int
         public var proteinGPerKg: Double
+
+        public init(caloriesKcal: Int, proteinGPerKg: Double) {
+            self.caloriesKcal = caloriesKcal
+            self.proteinGPerKg = proteinGPerKg
+        }
     }
 
     public struct Weight: Codable, Sendable, Equatable {
@@ -42,6 +57,13 @@ public struct WeeklySnapshot: Codable, Sendable, Equatable {
         public var trendKgWindowStart: Double
         /// Raw weigh-ins for the last 7 days, oldest first.
         public var dailyThisWeek: [Double]
+
+        public init(trendKgNow: Double, trendKgWeekAgo: Double, trendKgWindowStart: Double, dailyThisWeek: [Double]) {
+            self.trendKgNow = trendKgNow
+            self.trendKgWeekAgo = trendKgWeekAgo
+            self.trendKgWindowStart = trendKgWindowStart
+            self.dailyThisWeek = dailyThisWeek
+        }
     }
 
     public struct Intake: Codable, Sendable, Equatable {
@@ -50,11 +72,23 @@ public struct WeeklySnapshot: Codable, Sendable, Equatable {
         public var completeDays: Int
         public var avgKcalCompleteDays: Double
         public var proteinHitDaysThisWeek: Int
+
+        public init(windowDays: Int, completeDays: Int, avgKcalCompleteDays: Double, proteinHitDaysThisWeek: Int) {
+            self.windowDays = windowDays
+            self.completeDays = completeDays
+            self.avgKcalCompleteDays = avgKcalCompleteDays
+            self.proteinHitDaysThisWeek = proteinHitDaysThisWeek
+        }
     }
 
     public struct Waist: Codable, Sendable, Equatable {
         public var now: Double
         public var windowStart: Double
+
+        public init(now: Double, windowStart: Double) {
+            self.now = now
+            self.windowStart = windowStart
+        }
     }
 
     public struct Lift: Codable, Sendable, Equatable {
@@ -62,6 +96,13 @@ public struct WeeklySnapshot: Codable, Sendable, Equatable {
         public var e1rmNow: Double
         public var e1rmWindowStart: Double
         public var avgRir: Double
+
+        public init(name: String, e1rmNow: Double, e1rmWindowStart: Double, avgRir: Double) {
+            self.name = name
+            self.e1rmNow = e1rmNow
+            self.e1rmWindowStart = e1rmWindowStart
+            self.avgRir = avgRir
+        }
     }
 
     public struct MuscleVolume: Codable, Sendable, Equatable {
@@ -85,12 +126,25 @@ public struct WeeklySnapshot: Codable, Sendable, Equatable {
         public var hrvVsBaselinePct: Double
         public var stepsAvg: Double
         public var stepsBaseline: Double
+
+        public init(sleepAvgH: Double, sleepBaselineH: Double, hrvVsBaselinePct: Double, stepsAvg: Double, stepsBaseline: Double) {
+            self.sleepAvgH = sleepAvgH
+            self.sleepBaselineH = sleepBaselineH
+            self.hrvVsBaselinePct = hrvVsBaselinePct
+            self.stepsAvg = stepsAvg
+            self.stepsBaseline = stepsBaseline
+        }
     }
 
     /// Something that moves water weight: a high-salt day, a new creatine dose, illness, travel.
     public struct WaterEvent: Codable, Sendable, Equatable {
         public var type: String
         public var started: String
+
+        public init(type: String, started: String) {
+            self.type = type
+            self.started = started
+        }
     }
 
     public struct RecentChange: Codable, Sendable, Equatable {
@@ -98,6 +152,13 @@ public struct WeeklySnapshot: Codable, Sendable, Equatable {
         public var type: String
         public var detail: String
         public var reason: String
+
+        public init(date: String, type: String, detail: String, reason: String) {
+            self.date = date
+            self.type = type
+            self.detail = detail
+            self.reason = reason
+        }
     }
 
     public struct CurrentLoad: Codable, Sendable, Equatable {
@@ -107,6 +168,34 @@ public struct WeeklySnapshot: Codable, Sendable, Equatable {
         public var repRange: String
         /// Sessions in a row where every set reached the top of the range.
         public var hitTopOfRangeSessions: Int
+
+        public init(exercise: String, loadKg: Double, repRange: String, hitTopOfRangeSessions: Int) {
+            self.exercise = exercise
+            self.loadKg = loadKg
+            self.repRange = repRange
+            self.hitTopOfRangeSessions = hitTopOfRangeSessions
+        }
+    }
+
+    public init(
+        weekEnding: String, user: User, targets: Targets, weight: Weight, intake: Intake, waistCm: Waist? = nil, lifts: [Lift],
+        volume: [MuscleVolume], recovery: Recovery? = nil, waterEvents: [WaterEvent], recentChanges: [RecentChange],
+        daysSinceLastCalorieChange: Int, currentLoads: [CurrentLoad], memories: [String]? = nil
+    ) {
+        self.weekEnding = weekEnding
+        self.user = user
+        self.targets = targets
+        self.weight = weight
+        self.intake = intake
+        self.waistCm = waistCm
+        self.lifts = lifts
+        self.volume = volume
+        self.recovery = recovery
+        self.waterEvents = waterEvents
+        self.recentChanges = recentChanges
+        self.daysSinceLastCalorieChange = daysSinceLastCalorieChange
+        self.currentLoads = currentLoads
+        self.memories = memories
     }
 }
 

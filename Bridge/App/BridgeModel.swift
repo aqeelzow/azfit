@@ -36,6 +36,7 @@ final class BridgeModel {
         listener.start()
         Task { await refreshClaude() }
         Task { await watchClaude() }
+        Task { await runWeeklyReviews() }
     }
 
     var phoneSummary: String {
@@ -90,6 +91,19 @@ final class BridgeModel {
         pairings = store.pairings
         // The code worked: the pairing now has a phone. Close the code so it can't be shown to anyone else.
         if phoneArrived, let code, pairings.contains(where: { $0.id == code.pairingID && $0.phoneName != nil }) { self.code = nil }
+    }
+
+    /// The Sunday review: checked at launch and every hour after, so a Mac asleep on Sunday catches up (WeeklyReviews).
+    private func runWeeklyReviews() async {
+        let executable = Bundle.main.executablePath ?? CommandLine.arguments[0]
+        let reviews = WeeklyReviews(
+            div: { Div(files: try DivFiles.locate(), claude: try ClaudeCLI.locate(), toolServer: [executable, "tools"]) },
+            people: .standard(),
+            onRun: { name, run in log.info("ran \(name, privacy: .public): \(run.summary, privacy: .public)") })
+        while !Task.isCancelled {
+            for line in await reviews.runDue() { log.info("weekly review \(line, privacy: .public)") }
+            try? await Task.sleep(for: .seconds(3600))
+        }
     }
 
     /// Checks Claude every minute, so a sign-out shows up on the phone without anyone opening the menu.
