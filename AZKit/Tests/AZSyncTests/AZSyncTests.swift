@@ -1,7 +1,9 @@
 import AZModel
 import Foundation
+import ImageIO
 import Network
 import Testing
+import UniformTypeIdentifiers
 
 @testable import AZSync
 
@@ -39,6 +41,16 @@ import Testing
             .response(Response(id: UUID(), outcome: .failed("Claude is signed out."))),
             .request(Request(job: .sessionReview(SessionReviewRequest(workoutID: UUID())), person: UUID())),
             .response(Response(id: UUID(), outcome: .sessionReviewed(SessionReviewReply(note: "Good.", applied: 1, proposed: 0)))),
+            .request(
+                Request(job: .estimateMeal(MealPhotoRequest(photo: Data([0xFF, 0xD8, 0xFF]), mediaType: .jpeg, note: "half the rice")))),
+            .request(Request(job: .reviseMeal(MealRevisionRequest(previous: Self.estimate, question: "Dressing?", answer: "A little")))),
+            .response(
+                Response(
+                    id: UUID(),
+                    outcome: .mealEstimated(
+                        MealEstimateReply(
+                            estimate: Self.estimate, totals: MealTotals(kcal: 270, proteinG: 30, carbsG: 0, fatG: 16, grams: 130),
+                            warnings: ["Check the rice."])))),
         ]
         for message in messages {
             #expect(try DivJSON.decode(Message.self, from: DivJSON.encode(message)) == message)
@@ -46,7 +58,18 @@ import Testing
         #expect(try DivJSON.string(Message.hello(Hello(phoneName: "iPhone")), pretty: false).contains(#""type":"hello""#))
         let review = try DivJSON.string(Job.sessionReview(SessionReviewRequest(workoutID: UUID())), pretty: false)
         #expect(review.contains(#""kind":"session_review""#) && review.contains(#""session_review":{"#))
+        let photo = try DivJSON.string(Job.estimateMeal(MealPhotoRequest(photo: Data(), mediaType: .jpeg)), pretty: false)
+        #expect(photo.contains(#""kind":"estimate_meal""#) && photo.contains(#""estimate_meal":{"#))
+        let estimated = try DivJSON.string(
+            Outcome.mealEstimated(MealEstimateReply(estimate: Self.estimate, totals: MealTotals(kcal: 1, proteinG: 0, carbsG: 0, fatG: 0, grams: 0))),
+            pretty: false)
+        #expect(estimated.contains(#""kind":"meal_estimated""#) && estimated.contains(#""meal_estimated":{"#))
     }
+
+    static let estimate = MealEstimate(
+        mealName: "Salmon bowl",
+        items: [MealItem(name: "Salmon", portion: "130 g", grams: 130, kcal: 270, proteinG: 30, carbsG: 0, fatG: 16)], kcalLow: 520,
+        kcalHigh: 760, followUpQuestion: "Was there dressing?")
 
     @Test func framesSplitAndJoin() throws {
         let one = try Framing.frame(.hello(Hello(phoneName: "A")))
@@ -164,5 +187,35 @@ import Testing
         #expect(connection.offlineReason != nil)
         await #expect(throws: BridgeLink.Failure.self) { try await connection.ask(.chat(ChatRequest(message: "hi"))) }
         connection.stop()
+    }
+}
+
+@Suite struct PhotoPrepTests {
+    /// A 3000 by 2000 PNG, like a big photo from the library.
+    private func bigPNG() throws -> Data {
+        let context = try #require(
+            CGContext(
+                data: nil, width: 3000, height: 2000, bitsPerComponent: 8, bytesPerRow: 0, space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
+        context.setFillColor(red: 0.5, green: 0.3, blue: 0.9, alpha: 1)
+        context.fill(CGRect(x: 0, y: 0, width: 3000, height: 2000))
+        let image = try #require(context.makeImage())
+        let out = NSMutableData()
+        let destination = try #require(CGImageDestinationCreateWithData(out, UTType.png.identifier as CFString, 1, nil))
+        CGImageDestinationAddImage(destination, image, nil)
+        #expect(CGImageDestinationFinalize(destination))
+        return out as Data
+    }
+
+    @Test func shrinksAnyPhotoToAJPEGClaudeReadsWhole() throws {
+        let jpeg = try #require(PhotoPrep.jpeg(from: try bigPNG()))
+        #expect(jpeg.prefix(2) == Data([0xFF, 0xD8]))
+        let image = try #require(PhotoPrep.image(from: jpeg))
+        #expect(max(image.width, image.height) == PhotoPrep.maxPixels)
+        #expect(image.width > image.height)
+    }
+
+    @Test func refusesWhatIsntAnImage() {
+        #expect(PhotoPrep.jpeg(from: Data("not a photo".utf8)) == nil)
     }
 }

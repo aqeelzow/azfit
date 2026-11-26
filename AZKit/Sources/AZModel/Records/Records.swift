@@ -289,6 +289,18 @@ public struct FoodDay: Codable, Sendable, Equatable, Identifiable {
 
 // MARK: - Body
 
+extension Meal {
+    /// "Breakfast", "Lunch", "Dinner" or "Snack", from the hour it was eaten.
+    public static func mealTime(at date: Date, calendar: Calendar = .current) -> String {
+        switch calendar.component(.hour, from: date) {
+        case 4..<11: "Breakfast"
+        case 11..<15: "Lunch"
+        case 17..<22: "Dinner"
+        default: "Snack"
+        }
+    }
+}
+
 public struct WeighIn: Codable, Sendable, Equatable, Identifiable {
     public enum Source: String, Codable, Sendable {
         case manual

@@ -2,6 +2,7 @@ import AZModel
 import AZStore
 import AZSync
 import Foundation
+import Synchronization
 import Testing
 
 @testable import BridgeKit
@@ -197,6 +198,39 @@ func tempStore() -> PairingStore {
         #expect(try phone.all(Workout.self).first?.divNote == "Every set at 8. Up next time.")
         #expect(try phone.plan().first?.exercises.first?.loadKg == 82.5)
         #expect(try phone.all(DivChange.self).first?.job == "session_review")
+    }
+
+    @Test func mealPhotoAndAnswerComeBackWithTotalsFromCode() async throws {
+        // The model's items add up to 260, whatever it says elsewhere: the phone logs the code's total (D-010).
+        let answer = """
+            {"meal_name":"Rice","items":[{"name":"Rice","portion":"1 cup","grams":200,"kcal":260,"protein_g":5,"carbs_g":57,"fat_g":0.6}],
+             "kcal_low":230,"kcal_high":300,"confidence":"medium","matched_similar_meal":"","assumptions":[],
+             "follow_up_question":"Was there butter?"}
+            """
+        let ran = Mutex<[String]>([])
+        let jobs = PhoneJobs(
+            div: { Div(files: divFiles, claude: FakeClaude(answer: answer)) },
+            people: PeopleStores(folder: FileManager.default.temporaryDirectory), onRun: { name, _ in ran.withLock { $0.append(name) } })
+        let photo = MealPhotoRequest(photo: Data(repeating: 7, count: 100), mediaType: .jpeg)
+        guard case .mealEstimated(let first) = await jobs.handle(Request(job: .estimateMeal(photo))) else {
+            Issue.record("No estimate")
+            return
+        }
+        #expect(first.totals.kcal == 260)
+        #expect(first.estimate.followUpQuestion == "Was there butter?")
+        let revision = MealRevisionRequest(previous: first.estimate, question: "Was there butter?", answer: "No")
+        guard case .mealEstimated(let second) = await jobs.handle(Request(job: .reviseMeal(revision))) else {
+            Issue.record("No revision")
+            return
+        }
+        #expect(second.totals == first.totals)
+        #expect(ran.withLock { $0 } == ["estimate_meal", "revise_meal"])
+    }
+
+    @Test func mealPhotoSaysWhyItCouldntRun() async {
+        let jobs = PhoneJobs(div: { throw ClaudeError.notInstalled }, people: PeopleStores(folder: FileManager.default.temporaryDirectory))
+        let photo = MealPhotoRequest(photo: Data([1]), mediaType: .jpeg)
+        #expect(await jobs.handle(Request(job: .estimateMeal(photo))) == .failed("Claude Code isn't installed on your Mac."))
     }
 
     @Test func syncNeedsAPerson() async {

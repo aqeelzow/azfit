@@ -87,6 +87,42 @@ public enum UnitSystem: String, Codable, Sendable, CaseIterable {
         (Double(stone) * 14 + pounds) / poundsPerKg
     }
 
+    /// Body weights outside this are a typo, not a weigh-in.
+    public static let plausibleBodyWeightKg = 25.0...350.0
+
+    /// Body weight as the weigh-in fields show it: kilograms or pounds in `main`, or stone in `main` and the rest
+    /// in `pounds` for British.
+    public func bodyWeightFields(_ kg: Double) -> (main: String, pounds: String) {
+        switch bodyWeight {
+        case .kg: return (Self.oneDecimal(kg), "")
+        case .lb: return (Self.oneDecimal(kg * Self.poundsPerKg), "")
+        case .stone:
+            let total = (kg * Self.poundsPerKg * 10).rounded() / 10
+            let stone = Int(total / 14)
+            return (String(stone), Self.trimmed(((total - Double(stone) * 14) * 10).rounded() / 10))
+        }
+    }
+
+    /// What the person typed in the weigh-in fields, in kilograms. Nil when it isn't a number or isn't a
+    /// plausible body weight. Accepts a comma for the decimal point.
+    public func bodyWeightKg(typed main: String, pounds: String = "") -> Double? {
+        func number(_ text: String) -> Double? {
+            let text = text.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: ",", with: ".")
+            return text.isEmpty ? nil : Double(text)
+        }
+        let kg: Double
+        switch bodyWeight {
+        case .kg, .lb:
+            guard let value = number(main) else { return nil }
+            kg = bodyWeightKg(value)
+        case .stone:
+            let rest = pounds.trimmingCharacters(in: .whitespaces).isEmpty ? 0 : number(pounds)
+            guard let stone = number(main), let rest, stone == stone.rounded(), rest >= 0, rest < 14 else { return nil }
+            kg = Self.bodyWeightKg(stone: Int(stone), pounds: rest)
+        }
+        return Self.plausibleBodyWeightKg.contains(kg) ? kg : nil
+    }
+
     /// "81.4 cm" or "32.0 in".
     public func tape(_ cm: Double) -> String {
         tape == .cm ? "\(Self.oneDecimal(cm)) cm" : "\(Self.oneDecimal(cm / Self.cmPerInch)) in"

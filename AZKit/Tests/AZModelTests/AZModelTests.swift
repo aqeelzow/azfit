@@ -107,6 +107,35 @@ import Testing
         #expect(abs(UnitSystem.bodyWeightKg(stone: 12, pounds: 8) - 79.83) < 0.01)
         #expect(abs(UnitSystem.heightCm(feet: 5, inches: 11) - 180.34) < 0.01)
     }
+
+    @Test func weighInFieldsRoundTrip() throws {
+        #expect(UnitSystem.canadian.bodyWeightFields(80).main == "176.4")
+        #expect(UnitSystem.british.bodyWeightFields(80) == ("12", "8.4"))
+        #expect(abs(try #require(UnitSystem.american.bodyWeightKg(typed: "176,4")) - 80.01) < 0.01)
+        #expect(abs(try #require(UnitSystem.british.bodyWeightKg(typed: "12", pounds: "8.4")) - 80) < 0.05)
+        #expect(abs(try #require(UnitSystem.british.bodyWeightKg(typed: "12")) - 76.2) < 0.01)
+    }
+
+    @Test func weighInFieldsRefuseTypos() {
+        #expect(UnitSystem.canadian.bodyWeightKg(typed: "") == nil)
+        #expect(UnitSystem.canadian.bodyWeightKg(typed: "abc") == nil)
+        #expect(UnitSystem.canadian.bodyWeightKg(typed: "1760") == nil)
+        #expect(UnitSystem.british.bodyWeightKg(typed: "12.5", pounds: "2") == nil)
+        #expect(UnitSystem.british.bodyWeightKg(typed: "12", pounds: "15") == nil)
+    }
+}
+
+@Suite struct MealTimeTests {
+    @Test func namesTheMealByTheHour() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try #require(TimeZone(identifier: "UTC"))
+        func at(_ hour: Int) -> Date { Date(timeIntervalSince1970: TimeInterval(hour * 3600)) }
+        #expect(Meal.mealTime(at: at(8), calendar: calendar) == "Breakfast")
+        #expect(Meal.mealTime(at: at(13), calendar: calendar) == "Lunch")
+        #expect(Meal.mealTime(at: at(16), calendar: calendar) == "Snack")
+        #expect(Meal.mealTime(at: at(19), calendar: calendar) == "Dinner")
+        #expect(Meal.mealTime(at: at(23), calendar: calendar) == "Snack")
+    }
 }
 
 @Suite struct DayTests {

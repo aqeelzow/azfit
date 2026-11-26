@@ -37,6 +37,15 @@ public struct MealPhotoRequest: Codable, Sendable, Equatable {
         public var carbsG: Double
         public var fatG: Double
         public var loggedTimes: Int
+
+        public init(name: String, kcal: Double, proteinG: Double, carbsG: Double, fatG: Double, loggedTimes: Int) {
+            self.name = name
+            self.kcal = kcal
+            self.proteinG = proteinG
+            self.carbsG = carbsG
+            self.fatG = fatG
+            self.loggedTimes = loggedTimes
+        }
     }
 
     public init(

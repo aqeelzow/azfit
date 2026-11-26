@@ -116,7 +116,7 @@ public final class BridgeConnection {
     /// on the bridge, so it fails if that sync does.
     public func ask(_ job: Job) async throws -> Outcome {
         switch job {
-        case .sync: break
+        case .sync, .estimateMeal, .reviseMeal: break
         case .sessionReview: try await sync()
         case .chat: try? await sync()
         }

@@ -61,6 +61,16 @@ public struct PhoneJobs: Sendable {
                         note: result.output.note, applied: saved.filter { $0.status == .applied }.count,
                         proposed: saved.filter { $0.status == .proposed }.count))
 
+            case .estimateMeal(let photo):
+                let result = try await div().estimateMeal(photo)
+                onRun("estimate_meal", result.run)
+                return .mealEstimated(MealEstimateReply(estimate: result.estimate, totals: result.totals, warnings: result.warnings))
+
+            case .reviseMeal(let revision):
+                let result = try await div().reviseMeal(revision)
+                onRun("revise_meal", result.run)
+                return .mealEstimated(MealEstimateReply(estimate: result.estimate, totals: result.totals, warnings: result.warnings))
+
             case .chat(let chat):
                 var div = try div()
                 let today = today()

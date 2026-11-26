@@ -85,12 +85,15 @@ public struct WeightSummary: Sendable, Equatable {
     public var days: Int
     /// The trend, oldest first, for a sparkline.
     public var trend: [Double]
+    /// The day of each `trend` point.
+    public var trendDays: [String]
 
-    public init(latestKg: Double? = nil, changeKg: Double? = nil, days: Int = 0, trend: [Double] = []) {
+    public init(latestKg: Double? = nil, changeKg: Double? = nil, days: Int = 0, trend: [Double] = [], trendDays: [String] = []) {
         self.latestKg = latestKg
         self.changeKg = changeKg
         self.days = days
         self.trend = trend
+        self.trendDays = trendDays
     }
 }
 
@@ -189,10 +192,10 @@ extension AZStore {
             eaten: eaten, targets: targets, meals: meals)
     }
 
-    /// The trend weight over the last `days` days.
-    public func weight(today: String, days: Int = 21) throws -> WeightSummary {
+    /// The trend weight over the last `days` days (every weigh-in when nil).
+    public func weight(today: String, days: Int? = 21) throws -> WeightSummary {
         let all = try writer.read { db in try WeighIn.order(Column("day"), Column("at")).fetchAll(db) }
-        let since = Day.adding(-days, to: today)
+        let since = days.map { Day.adding(-$0, to: today) } ?? ""
         let window = all.filter { $0.day >= since }
         let trend = WeightTrend.trend(window.map(\.kg))
         let span =
@@ -200,7 +203,7 @@ extension AZStore {
                 Calendar.current.dateComponents([.day], from: first, to: last).day ?? 0
             } else { 0 }
         let change: Double? = trend.count > 1 ? ((trend[trend.count - 1] - trend[0]) * 10).rounded() / 10 : nil
-        return WeightSummary(latestKg: all.last?.kg, changeKg: change, days: span, trend: trend)
+        return WeightSummary(latestKg: all.last?.kg, changeKg: change, days: span, trend: trend, trendDays: window.map(\.day))
     }
 
     /// Div's changes from the last `days` days, newest first.

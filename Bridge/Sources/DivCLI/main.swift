@@ -226,6 +226,8 @@ do {
                 case .chat(let chat): print("chat: \(chat.message)")
                 case .sync(let push): print("sync: \(push.batch.rows.count) rows from the phone")
                 case .sessionReview(let review): print("session review: workout \(review.workoutID)")
+                case .estimateMeal(let photo): print("meal photo: \(photo.photo.count / 1024) KB")
+                case .reviseMeal(let revision): print("meal answer: \(revision.answer)")
                 }
                 let outcome = await jobs.handle(request)
                 switch outcome {
@@ -233,6 +235,7 @@ do {
                 case .synced(let pull): print("synced: \(pull.batch.rows.count) rows to the phone")
                 case .sessionReviewed(let reply):
                     print("reviewed: \(reply.note) (\(reply.applied) applied, \(reply.proposed) to check)")
+                case .mealEstimated(let reply): print("meal: \(reply.estimate.mealName), \(reply.totals.kcal) kcal")
                 case .failed(let why): print("failed: \(why)")
                 }
                 return outcome
