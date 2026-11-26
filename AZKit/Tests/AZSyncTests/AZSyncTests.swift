@@ -229,3 +229,64 @@ import UniformTypeIdentifiers
         #expect(PhotoPrep.takenAt(try bigPNG()) == nil)
     }
 }
+
+@Suite struct FoodDatabaseTests {
+    @Test func readsAProductWithServingAndPer100g() throws {
+        let json = """
+            {"product":{"code":"0123","product_name":"Greek yogurt","brands":"Fage, Other","serving_size":"1 pot (170 g)",
+            "serving_quantity":"170","nutriments":{"energy-kcal_100g":97,"proteins_100g":"9","carbohydrates_100g":3.9,"fat_100g":5,
+            "sodium_100g":0.032,"vitamin-d_100g":1e-07,"fiber_100g":0}}}
+            """
+        let food = try #require(FoodDatabase.food(fromProduct: Data(json.utf8)))
+        #expect(food.name == "Greek yogurt" && food.brand == "Fage" && food.barcode == "0123")
+        let per100g = try #require(food.per100g)
+        #expect(per100g.kcal == 97 && per100g.proteinG == 9 && per100g.carbsG == 3.9 && per100g.fatG == 5)
+        // Grams to each nutrient's unit: sodium in mg, vitamin D in micrograms.
+        #expect(abs((per100g.micros["sodium"] ?? 0) - 32) < 0.001)
+        #expect(abs((per100g.micros["vitamin_d"] ?? 0) - 0.1) < 0.0001)
+        #expect(per100g.micros["fiber"] == 0 && per100g.micros["iron"] == nil)
+        let meal = try #require(food.meal(170, .grams, day: "2026-11-26", slot: .breakfast))
+        #expect(meal.micros?["sodium"] == 54.4)
+        #expect(food.serving?.grams == 170)
+        #expect(food.units == [.servings, .grams])
+    }
+
+    @Test func skipsProductsWithoutCaloriesOrName() throws {
+        let products = [
+            #"{"product":{"code":"1","product_name":"Water","nutriments":{}}}"#,
+            #"{"product":{"code":"2","nutriments":{"energy-kcal_100g":50}}}"#,
+        ]
+        #expect(products.compactMap { FoodDatabase.food(fromProduct: Data($0.utf8)) }.isEmpty)
+        let bar =
+            #"{"product":{"code":"3","product_name":"Bar","brands":["xx:Quest"],"serving_size":"1 bar","nutriments":{"energy-kcal_serving":210,"proteins_serving":20}}}"#
+        let food = try #require(FoodDatabase.food(fromProduct: Data(bar.utf8)))
+        #expect(food.brand == "Quest" && food.units == [.servings])
+        #expect(food.nutrients(1, .servings)?.proteinG == 20)
+    }
+
+    @Test func searchHitsAreInEnglishWithCaloriesFromTheirScore() throws {
+        let json = """
+            {"hits":[
+            {"code":"1","lang":"en","product_name":"Greek Yogurt","brands":["xx:chobani"],"serving_size":"1 cup",
+             "nutriscore_data":{"components":{"negative":[{"id":"energy","value":360.5,"unit":"kJ"}]}}},
+            {"code":"2","lang":"es","product_name":"Yogur sabor a Platano","product_name_en":"Banana yogurt"},
+            {"code":"3","lang":"lt","product_name":"Jogurtas"},
+            {"code":"","lang":"en","product_name":"No barcode"}]}
+            """
+        let hits = FoodDatabase.hits(fromSearch: Data(json.utf8))
+        #expect(hits.map(\.name) == ["Greek Yogurt", "Banana yogurt"])
+        let first = try #require(hits.first)
+        #expect(first.brand == "Chobani" && first.kcalPer100g == 86 && first.serving == "1 cup")
+        #expect(hits.last?.kcalPer100g == nil)
+    }
+
+    @Test func aProductPrefersItsEnglishName() throws {
+        let json =
+            #"{"product":{"code":"9","lang":"fr","product_name":"Yaourt grec","product_name_en":"Greek yogurt","nutriments":{"energy-kcal_100g":100}}}"#
+        #expect(FoodDatabase.food(fromProduct: Data(json.utf8))?.name == "Greek yogurt")
+    }
+
+    @Test func anUnknownBarcodeIsNil() {
+        #expect(FoodDatabase.food(fromProduct: Data(#"{"status":0,"status_verbose":"product not found"}"#.utf8)) == nil)
+    }
+}

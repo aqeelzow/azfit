@@ -96,7 +96,7 @@ struct SnapMealView: View {
 
             HStack(spacing: 4) {
                 mode("Photo", isOn: true) {}
-                mode("Describe", isOn: false) { router.dismissCover(thenPush: .describeMeal) }
+                mode("Add food", isOn: false) { router.dismissCover(thenPush: .addFood(nil)) }
             }
             .padding(.top, 16)
 
@@ -117,7 +117,7 @@ struct SnapMealView: View {
                 .opacity(problem == nil ? 1 : 0.35)
                 .accessibilityLabel("Take photo")
                 Spacer()
-                glassButton("text.alignleft", "Describe instead", size: 52) { router.dismissCover(thenPush: .describeMeal) }
+                glassButton("magnifyingglass", "Add food instead", size: 52) { router.dismissCover(thenPush: .addFood(nil)) }
             }
             .padding(.horizontal, 36)
             .padding(.top, 34)

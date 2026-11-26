@@ -85,9 +85,14 @@ public struct NutritionTarget: Codable, Sendable, Equatable, Identifiable {
     public var source: Source
     /// The Div change that set it, for its reason and its undo.
     public var divChangeID: UUID?
+    /// Fat the person chose, in grams a day. Nil: a quarter of the calories (`Targets.macroGrams`).
+    public var fatG: Int?
+    /// Water the person chose, in ml a day. Nil: from body weight (`Targets.waterMl`).
+    public var waterMl: Int?
 
     public init(
-        id: UUID = UUID(), startDay: String, kcal: Int, proteinGPerKg: Double, source: Source, divChangeID: UUID? = nil
+        id: UUID = UUID(), startDay: String, kcal: Int, proteinGPerKg: Double, source: Source, divChangeID: UUID? = nil,
+        fatG: Int? = nil, waterMl: Int? = nil
     ) {
         self.id = id
         self.startDay = startDay
@@ -95,6 +100,8 @@ public struct NutritionTarget: Codable, Sendable, Equatable, Identifiable {
         self.proteinGPerKg = proteinGPerKg
         self.source = source
         self.divChangeID = divChangeID
+        self.fatG = fatG
+        self.waterMl = waterMl
     }
 }
 
@@ -122,9 +129,11 @@ public struct PlannedSession: Codable, Sendable, Equatable, Identifiable {
         self.movedUntilDay = movedUntilDay
     }
 
-    /// The weekday it happens on in the week of `day`.
+    /// The weekday it happens on in the week of `day`. A move lasts only the week ending `movedUntilDay`.
     public func weekday(on day: String) -> Int {
-        if let movedToWeekday, let movedUntilDay, day <= movedUntilDay { return movedToWeekday }
+        if let movedToWeekday, let movedUntilDay, day <= movedUntilDay, day > Day.adding(-7, to: movedUntilDay) {
+            return movedToWeekday
+        }
         return weekday
     }
 
@@ -249,11 +258,16 @@ public struct Meal: Codable, Sendable, Equatable, Identifiable {
     public var isFavorite: Bool
     /// The person removed it. Kept, never deleted, and left out of every total.
     public var removed: Bool
+    /// Breakfast, lunch, dinner or snacks. Nil on meals logged before meals had one (`mealSlot` uses the time).
+    public var slot: Slot?
+    /// Micronutrients from the food's label, keyed by `Micronutrient.rawValue`. Nil when unknown (typed, photo).
+    public var micros: [String: Double]?
 
     public init(
         id: UUID = UUID(), day: String, at: Date = .now, name: String, kcal: Double, kcalLow: Double? = nil,
         kcalHigh: Double? = nil, proteinG: Double, carbsG: Double, fatG: Double, source: Source, barcode: String? = nil,
-        isFavorite: Bool = false, removed: Bool = false
+        isFavorite: Bool = false, removed: Bool = false, slot: Slot? = nil,
+        micros: [String: Double]? = nil
     ) {
         self.id = id
         self.day = day
@@ -269,6 +283,8 @@ public struct Meal: Codable, Sendable, Equatable, Identifiable {
         self.barcode = barcode
         self.isFavorite = isFavorite
         self.removed = removed
+        self.slot = slot
+        self.micros = micros
     }
 }
 
@@ -302,10 +318,10 @@ extension Meal {
 
     /// The same food logged again now, as a new row: one-tap repeat logging. The estimate's range comes along; the
     /// barcode, favorite flag and removal don't.
-    public func again(day: String, at: Date = .now) -> Meal {
+    public func again(day: String, at: Date = .now, slot: Slot? = nil) -> Meal {
         Meal(
             day: day, at: at, name: name, kcal: kcal, kcalLow: kcalLow, kcalHigh: kcalHigh, proteinG: proteinG, carbsG: carbsG,
-            fatG: fatG, source: .favorite)
+            fatG: fatG, source: .favorite, slot: slot ?? .at(at), micros: micros)
     }
 }
 

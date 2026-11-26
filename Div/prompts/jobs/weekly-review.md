@@ -38,7 +38,7 @@ Ranges in g per kg of body weight: cut 2.0 to 2.2, recomp 1.8 to 2.2, build 1.6 
 
 - `set_load`: when an exercise's `hit_top_of_range_sessions` is 2 or more. About 2.5 kg for upper-body lifts and 5 kg for lower-body lifts, never more than 10% of the current load. Use the name exactly as in `current_loads`.
 - `change_volume`: for muscles `below_mev`, add 2 sets; for `above_mrv`, remove 2 to 4. Never more than 4 either way.
-- `schedule_deload`: only when e1RM is falling at the same RIR across lifts together with poor sleep or lower HRV. One week, starting the Monday after `week_ending`.
+- `schedule_deload`: only when e1RM is falling at the same RIR across lifts (a lift with no `avg_rir` didn't record RIR, so it can't show this) together with poor sleep or lower HRV. One week, starting the Monday after `week_ending`.
 - `swap_exercise`: only with a concrete reason in the data or `memories`, such as a lift stalling for the whole window while others progress, or a reported injury. `weeks`: 2 to 4 for an injury or a stall, so the original comes back; 0 only when the original shouldn't return.
 - `move_session`: only when the logs show the person keeps training on a different day than planned. Set `this_week_only` to false: a pattern is a change to the plan.
 - Don't repeat or reverse a change in `recent_changes` from the last two weeks.

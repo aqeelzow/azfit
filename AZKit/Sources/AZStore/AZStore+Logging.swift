@@ -63,8 +63,6 @@ public struct PlannedUse: Sendable, Equatable {
 }
 
 extension AZStore {
-    /// Sets that don't say their reps in reserve count as this many, as in the reviews.
-    static let unknownRIR = 2.0
 
     // MARK: Food
 
@@ -79,6 +77,66 @@ extension AZStore {
             meal.removed = true
             try meal.update(db)
         }
+    }
+
+    /// Marks a day's food log as everything eaten (true), not everything (false), or unsaid (nil). Only days marked
+    /// true count in the weekly calorie review.
+    public func setDayComplete(_ day: String, _ complete: Bool?) throws {
+        try save(FoodDay(day: day, complete: complete))
+    }
+
+    /// Water drunk on a day, in ml.
+    public func water(on day: String) throws -> Double {
+        try writer.read { db in
+            try WaterLog.filter(Column("day") == day && Column("removed") == false).fetchAll(db).reduce(0) { $0 + $1.ml }
+        }
+    }
+
+    public func logWater(ml: Double = WaterLog.glassMl, day: String, at: Date = .now) throws {
+        guard ml > 0 else { return }
+        try save(WaterLog(day: day, at: at, ml: ml))
+    }
+
+    /// Takes back the day's latest water. The row stays, marked removed.
+    public func removeLastWater(on day: String) throws {
+        try writer.write { db in
+            guard
+                var last = try WaterLog.filter(Column("day") == day && Column("removed") == false).order(Column("at").desc)
+                    .fetchOne(db)
+            else { return }
+            last.removed = true
+            try last.update(db)
+        }
+    }
+
+    /// Moves a logged food to another meal of the same day.
+    public func moveMeal(_ id: UUID, to slot: Meal.Slot) throws {
+        try writer.write { db in
+            guard var meal = try Meal.fetchOne(db, key: id.uuidString.lowercased()) else { return }
+            meal.slot = slot
+            try meal.update(db)
+        }
+    }
+
+    /// Saves a food the person made, so search and its barcode find it again.
+    public func saveCustomFood(_ food: CustomFood) throws {
+        try save(food)
+    }
+
+    /// The person's own foods whose name or brand contains `query` (all of them when it's empty), newest first.
+    public func customFoods(matching query: String = "") throws -> [CustomFood] {
+        let all = try writer.read { db in try CustomFood.order(Column("created_at").desc).fetchAll(db) }
+        let words = query.lowercased().split(separator: " ").map(String.init)
+        guard !words.isEmpty else { return all }
+        return all.filter { food in
+            let text = "\(food.name) \(food.brand ?? "")".lowercased()
+            return words.allSatisfy { text.contains($0) }
+        }
+    }
+
+    /// A food the person made with this barcode.
+    public func customFood(barcode: String) throws -> CustomFood? {
+        try writer.read { db in try CustomFood.filter(Column("barcode") == barcode).fetchOne(db) }
     }
 
     /// Meals logged before, one per name (the latest), the most logged first.
@@ -114,6 +172,21 @@ extension AZStore {
         let weighIn = WeighIn(day: day, at: at, kg: kg, source: .manual)
         try save(weighIn)
         return weighIn
+    }
+
+    /// Weigh-ins read from Apple Health, keyed by the Health sample's ID so reading them again adds nothing. Returns
+    /// how many were new. Implausible readings are skipped.
+    @discardableResult
+    public func importWeighIns(_ weighIns: [WeighIn]) throws -> Int {
+        try writer.write { db in
+            var added = 0
+            for weighIn in weighIns where UnitSystem.plausibleBodyWeightKg.contains(weighIn.kg) {
+                guard try !WeighIn.exists(db, key: weighIn.id.uuidString.lowercased()) else { continue }
+                try weighIn.insert(db)
+                added += 1
+            }
+            return added
+        }
     }
 
     /// The scale's trend change week by week, oldest first, ending with the week `today` is in.
@@ -177,7 +250,7 @@ extension AZStore {
         }
         let dayOf = Dictionary(workouts.map { ($0.id, $0.day) }, uniquingKeysWith: { first, _ in first })
         func e1rm(_ set: LoggedSet) -> Double {
-            Strength.e1rm(loadKg: set.loadKg, reps: set.reps, rir: set.rir ?? Self.unknownRIR)
+            Strength.e1rm(loadKg: set.loadKg, reps: set.reps, rir: set.rir)
         }
         let trends = Dictionary(grouping: sets.filter { $0.reps > 0 && $0.loadKg > 0 }, by: \.exerciseID).compactMap {
             id, sets -> LiftTrend? in

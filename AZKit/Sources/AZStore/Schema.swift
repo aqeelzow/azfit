@@ -5,7 +5,7 @@ enum Schema {
     /// Every synced table: each has a text `id` primary key.
     static let tables = [
         "profile", "nutrition_target", "planned_session", "planned_exercise", "workout", "logged_set", "meal", "food_day",
-        "weigh_in", "body_measurement", "div_change", "memory", "week_review",
+        "weigh_in", "body_measurement", "div_change", "memory", "week_review", "water_log",
     ]
 
     static var migrator: DatabaseMigrator {
@@ -154,7 +154,7 @@ enum Schema {
                         acknowledged_seq INTEGER NOT NULL
                     );
                     """)
-            for table in tables where table != "week_review" { try logChanges(to: table, db) }
+            for table in tables where !["week_review", "water_log"].contains(table) { try logChanges(to: table, db) }
         }
         // Additive from here on: databases already made with v1 exist on phones and bridges.
         migrator.registerMigration("v2 workout note") { db in
@@ -174,6 +174,50 @@ enum Schema {
                     CREATE INDEX week_review_week ON week_review(week_ending);
                     """)
             try logChanges(to: "week_review", db)
+        }
+        // The meal a food was logged to, and foods the person made (phone only, so not synced).
+        migrator.registerMigration("v4 meal slots and custom foods") { db in
+            try db.execute(
+                sql: """
+                    ALTER TABLE meal ADD COLUMN slot TEXT;
+                    CREATE TABLE custom_food (
+                        id TEXT PRIMARY KEY NOT NULL,
+                        name TEXT NOT NULL,
+                        brand TEXT,
+                        serving_label TEXT NOT NULL,
+                        kcal REAL NOT NULL,
+                        protein_g REAL NOT NULL,
+                        carbs_g REAL NOT NULL,
+                        fat_g REAL NOT NULL,
+                        barcode TEXT,
+                        created_at TEXT NOT NULL
+                    );
+                    CREATE INDEX custom_food_barcode ON custom_food(barcode);
+                    """)
+        }
+        // Micronutrients on meals, and water.
+        migrator.registerMigration("v5 micronutrients and water") { db in
+            try db.execute(
+                sql: """
+                    ALTER TABLE meal ADD COLUMN micros TEXT;
+                    CREATE TABLE water_log (
+                        id TEXT PRIMARY KEY NOT NULL,
+                        day TEXT NOT NULL,
+                        at TEXT NOT NULL,
+                        ml REAL NOT NULL,
+                        removed INTEGER NOT NULL
+                    );
+                    CREATE INDEX water_log_day ON water_log(day);
+                    """)
+            try logChanges(to: "water_log", db)
+        }
+        // Fat and water targets the person set themselves.
+        migrator.registerMigration("v6 own fat and water targets") { db in
+            try db.execute(
+                sql: """
+                    ALTER TABLE nutrition_target ADD COLUMN fat_g INTEGER;
+                    ALTER TABLE nutrition_target ADD COLUMN water_ml INTEGER;
+                    """)
         }
         return migrator
     }

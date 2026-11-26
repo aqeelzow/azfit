@@ -16,6 +16,10 @@ final class AppEnvironment {
     let bridge: BridgeConnection
     /// The conversation on the Div screen. Kept here so it survives leaving the screen.
     let chat: ChatSession
+    /// Body weight from Apple Health, once the person connects it.
+    let health = HealthWeights()
+    /// Food search and barcode lookup (Open Food Facts).
+    let foods = FoodDatabase()
     /// Who this is. Nil until onboarding saves them.
     private(set) var profile: Profile?
     /// Bumped after every write, so screens reading the store refresh.
@@ -42,6 +46,21 @@ final class AppEnvironment {
         profile = try? store.profile()
         revision += 1
         Task { try? await bridge.sync() }
+    }
+
+    /// Reads new weigh-ins from Apple Health, when connected, and refreshes the screens if any came in.
+    func syncHealth(allHistory: Bool = false) {
+        Task {
+            if await health.sync(into: store, allHistory: allHistory) > 0 { changed() }
+        }
+    }
+
+    /// Connects Apple Health for weight and reads it in.
+    func connectHealth() {
+        Task {
+            await health.connect(into: store)
+            changed()
+        }
     }
 
     /// Asks Div to review finished workouts from the last two days that don't have a note yet. Runs after Finish and
@@ -74,9 +93,9 @@ final class AppEnvironment {
     }
 
     /// Saves who they are, their targets and a template plan (D-028).
-    func finishOnboarding(_ profile: Profile, weightKg: Double?) {
+    func finishOnboarding(_ profile: Profile, weightKg: Double?, weekdays: Set<Int>) {
         do {
-            try store.start(profile, weightKg: weightKg, today: Day.string(.now))
+            try store.start(profile, weightKg: weightKg, today: Day.string(.now), weekdays: weekdays)
         } catch {
             assertionFailure("Couldn't save onboarding: \(error)")
         }

@@ -6,8 +6,8 @@ import GRDB
 // The inputs Div's reviews read, built from the database, and saving what they decide.
 
 extension AZStore {
-    /// RIR assumed for sets logged without one, and prescribed until the plan carries its own.
-    public static let defaultRIR = 2.0
+    /// The RIR the plan aims for, until it carries its own per exercise. A target, not a guess about any set.
+    public static let targetRIR = 2.0
 
     /// A finished workout as the session review reads it: each exercise with its prescription, the sets as lifted,
     /// and its best e1RM from earlier workouts. Exercises are named as in the library. Nil if it has no sets.
@@ -36,14 +36,14 @@ extension AZStore {
                 let heaviest = done.map(\.loadKg).max() ?? 0
                 let prescription = SessionReport.Prescription(
                     sets: plan?.sets ?? done.count, repMin: plan?.repMin ?? done.map(\.reps).min() ?? 0,
-                    repMax: plan?.repMax ?? done.map(\.reps).max() ?? 0, rir: Self.defaultRIR, loadKg: plan?.loadKg ?? heaviest)
+                    repMax: plan?.repMax ?? done.map(\.reps).max() ?? 0, rir: Self.targetRIR, loadKg: plan?.loadKg ?? heaviest)
                 let history = order.compactMap { workoutID -> Double? in
                     let theirs = earlierSets.filter { $0.workoutID == workoutID && $0.exerciseID == id }
-                    return theirs.map { Strength.e1rm(loadKg: $0.loadKg, reps: $0.reps, rir: $0.rir ?? Self.defaultRIR) }.max()
+                    return theirs.map { Strength.e1rm(loadKg: $0.loadKg, reps: $0.reps, rir: $0.rir) }.max()
                 }
                 return SessionReport.Exercise(
                     exercise: library.exercise(id)?.name ?? id, prescribed: prescription,
-                    performed: done.map { .init(loadKg: $0.loadKg, reps: $0.reps, rir: $0.rir ?? Self.defaultRIR) },
+                    performed: done.map { .init(loadKg: $0.loadKg, reps: $0.reps, rir: $0.rir) },
                     e1rmHistory: Array(history.suffix(6)))
             }
             let memories = try Memory.order(Column("created_at")).fetchAll(db).map(\.text)
@@ -109,10 +109,6 @@ extension AZStore {
 
     /// Days of data the weekly review reads, before the person has been here that long.
     public static let reviewWindowDays = 21
-    /// Until the phone can mark a day "that's everything", a day with at least this share of the target logged counts
-    /// as complete. One marked complete or not on purpose always wins.
-    public static let completeDayShare = 0.6
-
     /// The Sunday on or before `day`.
     public static func sunday(onOrBefore day: String) -> String {
         Day.adding(-((Day.weekday(day) ?? 7) % 7), to: day)
@@ -149,9 +145,8 @@ extension AZStore {
         let meals = records.meals.filter { !$0.removed && $0.day >= windowStart && $0.day <= weekEnding }
         let marked = Dictionary(records.foodDays.map { ($0.day, $0.complete) }, uniquingKeysWith: { _, last in last })
         let kcalByDay = Dictionary(grouping: meals, by: \.day).mapValues { $0.reduce(0) { $0 + $1.kcal } }
-        let complete = kcalByDay.filter { day, kcal in
-            marked[day].flatMap { $0 } ?? (kcal >= Double(target.kcal) * Self.completeDayShare)
-        }
+        // Only days the person marked "That's everything": a partly logged day would read as eating less.
+        let complete = kcalByDay.filter { day, _ in marked[day] == .some(true) }
         let proteinTarget = target.proteinGPerKg * weight.trendKgNow
         let proteinByDay = Dictionary(grouping: meals.filter { $0.day >= weekStart }, by: \.day).mapValues {
             $0.reduce(0) { $0 + $1.proteinG }
@@ -169,7 +164,7 @@ extension AZStore {
         let workouts = records.workouts.filter { !$0.skipped && $0.day >= windowStart && $0.day <= weekEnding }
         let dayOf = Dictionary(uniqueKeysWithValues: workouts.map { ($0.id, $0.day) })
         let sets = records.sets.filter { dayOf[$0.workoutID] != nil }
-        func e1rm(_ set: LoggedSet) -> Double { Strength.e1rm(loadKg: set.loadKg, reps: set.reps, rir: set.rir ?? Self.defaultRIR) }
+        func e1rm(_ set: LoggedSet) -> Double { Strength.e1rm(loadKg: set.loadKg, reps: set.reps, rir: set.rir) }
         let lifts = Dictionary(grouping: sets, by: \.exerciseID).compactMap { id, sets -> WeeklySnapshot.Lift? in
             let thisWeek = sets.filter { (dayOf[$0.workoutID] ?? "") >= weekStart }
             guard let firstDay = sets.compactMap({ dayOf[$0.workoutID] }).min(), firstDay < weekStart, !thisWeek.isEmpty else {
@@ -179,7 +174,7 @@ extension AZStore {
             return WeeklySnapshot.Lift(
                 name: library.exercise(id)?.name ?? id, e1rmNow: (thisWeek.map(e1rm).max() ?? 0).rounded(),
                 e1rmWindowStart: (first.map(e1rm).max() ?? 0).rounded(),
-                avgRir: thisWeek.reduce(0) { $0 + ($1.rir ?? Self.defaultRIR) } / Double(thisWeek.count))
+                avgRir: Strength.averageRIR(thisWeek.map(\.rir)))
         }
         .sorted { $0.name < $1.name }
 

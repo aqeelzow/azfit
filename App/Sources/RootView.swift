@@ -64,7 +64,8 @@ struct MainView: View {
     @ViewBuilder
     private func destination(_ route: Router.Route) -> some View {
         switch route {
-        case .workout: WorkoutView()
+        case .session(let id): SessionView(sessionID: id)
+        case .workout(let id): WorkoutView(sessionID: id)
         case .workoutDone: WorkoutDoneView()
         case .swapExercise(let exerciseID): SwapExerciseView(replacing: exerciseID)
         case .exercise(let exerciseID): ExerciseView(exerciseID: exerciseID)
@@ -72,9 +73,14 @@ struct MainView: View {
         case .divLog: DivLogView()
         case .memory: MemoryView()
         case .connectMac: ConnectMacView()
-        case .describeMeal: DescribeMealView()
+        case .addFood(let slot): AddFoodView(slot: slot ?? .at(.now))
+        case .food(let food, let slot): FoodDetailView(food: food, slot: slot)
+        case .foodHit(let hit, let slot): DatabaseFoodView(hit: hit, slot: slot)
+        case .createFood(let slot, let barcode): CreateFoodView(slot: slot, barcode: barcode)
+        case .quickAdd(let slot): DescribeMealView(slot: slot)
         case .mealEstimate(let photo): MealView(photo: photo)
         case .calorieTarget: CalorieTargetView()
+        case .editTargets: EditTargetsView()
         case .weighIn: WeighInView()
         case .measurements: ScanResultView()
         case .progress: BodyProgressView()

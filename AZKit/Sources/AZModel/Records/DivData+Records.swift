@@ -47,12 +47,14 @@ extension DivData {
     public init(_ r: PersonRecords, today: String, calorieFloorKcal: Int, library: Library = .standard) {
         func name(_ id: String) -> String { library.exercise(id)?.name ?? id }
         let target = r.target(on: today)
+        let previous = target.flatMap { t in r.targets.filter { $0.startDay < t.startDay }.max { $0.startDay < $1.startDay } }
 
         self.today = today
         profile = Profile(
             name: r.profile.name, age: r.profile.age(on: today) ?? 0, heightCm: r.profile.heightCm ?? 0, goal: r.profile.goal,
             targetRatePctPerWeek: r.profile.targetRatePctPerWeek, caloriesKcal: target?.kcal ?? 0,
-            proteinGPerKg: target?.proteinGPerKg ?? 0, calorieFloorKcal: calorieFloorKcal, kidneyDisease: r.profile.kidneyDisease)
+            proteinGPerKg: target?.proteinGPerKg ?? 0, calorieFloorKcal: calorieFloorKcal, kidneyDisease: r.profile.kidneyDisease,
+            targetsSetBy: target?.source.rawValue, fatG: target?.fatG, waterMl: target?.waterMl, previousCaloriesKcal: previous?.kcal)
         memories = r.memories.sorted { $0.createdAt < $1.createdAt }.map {
             Memory(text: $0.text, source: $0.source.rawValue, date: Day.string($0.createdAt))
         }
@@ -87,7 +89,7 @@ extension DivData {
             Workout(
                 date: workout.day, name: workout.name,
                 sets: r.sets.filter { $0.workoutID == workout.id }.sorted { $0.position < $1.position }.map {
-                    WorkoutSet(exercise: name($0.exerciseID), loadKg: $0.loadKg, reps: $0.reps, rir: $0.rir ?? 2)
+                    WorkoutSet(exercise: name($0.exerciseID), loadKg: $0.loadKg, reps: $0.reps, rir: $0.rir)
                 })
         }
         divLog = r.changes.sorted { $0.createdAt < $1.createdAt }.map { change in

@@ -16,7 +16,9 @@ struct AZfitApp: App {
         // Talk to the Mac while the app is open. Away from the app, the bridge runs the Sunday review on its own.
         .onChange(of: scenePhase, initial: true) { _, phase in
             switch phase {
-            case .active: environment.bridge.connect()
+            case .active:
+                environment.bridge.connect()
+                environment.syncHealth()
             case .background: environment.bridge.stop()
             default: break
             }

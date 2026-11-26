@@ -39,9 +39,10 @@ public struct InWorkoutDerived: Codable, Sendable, Equatable {
         public var loadKg: Double
         /// "below", "in" or "top" of the rep range.
         public var repRange: String
-        public var rirVsPrescribed: Double
+        /// Nil when the set has no RIR.
+        public var rirVsPrescribed: Double?
 
-        public init(reps: Int, loadKg: Double, repRange: String, rirVsPrescribed: Double) {
+        public init(reps: Int, loadKg: Double, repRange: String, rirVsPrescribed: Double?) {
             self.reps = reps
             self.loadKg = loadKg
             self.repRange = repRange

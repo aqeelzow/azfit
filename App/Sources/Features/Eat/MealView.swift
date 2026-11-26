@@ -309,9 +309,8 @@ struct MealView: View {
             } else {
                 PillButton(title: "Connect your Mac", style: .fill) { router.push(.connectMac) }
             }
-            PillButton(title: "Describe it", style: .fill) {
-                router.pop()
-                router.push(.describeMeal)
+            PillButton(title: "Add it yourself", style: .fill) {
+                router.replaceTop(with: .addFood(nil))
             }
         }
     }

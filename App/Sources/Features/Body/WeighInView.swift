@@ -2,14 +2,15 @@ import AZModel
 import AZStore
 import SwiftUI
 
-/// Weighing in: one number in the person's units (stone and pounds for British), saved as today's weigh-in. The
-/// trend and the Sunday calorie check read these.
+/// Weighing in: one number in the person's units (stone and pounds for British) and when it was weighed (now by
+/// default), or read from Apple Health once connected. The trend and the Sunday calorie check read these.
 struct WeighInView: View {
     @Environment(Router.self) private var router
     @Environment(AppEnvironment.self) private var environment
     @State private var main = ""
     @State private var pounds = ""
     @State private var problem: String?
+    @State private var weighedAt = Date.now
     @FocusState private var focus: Field?
 
     private enum Field: Hashable { case main, pounds }
@@ -44,6 +45,16 @@ struct WeighInView: View {
                     Text(problem ?? "Same time each day is best: after waking, before eating.")
                         .font(.az(14)).foregroundStyle(AZColor.muted)
                         .padding(.top, 12)
+                    HStack {
+                        Text("Weighed").font(.az(16, .bold))
+                        Spacer()
+                        DatePicker("Weighed", selection: $weighedAt, in: ...Date.now, displayedComponents: [.date, .hourAndMinute])
+                            .labelsHidden()
+                            .tint(AZColor.accent)
+                    }
+                    .frame(minHeight: 60)
+                    .padding(.top, 14)
+                    healthRow.padding(.top, 4)
                     if let latest {
                         SectionHeader(title: "Last time").padding(.top, 30)
                         HairlineStack {
@@ -71,6 +82,38 @@ struct WeighInView: View {
         }
         .azScreen()
         .onAppear { focus = .main }
+    }
+
+    /// Apple Health: connect it, or say it's reading from it.
+    @ViewBuilder
+    private var healthRow: some View {
+        let health = environment.health
+        if health.isAvailable {
+            HStack(spacing: 12) {
+                IconTile(systemImage: "heart.fill", size: 40, foreground: AZColor.ink, background: AZColor.fill)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("Apple Health").font(.az(16, .bold))
+                    Text(healthNote(health)).font(.az(13.5)).foregroundStyle(AZColor.muted).fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 8)
+                if health.isConnected {
+                    PillButton(title: health.isSyncing ? "Reading" : "Sync", style: .fill) { environment.syncHealth(allHistory: true) }
+                        .disabled(health.isSyncing)
+                } else {
+                    PillButton(title: "Connect", style: .dark) { environment.connectHealth() }
+                }
+            }
+            .frame(minHeight: 64)
+        }
+    }
+
+    private func healthNote(_ health: HealthWeights) -> String {
+        if let problem = health.problem { return problem }
+        guard health.isConnected else { return "Bring in weigh-ins from a smart scale or other apps" }
+        if let added = health.lastAdded {
+            return added == 0 ? "Up to date. New weights come in when you open the app" : "Brought in \(added) new"
+        }
+        return "Weights come in when you open the app"
     }
 
     private var typedKg: Double? { environment.units.bodyWeightKg(typed: main, pounds: pounds) }
@@ -108,7 +151,7 @@ struct WeighInView: View {
             return
         }
         do {
-            try environment.store.logWeighIn(kg: kg, day: environment.today)
+            try environment.store.logWeighIn(kg: kg, day: Day.string(weighedAt), at: weighedAt)
             environment.changed()
             router.pop()
             if router.path.last != .progress { router.push(.progress) }

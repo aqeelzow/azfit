@@ -178,7 +178,10 @@ extension AZStore {
         let current = try NutritionTarget.filter(Column("start_day") <= today).order(Column("start_day").desc).fetchOne(db)
         var target =
             current.map {
-                $0.startDay == today ? $0 : NutritionTarget(startDay: today, kcal: $0.kcal, proteinGPerKg: $0.proteinGPerKg, source: .div)
+                $0.startDay == today
+                    ? $0
+                    : NutritionTarget(
+                        startDay: today, kcal: $0.kcal, proteinGPerKg: $0.proteinGPerKg, source: .div, fatG: $0.fatG, waterMl: $0.waterMl)
             }
             ?? NutritionTarget(startDay: today, kcal: 0, proteinGPerKg: 0, source: .div)
         let undo = [try row(db, table: NutritionTarget.databaseTableName, id: target.id.uuidString.lowercased())]

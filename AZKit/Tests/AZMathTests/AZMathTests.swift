@@ -119,6 +119,18 @@ func session(_ name: String) throws -> SessionReport { try fixture("session-revi
         #expect(Targets.calorieFloor(sex: .male, weightKg: nil, heightCm: nil, age: nil) == 1_500)
     }
 
+    @Test func breakdownAddsUpToTheTarget() {
+        let b = Targets.startingBreakdown(sex: .male, weightKg: 80, heightCm: 180, age: 30, goal: .cut, ratePctPerWeek: -0.5)
+        // 800 + 1,125 - 150 + 5 = 1,780 resting, × 1.5 = 2,670, and 0.4 kg a week off is -440 a day.
+        #expect(b.bmr == 1_780)
+        #expect(b.maintenance == 2_670)
+        #expect(b.goalAdjustment == -440)
+        #expect(b.kcal == 2_250 && !b.heldAtFloor)
+        #expect(b.kcal == Targets.startingCalories(sex: .male, weightKg: 80, heightCm: 180, age: 30, goal: .cut, ratePctPerWeek: -0.5))
+        let tiny = Targets.startingBreakdown(sex: .female, weightKg: 45, heightCm: 150, age: 60, goal: .cut, ratePctPerWeek: -1)
+        #expect(tiny.heldAtFloor && tiny.kcal == tiny.floor)
+    }
+
     @Test func startingCaloriesFollowTheGoal() {
         let maintain = Targets.startingCalories(sex: .male, weightKg: 80, heightCm: 180, age: 30, goal: .recomp, ratePctPerWeek: 0)
         let cut = Targets.startingCalories(sex: .male, weightKg: 80, heightCm: 180, age: 30, goal: .cut, ratePctPerWeek: -0.5)

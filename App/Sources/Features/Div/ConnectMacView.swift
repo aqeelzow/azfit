@@ -45,27 +45,12 @@ struct MacPairingPanel: View {
                 HairlineStack {
                     step(1, "Install AZfit Bridge on your Mac")
                     step(2, "Sign in to Claude from its menu")
-                    step(3, "Choose Pair a phone, then scan the code")
+                    step(3, Self.canScan ? "Choose Pair a phone, then scan or copy the code" : "Choose Pair a phone, then Copy code")
                 }
-                HStack(spacing: 10) {
-                    if Self.canScan {
-                        PrimaryButton(title: "Scan code", trailingImage: "qrcode.viewfinder", style: .accent) { isScanning = true }
-                    }
-                    // PasteButton reads the clipboard without iOS's "Allow Paste" prompt, which returns nothing when denied.
-                    PasteButton(payloadType: String.self) { strings in
-                        guard let text = strings.first else {
-                            problem = "Nothing to paste. In AZfit Bridge, choose Pair a phone, then Copy code."
-                            return
-                        }
-                        pair(text)
-                    }
-                    .labelStyle(.titleOnly)
-                    .buttonBorderShape(.capsule)
-                    .controlSize(.extraLarge)
-                    .tint(AZColor.accent)
-                    .frame(maxWidth: .infinity)
-                    .accessibilityLabel("Paste code")
+                if Self.canScan {
+                    PrimaryButton(title: "Scan code", trailingImage: "qrcode.viewfinder", style: .accent) { isScanning = true }
                 }
+                pasteCard
                 if let problem {
                     Text(problem).font(.az(13.5)).foregroundStyle(AZColor.muted).fixedSize(horizontal: false, vertical: true)
                 }
@@ -80,6 +65,35 @@ struct MacPairingPanel: View {
             }
             .ignoresSafeArea()
         }
+    }
+
+    /// Pairing by copy and paste: what to copy on the Mac, and the system Paste button, which reads the clipboard
+    /// without iOS's "Allow Paste" prompt (that prompt returns nothing when denied). iOS greys the button out until
+    /// there's text to paste, so the card says where the code comes from.
+    private var pasteCard: some View {
+        HStack(spacing: 14) {
+            IconTile(systemImage: "doc.on.clipboard", size: 44, foreground: AZColor.ink, background: AZColor.card)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Paste the code").font(.az(15.5, .bold))
+                Text("Copy it from AZfit Bridge on your Mac, then tap Paste.")
+                    .font(.az(13.5)).foregroundStyle(AZColor.muted).fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 4)
+            PasteButton(payloadType: String.self) { strings in
+                guard let text = strings.first else {
+                    problem = "Nothing to paste. In AZfit Bridge, choose Pair a phone, then Copy code."
+                    return
+                }
+                pair(text)
+            }
+            .labelStyle(.titleAndIcon)
+            .buttonBorderShape(.capsule)
+            .controlSize(.large)
+            .tint(AZColor.accent)
+            .accessibilityLabel("Paste code")
+        }
+        .padding(14)
+        .background(AZColor.fill, in: .rect(cornerRadius: 22, style: .continuous))
     }
 
     private func step(_ number: Int, _ text: String) -> some View {

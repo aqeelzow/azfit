@@ -9,6 +9,7 @@ struct MemoryView: View {
     @Environment(Router.self) private var router
     @Environment(AppEnvironment.self) private var environment
     @State private var problem: String?
+    @State private var confirmRepair = false
 
     private var lock: some View {
         Image(systemName: "lock")
@@ -52,6 +53,12 @@ struct MemoryView: View {
                         Text(problem).font(.az(14)).foregroundStyle(AZColor.muted).padding(.top, 8)
                     }
 
+                    SectionLabel(text: "Your Mac").padding(.top, 26)
+                    HairlineStack {
+                        macRow
+                    }
+                    .padding(.top, 2)
+
                     HStack(alignment: .firstTextBaseline) {
                         SectionLabel(text: "Remembers")
                         Spacer()
@@ -90,6 +97,35 @@ struct MemoryView: View {
             .scrollIndicators(.hidden)
         }
         .azScreen()
+        .confirmationDialog("Pair with your Mac again?", isPresented: $confirmRepair, titleVisibility: .visible) {
+            Button("Pair again") { repair() }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text(
+                "This phone forgets its current pairing. On your Mac, open AZfit Bridge, choose Pair a phone, and scan or copy the new code. Your logs and Div's memory stay."
+            )
+        }
+    }
+
+    /// Where Div runs, and a way back to it: pair when unpaired, pair again when the link is broken.
+    private var macRow: some View {
+        let bridge = environment.bridge
+        let (title, detail, _, _) = BridgeStatusCard.describe(bridge.state, name: bridge.bridgeName ?? "Your Mac")
+        return item(title, detail) {
+            if bridge.code == nil {
+                PillButton(title: "Pair", style: .dark) { router.push(.connectMac) }
+            } else {
+                PillButton(title: "Re-pair", systemImage: "arrow.triangle.2.circlepath", style: .fill) { confirmRepair = true }
+            }
+        }
+        .accessibilityElement(children: .contain)
+    }
+
+    /// Drops the phone's pairing and opens the pairing steps for a new code. Nothing logged is touched: the Mac keeps
+    /// data by person, so the same Mac picks up where it left off.
+    private func repair() {
+        environment.bridge.forget()
+        router.push(.connectMac)
     }
 
     /// One switch, bound to the saved autonomy.

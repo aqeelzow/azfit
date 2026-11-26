@@ -43,6 +43,8 @@ enum AZColor {
     /// Macro colors. Protein uses `accent`.
     static let carbs = Color(light: 0xB7A4FF, dark: 0x6F5BD6)
     static let fat = Color(light: 0xFF8FB1, dark: 0xFF9CBB)
+    /// Water on Eat.
+    static let water = Color(light: 0x4FA3F7, dark: 0x6BB6FF)
 
     /// Muscle map: how many sets a muscle got, from none (0) to most (5).
     static let ramp: [Color] = [

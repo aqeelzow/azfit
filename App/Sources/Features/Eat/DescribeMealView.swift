@@ -3,9 +3,10 @@ import AZModel
 import AZStore
 import SwiftUI
 
-/// Typing a meal in: a name, calories and macros. Calories come from the macros when left empty, and a meal logged
-/// before fills everything in with one tap.
+/// Quick add: a name, calories and macros typed straight in, to a meal. Calories come from the macros when left
+/// empty, and a meal logged before fills everything in with one tap.
 struct DescribeMealView: View {
+    let slot: Meal.Slot
     @Environment(Router.self) private var router
     @Environment(AppEnvironment.self) private var environment
     @State private var name = ""
@@ -21,7 +22,7 @@ struct DescribeMealView: View {
     var body: some View {
         let recent = (try? environment.store.recentMeals()) ?? []
         VStack(spacing: 0) {
-            TopBar(title: "Describe a meal", subtitle: mealTime) {
+            TopBar(title: "Quick add", subtitle: slot.title) {
                 BackButton()
             } trailing: {
                 Color.clear.frame(width: 44, height: 44)
@@ -66,9 +67,6 @@ struct DescribeMealView: View {
         .azScreen()
         .onAppear { focus = .name }
     }
-
-    /// "Lunch", from the time of day.
-    private var mealTime: String { Meal.mealTime(at: .now) }
 
     private var trimmedName: String { name.trimmingCharacters(in: .whitespacesAndNewlines) }
 
@@ -146,7 +144,7 @@ struct DescribeMealView: View {
         }
         let meal = Meal(
             day: environment.today, name: trimmedName, kcal: Double(totals.kcal), proteinG: totals.proteinG, carbsG: totals.carbsG,
-            fatG: totals.fatG, source: .typed)
+            fatG: totals.fatG, source: .typed, slot: slot)
         do {
             try environment.store.logMeal(meal)
             environment.changed()
@@ -157,7 +155,7 @@ struct DescribeMealView: View {
     }
 
     /// A typed number: `.some(nil)` when empty, nil when it isn't a number.
-    private static func number(_ text: String) -> Double?? {
+    static func number(_ text: String) -> Double?? {
         let text = text.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: ",", with: ".")
         if text.isEmpty { return .some(nil) }
         return Double(text).map { .some($0) } ?? nil
@@ -174,5 +172,5 @@ struct DescribeMealView: View {
 }
 
 #Preview {
-    NavigationStack { DescribeMealView() }.environment(Router()).environment(AppEnvironment.preview())
+    NavigationStack { DescribeMealView(slot: .lunch) }.environment(Router()).environment(AppEnvironment.preview())
 }

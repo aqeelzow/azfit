@@ -34,7 +34,9 @@ import Testing
         #expect(bench.prescribed.sets == 3 && bench.prescribed.repMin == 6 && bench.prescribed.repMax == 8)
         // No planned load yet, so what was lifted is the starting point.
         #expect(bench.prescribed.loadKg == 80)
-        #expect(bench.performed.map(\.rir) == [2, 2, 2])
+        // Logged without RIR, so Div gets none rather than a guess.
+        #expect(bench.performed.map(\.rir) == [nil, nil, nil])
+        #expect(Strength.derive(report).exercises[0].avgRir == nil)
         #expect(bench.e1rmHistory == [Strength.e1rm(loadKg: 75, reps: 8, rir: 2)])
         #expect(report.exercises[1].e1rmHistory.isEmpty)
     }
@@ -82,9 +84,11 @@ import Testing
         for offset in 1..<29 {
             let day = Day.adding(offset, to: "2026-11-01")
             try store.save(WeighIn(day: day, kg: 84 - Double(offset) * 0.1))
-            // Every 4th day only a snack: under 60% of the target, so not complete.
-            let kcal = offset % 4 == 0 ? 300.0 : Double(target.kcal)
+            // Every 4th day only a snack, never marked complete. The rest are marked "That's everything".
+            let snackDay = offset % 4 == 0
+            let kcal = snackDay ? 300.0 : Double(target.kcal)
             try store.save(Meal(day: day, name: "Food", kcal: kcal, proteinG: 170, carbsG: 200, fatG: 60, source: .typed))
+            if !snackDay { try store.setDayComplete(day, true) }
         }
         let push = try #require(try store.plan().first { $0.session.name == "Push" }?.session)
         for (day, load) in [("2026-11-09", 70.0), ("2026-11-16", 72.5), ("2026-11-23", 75.0)] {
@@ -96,6 +100,29 @@ import Testing
             try store.finishWorkout(workout.id)
         }
         return store
+    }
+
+    @Test func onlyDaysMarkedCompleteCount() throws {
+        let store = try threeWeeks()
+        // A full day left unmarked doesn't count, however much was logged.
+        try store.setDayComplete("2026-11-27", nil)
+        #expect(try store.weeklySnapshot(weekEnding: sunday)?.intake.completeDays == 14)
+        try store.setDayComplete("2026-11-27", true)
+        #expect(try store.food(on: "2026-11-27").dayComplete == true)
+        #expect(try store.weeklySnapshot(weekEnding: sunday)?.intake.completeDays == 15)
+    }
+
+    @Test func setsWithoutRIRAssumeNothing() throws {
+        let store = try threeWeeks()
+        let push = try #require(try store.plan().first { $0.session.name == "Push" }?.session)
+        let workout = try store.startWorkout(push, today: "2026-11-24")
+        try store.logSet(LoggedSet(workoutID: workout.id, exerciseID: "barbell_bench_press", position: 0, loadKg: 80, reps: 8, rir: nil))
+        try store.finishWorkout(workout.id)
+        let bench = try #require(try store.weeklySnapshot(weekEnding: sunday)?.lifts.first)
+        // The set without RIR counts its 8 reps alone, and leaves the average to the sets that recorded one.
+        #expect(bench.e1rmNow == Strength.e1rm(loadKg: 80, reps: 8, rir: 0).rounded())
+        #expect(bench.avgRir == 2)
+        #expect(Strength.averageRIR([nil, nil]) == nil)
     }
 
     @Test func sundayOfAnyDay() {
